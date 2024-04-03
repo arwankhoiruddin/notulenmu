@@ -1,5 +1,8 @@
 <?php
 function notulenmu_list_page(){
+    if (!current_user_can('edit_posts')) {
+        wp_die(__('You do not have sufficient permissions to access this page.'));
+    }
     global $wpdb;
     $user_id = get_current_user_id();
     $table_name = $wpdb->prefix . 'salammu_notulenmu';

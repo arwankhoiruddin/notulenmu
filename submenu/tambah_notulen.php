@@ -74,6 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 function notulenmu_add_page() {
+    if (!current_user_can('edit_posts')) {
+        wp_die(__('You do not have sufficient permissions to access this page.'));
+    }
+
     // Check if we are editing an existing notulen
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();

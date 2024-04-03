@@ -1,5 +1,4 @@
 <?php
-
 function show_admin_notices() {
     // Check if the transient is set
     if (get_transient('data_saved')) {
@@ -12,6 +11,9 @@ function show_admin_notices() {
 }
 
 function notulenmu_settings_page(){
+    if (!current_user_can('edit_posts')) {
+        wp_die(__('You do not have sufficient permissions to access this page.'));
+    }
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
     $user_id = get_current_user_id();
