@@ -1,11 +1,10 @@
 <?php
 /**
  * Plugin Name: NotulenMu
- * Plugin URI:  http://salammu.id/notulenmu
  * Description: NotulenMu LPCR.
  * Version:     1.0
  * Author:      Arwan LPCR
- * Author URI:  http://salammu.id/
+ * Author URI:  http://mandatech.co.id/
  * License:     GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: notulenmu
