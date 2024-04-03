@@ -3,9 +3,27 @@ function notulenmu_list_page(){
     global $wpdb;
     $user_id = get_current_user_id();
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
-    $rows = $wpdb->get_results("SELECT * FROM $table_name where user_id = $user_id order by tingkat");
+
+    $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
+
+    $sql = "SELECT * FROM $table_name where user_id = $user_id";
+    if ($filter !== '') {
+        $sql .= " AND tingkat = '$filter'";
+    }
+    $sql .= " order by tingkat";
+    echo $sql;
+    $rows = $wpdb->get_results($sql);
 
     echo "<h1>List Notulen</h1>";
+    // Create a dropdown for the filter
+    echo "<select id='filter' onchange='if (this.value !== null) window.location.href=\"?page=notulenmu-list&filter=\"+this.value'>";
+    echo "<option value=''>All</option>";
+    echo "<option value='ranting'" . ($filter === 'ranting' ? ' selected' : '') . ">Ranting</option>";
+    echo "<option value='cabang'" . ($filter === 'cabang' ? ' selected' : '') . ">Cabang</option>";
+    echo "<option value='daerah'" . ($filter === 'daerah' ? ' selected' : '') . ">Daerah</option>";
+    echo "<option value='wilayah'" . ($filter === 'wilayah' ? ' selected' : '') . ">Wilayah</option>";
+    echo "</select>";
+
     echo "<table class='widefat'>";
     echo "<thead>";
     echo "<tr>";
