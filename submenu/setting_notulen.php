@@ -69,6 +69,19 @@ function notulenmu_settings_page(){
     }
     echo '</select></td>';
     echo '</tr>';
+    echo '<tr>';
+    echo '<th scope="row"><label for="prm">Pimpinan Ranting</label></th>';
+    echo '<td><select name="prm" id="prm">';
+    if (empty($saved_data)) {
+        echo '<option value="">No data</option>';
+    } else {
+        $json_address = 'https://sicara.id/api/v0/organisation/'. $saved_data['prm'];
+        $json = file_get_contents($json_address);
+        $data = json_decode($json, true);
+        echo '<option value="' . $data['data']['id'] . '">' . $data['data']['nama'] . '</option>';
+    }
+    echo '</select></td>';
+    echo '</tr>';
     echo '</tbody>';
     echo '</table>';
     echo '<input type="submit" value="Save Settings" class="button-primary">';
@@ -176,6 +189,27 @@ document.addEventListener('DOMContentLoaded', (event) => {
             });
         });
     });
+
+    document.getElementById('pcm').addEventListener('change', function() {
+    var id = this.value;
+    fetch('https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children', {
+        headers: {
+            'Origin': 'http://localhost',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        var pr = document.getElementById('prm');
+        pr.innerHTML = '';
+        data.data.forEach(item => {
+            var option = document.createElement('option');
+            option.value = item.id;
+            option.text = item.nama;
+            pr.appendChild(option);
+        });
+    });
+});
 });
 </script>
 

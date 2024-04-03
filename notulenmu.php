@@ -21,9 +21,9 @@ function notulenmu_menu() {
     add_menu_page('Tentang', 'NotulenMu', 'manage_options', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
 
     // Add submenu pages
-    add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'manage_options', 'notulenmu-list', 'notulenmu_list_page');
-    add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'manage_options', 'notulenmu-add', 'notulenmu_add_page');
     add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'manage_options', 'notulenmu-settings', 'notulenmu_settings_page');
+    add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'manage_options', 'notulenmu-add', 'notulenmu_add_page');
+    add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'manage_options', 'notulenmu-list', 'notulenmu_list_page');
 }
 
 add_action('admin_menu', 'notulenmu_menu');
