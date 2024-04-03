@@ -11,7 +11,6 @@ function notulenmu_list_page(){
         $sql .= " AND tingkat = '$filter'";
     }
     $sql .= " order by tingkat";
-    echo $sql;
     $rows = $wpdb->get_results($sql);
 
     echo "<h1>List Notulen</h1>";
