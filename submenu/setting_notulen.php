@@ -103,7 +103,8 @@ function handle_setting_form() {
         'user_id' => $user_id,
         'pwm' => $_POST['pwm'],
         'pdm' => $_POST['pdm'],
-        'pcm' => $_POST['pcm']
+        'pcm' => $_POST['pcm'],
+        'prm' => $_POST['prm']
     );
 
     if ($row) {
@@ -120,9 +121,6 @@ function handle_setting_form() {
     wp_redirect(add_query_arg('page', 'notulenmu-settings', admin_url('admin.php')));
     exit;
 }
-
-add_action('admin_post_handle_setting_form', 'handle_setting_form');
-add_action('admin_notices', 'show_admin_notices');
 ?>
 
 <script>
