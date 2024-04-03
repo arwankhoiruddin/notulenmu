@@ -20,14 +20,12 @@ function notulenmu_menu() {
     add_menu_page('Tentang', 'NotulenMu', 'edit_posts', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
 
     // Add submenu pages
-    add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'edit_posts', 'notulenmu-settings', 'notulenmu_settings_page');
     add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'edit_posts', 'notulenmu-add', 'notulenmu_add_page');
     add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'edit_posts', 'notulenmu-list', 'notulenmu_list_page');
+    add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'edit_posts', 'notulenmu-settings', 'notulenmu_settings_page');
 }
 
 add_action('admin_menu', 'notulenmu_menu');
-add_action('admin_post_handle_setting_form', 'handle_setting_form');
-add_action('admin_notices', 'show_admin_notices');
 
 function notulenmu_install() {
     global $wpdb;

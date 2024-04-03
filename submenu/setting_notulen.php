@@ -1,4 +1,7 @@
 <?php
+add_action('admin_post_handle_setting_form', 'handle_setting_form');
+add_action('admin_notices', 'show_admin_notices');    
+
 function show_admin_notices() {
     // Check if the transient is set
     if (get_transient('data_saved')) {
