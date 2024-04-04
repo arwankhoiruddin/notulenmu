@@ -147,7 +147,7 @@ function notulenmu_settings_page() {
             var url_live = 'https://sicara.id/api/v0/organisation/' + id + '/children';
             var origin_localhost = 'https://localhost';
             var origin_live = 'https://lpcr.or.id';
-            fetch(url, {
+            fetch(url_live, {
                 headers: {
                     'Origin': origin_live,
                     'X-Requested-With': 'XMLHttpRequest'
