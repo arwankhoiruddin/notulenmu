@@ -6,7 +6,7 @@ if ($pagenow === 'wp-login.php') {
     return;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POST['form_name'] === 'notulenmu_setting_form') {
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
     // Verify nonce for security
@@ -73,6 +73,7 @@ function notulenmu_settings_page() {
     ?>
     <h1>Notulenmu Settings</h1>
     <form method="POST" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+        <input type="hidden" name="form_name" value="notulenmu_setting_form">
         <input type="hidden" name="action" value="handle_notulenmu_form">
         <input type="hidden" name="user_id" value="<?php echo esc_attr(get_current_user_id()); ?>">
         <?php wp_nonce_field('handle_notulenmu_form'); ?>

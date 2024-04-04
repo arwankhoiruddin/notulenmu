@@ -6,7 +6,7 @@ if ($pagenow === 'wp-login.php') {
     return;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POST['form_name'] === 'notulenmu_add_form') {
     global $wpdb;
 
     // Get the data from the form
@@ -104,6 +104,7 @@ function notulenmu_add_page() {
     
     // Form for adding or editing
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+    echo '<input type="hidden" name="form_name" value="notulenmu_add_form">';
     echo '<input type="hidden" name="user_id" value="'. $logged_user. '">';
     echo '<input type="hidden" name="action" value="handle_notulen_form">';
     echo '<table class="form-table">';
