@@ -44,16 +44,17 @@ function notulenmu_settings_page() {
     $settings = $wpdb->get_row("SELECT * FROM $table_name where user_id='$user_id'", ARRAY_A);
 
     $url_heroku = 'https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/';
+    $url_allorigin = 'https://api.allorigins.win/raw?url=https://sicara.id/api/v0/organisation/';
     $url = 'https://sicara.id/api/v0/organisation/';
-    $args = array(
-        'headers' => array(
-            'origin' => get_site_url(),
-            'x-requested-with' => 'XMLHttpRequest'
-        )
-    );
+    // $args = array(
+    //     'headers' => array(
+    //         'origin' => get_site_url(),
+    //         'x-requested-with' => 'XMLHttpRequest'
+    //     )
+    // );
 
     // Make the API request
-    $response = wp_remote_get($url_heroku, $args);
+    $response = wp_remote_get($url_allorigin);
 
     // Check for errors
     if (is_wp_error($response)) {
@@ -144,10 +145,11 @@ function notulenmu_settings_page() {
         document.getElementById(pimpinan_wilayah_id).addEventListener('change', function() {
             var id = this.value;
             var url_heroku = 'https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children';
+            var url_allorigin = 'https://api.allorigins.win/raw?url=https://sicara.id/api/v0/organisation/' + id + '/children';
             var url_live = 'https://sicara.id/api/v0/organisation/' + id + '/children';
             var origin_localhost = 'https://localhost';
             var origin_live = 'https://lpcr.or.id';
-            fetch(url_heroku)
+            fetch(url_allorigin)
             .then(response => response.json())
             .then(data => {
                 var pimpinan_daerah = document.getElementById(pimpinan_daerah_id);
