@@ -62,6 +62,7 @@ function notulenmu_install() {
         $sql = "CREATE TABLE $table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             user_id mediumint(9) NOT NULL,
+            id_tingkat int NOT NULL,
             tingkat text NOT NULL,
             topik_rapat text NOT NULL,
             tanggal_rapat datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
@@ -85,9 +86,10 @@ function notulenmu_install() {
         $sql = "CREATE TABLE $table_name_setting (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             user_id mediumint(9) NOT NULL,
-            pwm text NOT NULL,
-            pdm text NOT NULL,
-            pcm text NOT NULL,
+            pwm int NOT NULL,
+            pdm int NOT NULL,
+            pcm int NOT NULL,
+            prm int NOT NULL,
             PRIMARY KEY  (id)
         ) $charset_collate;";
 

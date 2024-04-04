@@ -1,9 +1,9 @@
 <?php
-function handle_notulenmu_form() {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
     // Verify nonce for security
-    check_admin_referer('handle_notulenmu_form');
+    // check_admin_referer('handle_notulenmu_form');
 
     $user_id = $_POST['user_id'];
     // Sanitize and store the form data
@@ -30,12 +30,13 @@ function handle_notulenmu_form() {
         // Insert a new row
         $wpdb->insert($table_name, $data);
     }
-
+    if (!function_exists('wp_redirect')) {
+        require_once(ABSPATH . WPINC . '/pluggable.php');
+    }
     // Redirect back to the settings page
     wp_redirect(admin_url('admin.php?page=notulenmu-settings'));
     exit;
 }
-add_action('admin_post_handle_notulenmu_form', 'handle_notulenmu_form');
 
 function notulenmu_settings_page() {
     global $wpdb;
