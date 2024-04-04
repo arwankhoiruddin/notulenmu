@@ -1,4 +1,11 @@
 <?php
+global $pagenow;
+
+// If we're on the login page, return early
+if ($pagenow === 'wp-login.php') {
+    return;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
