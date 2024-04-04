@@ -16,6 +16,12 @@ include plugin_dir_path(__FILE__) . 'submenu/tambah_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/setting_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/about_notulen.php';
 
+add_action('send_headers', 'add_cors_headers');
+
+function add_cors_headers() {
+    header("Access-Control-Allow-Origin: *"); 
+}
+
 function notulenmu_menu() {    
     add_menu_page('Tentang', 'NotulenMu', 'edit_posts', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
 
