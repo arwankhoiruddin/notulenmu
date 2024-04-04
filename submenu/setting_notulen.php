@@ -53,7 +53,7 @@ function notulenmu_settings_page() {
     );
 
     // Make the API request
-    $response = wp_remote_get($url, $args);
+    $response = wp_remote_get($url_heroku, $args);
 
     // Check for errors
     if (is_wp_error($response)) {
@@ -147,12 +147,7 @@ function notulenmu_settings_page() {
             var url_live = 'https://sicara.id/api/v0/organisation/' + id + '/children';
             var origin_localhost = 'https://localhost';
             var origin_live = 'https://lpcr.or.id';
-            fetch(url_live, {
-                headers: {
-                    'Origin': origin_live,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
+            fetch(url_heroku)
             .then(response => response.json())
             .then(data => {
                 var pimpinan_daerah = document.getElementById(pimpinan_daerah_id);

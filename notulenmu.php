@@ -23,6 +23,12 @@ function add_cors_headers() {
 }
 
 function notulenmu_menu() {    
+    global $pagenow;
+
+    // If we're on the login page, return early
+    if ($pagenow === 'wp-login.php') {
+        return;
+    }
     add_menu_page('Tentang', 'NotulenMu', 'edit_posts', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
 
     // Add submenu pages
