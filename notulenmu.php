@@ -54,6 +54,8 @@ function notulenmu_install() {
 
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
 
+    $wpdb->query("DROP TABLE IF EXISTS $table_name");
+
     // Check if the table already exists
     if($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
         // Table doesn't exist, so create it
@@ -77,6 +79,8 @@ function notulenmu_install() {
     }
 
     $table_name_setting = $wpdb->prefix . 'salammu_notulenmu_setting';
+
+    $wpdb->query("DROP TABLE IF EXISTS $table_name_setting");
 
     // Check if the setting table already exists
     if($wpdb->get_var("SHOW TABLES LIKE '$table_name_setting'") != $table_name_setting) {
