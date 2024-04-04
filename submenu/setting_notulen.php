@@ -43,7 +43,8 @@ function notulenmu_settings_page() {
     $user_id = get_current_user_id();
     $settings = $wpdb->get_row("SELECT * FROM $table_name where user_id='$user_id'", ARRAY_A);
 
-    $url = 'https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/';
+    $url_heroku = 'https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/';
+    $url = 'https://sicara.id/api/v0/organisation/';
     $args = array(
         'headers' => array(
             'origin' => get_site_url(),
@@ -142,7 +143,9 @@ function notulenmu_settings_page() {
     function updateDropdowns(pimpinan_wilayah_id, pimpinan_daerah_id) {
         document.getElementById(pimpinan_wilayah_id).addEventListener('change', function() {
             var id = this.value;
-            fetch('https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children', {
+            var url_heroku = 'https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children';
+            var url_live = 'https://sicara.id/api/v0/organisation/' + id + '/children';
+            fetch(url_live, {
                 headers: {
                     'Origin': 'http://localhost',
                     'X-Requested-With': 'XMLHttpRequest'
