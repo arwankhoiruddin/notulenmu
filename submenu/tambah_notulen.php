@@ -1,76 +1,82 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    global $wpdb;
-
-    // Get the data from the form
-    $user_id = $_POST['user_id'];
-    $tingkat = $_POST['tingkat'];
-    $topik_rapat = $_POST['topik_rapat'];
-    $tanggal_rapat = $_POST['tanggal_rapat'];
-    $tempat_rapat = $_POST['tempat_rapat'];
-    $peserta_rapat = $_POST['peserta_rapat'];
-    $notulen_rapat = $_POST['notulen_rapat'];
-
-    $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
-
-    echo "SELECT pwm FROM $setting_table_name WHERE user_id = '$user_id'";
-
-    if ($tingkat == 'wilayah') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'daerah') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'cabang') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'ranting') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else {
-        add_notice('error', 'Invalid tingkat.');
-        return;
+$user_id = get_current_user_id();
+echo $user_id;
+if ($user_id == 0) {
+} else {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        global $wpdb;
+    
+        // Get the data from the form
+        $user_id = $_POST['user_id'];
+        $tingkat = $_POST['tingkat'];
+        $topik_rapat = $_POST['topik_rapat'];
+        $tanggal_rapat = $_POST['tanggal_rapat'];
+        $tempat_rapat = $_POST['tempat_rapat'];
+        $peserta_rapat = $_POST['peserta_rapat'];
+        $notulen_rapat = $_POST['notulen_rapat'];
+    
+        $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+    
+        echo "SELECT pwm FROM $setting_table_name WHERE user_id = '$user_id'";
+    
+        if ($tingkat == 'wilayah') {
+            $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        } else if ($tingkat == 'daerah') {
+            $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        } else if ($tingkat == 'cabang') {
+            $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        } else if ($tingkat == 'ranting') {
+            $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        } else {
+            add_notice('error', 'Invalid tingkat.');
+            return;
+        }
+        
+        $table_name = $wpdb->prefix . 'salammu_notulenmu';
+        // Insert the data into the table
+        $result = $wpdb->insert(
+            $table_name, // Table name
+            array( // Data
+                'user_id' => $user_id,
+                'tingkat' => $tingkat,
+                'id_tingkat' => $tingkat_id,
+                'topik_rapat' => $topik_rapat,
+                'tanggal_rapat' => $tanggal_rapat,
+                'tempat_rapat' => $tempat_rapat,
+                'peserta_rapat' => $peserta_rapat,
+                'notulen_rapat' => $notulen_rapat,
+            ),
+            array( // Data format
+                '%d', // user_id
+                '%s', // tingkat
+                '%s', // tingkat_id
+                '%s', // topik_rapat
+                '%s', // tanggal_rapat
+                '%s', // tempat_rapat
+                '%s', // peserta_rapat
+                '%s', // notulen_rapat
+            )
+        );
+        if ($result !== false) {
+            set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
+            if (!function_exists('wp_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+            exit;
+        } else {
+            add_notice('error', 'There was an error adding the notulen.');
+        }
+    
+        add_action('admin_notices', 'notulenmu_admin_notices');
+        function notulenmu_admin_notices() {
+            if ($message = get_transient('notulenmu_admin_notice')) {
+                echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
+                delete_transient('notulenmu_admin_notice');
+            }
+        }
     }
     
-    $table_name = $wpdb->prefix . 'salammu_notulenmu';
-    // Insert the data into the table
-    $result = $wpdb->insert(
-        $table_name, // Table name
-        array( // Data
-            'user_id' => $user_id,
-            'tingkat' => $tingkat,
-            'id_tingkat' => $tingkat_id,
-            'topik_rapat' => $topik_rapat,
-            'tanggal_rapat' => $tanggal_rapat,
-            'tempat_rapat' => $tempat_rapat,
-            'peserta_rapat' => $peserta_rapat,
-            'notulen_rapat' => $notulen_rapat,
-        ),
-        array( // Data format
-            '%d', // user_id
-            '%s', // tingkat
-            '%s', // tingkat_id
-            '%s', // topik_rapat
-            '%s', // tanggal_rapat
-            '%s', // tempat_rapat
-            '%s', // peserta_rapat
-            '%s', // notulen_rapat
-        )
-    );
-    if ($result !== false) {
-        set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
-        if (!function_exists('wp_redirect')) {
-            require_once(ABSPATH . WPINC . '/pluggable.php');
-        }
-        wp_redirect(admin_url('admin.php?page=notulenmu-list'));
-        exit;
-    } else {
-        add_notice('error', 'There was an error adding the notulen.');
-    }
-
-    add_action('admin_notices', 'notulenmu_admin_notices');
-    function notulenmu_admin_notices() {
-        if ($message = get_transient('notulenmu_admin_notice')) {
-            echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
-            delete_transient('notulenmu_admin_notice');
-        }
-    }
 }
 
 function notulenmu_add_page() {

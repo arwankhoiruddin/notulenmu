@@ -16,7 +16,7 @@ include plugin_dir_path(__FILE__) . 'submenu/tambah_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/setting_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/about_notulen.php';
 
-function notulenmu_menu() {
+function notulenmu_menu() {    
     add_menu_page('Tentang', 'NotulenMu', 'edit_posts', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
 
     // Add submenu pages
@@ -25,7 +25,17 @@ function notulenmu_menu() {
     add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'edit_posts', 'notulenmu-settings', 'notulenmu_settings_page');
 }
 
+function ignore_on_login() {
+    global $pagenow;
+
+    // Don't run on the login page
+    if ($pagenow === 'wp-login.php') {
+        return;
+    }
+}
+
 add_action('admin_menu', 'notulenmu_menu');
+add_action('wp_loaded', 'ignore_on_login');
 
 function notulenmu_install() {
     global $wpdb;

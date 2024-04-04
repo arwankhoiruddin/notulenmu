@@ -53,7 +53,7 @@ function notulenmu_settings_page() {
     );
 
     // Make the API request
-    $response = wp_remote_get($url, $args);
+    $response = wp_remote_get($url_heroku, $args);
 
     // Check for errors
     if (is_wp_error($response)) {
@@ -145,7 +145,7 @@ function notulenmu_settings_page() {
             var id = this.value;
             var url_heroku = 'https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children';
             var url_live = 'https://sicara.id/api/v0/organisation/' + id + '/children';
-            fetch(url_live, {
+            fetch(url_heroku, {
                 headers: {
                     'Origin': 'http://localhost',
                     'X-Requested-With': 'XMLHttpRequest'
