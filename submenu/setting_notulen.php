@@ -43,18 +43,16 @@ function notulenmu_settings_page() {
     $user_id = get_current_user_id();
     $settings = $wpdb->get_row("SELECT * FROM $table_name where user_id='$user_id'", ARRAY_A);
 
-    $url_heroku = 'https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/';
-    $url_allorigin = 'https://api.allorigins.win/raw?url=https://sicara.id/api/v0/organisation/';
     $url = 'https://sicara.id/api/v0/organisation/';
-    // $args = array(
-    //     'headers' => array(
-    //         'origin' => get_site_url(),
-    //         'x-requested-with' => 'XMLHttpRequest'
-    //     )
-    // );
+    $args = array(
+        'headers' => array(
+            'origin' => get_site_url(),
+            'x-requested-with' => 'XMLHttpRequest'
+        )
+    );
 
     // Make the API request
-    $response = wp_remote_get($url_allorigin);
+    $response = wp_remote_get($url);
 
     // Check for errors
     if (is_wp_error($response)) {
@@ -64,9 +62,6 @@ function notulenmu_settings_page() {
         // Decode the JSON response
         $data = json_decode(wp_remote_retrieve_body($response), true);
     }
-    $json_data = json_encode($data['data']);
-    // echo $json_data;
-    
     ?>
     <h1>Notulenmu Settings</h1>
     <form method="POST" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -79,8 +74,13 @@ function notulenmu_settings_page() {
                 <th scope="row"><label for="pimpinan_wilayah">Pimpinan Wilayah:</label></th>
                 <td>
                 <select name="pimpinan_wilayah" id="pimpinan_wilayah">
-                    <?php foreach ($data['data'] as $item): ?>
-                        <option value="<?php echo $item['id']; ?>" <?php selected($settings['pwm'], $item['id']); ?>>
+                    <?php 
+                    foreach ($data['data'] as $item): 
+                    ?>
+                        <option value="<?php echo $item['id']; ?>" 
+                            <?php 
+                                $selectedValue = $settings !== null ? $settings['pwm'] : 0;
+                                selected($selectedValue, $item['id']); ?>>
                             <?php echo $item['nama']; ?>
                         </option>
                     <?php endforeach; ?>
@@ -144,12 +144,8 @@ function notulenmu_settings_page() {
     function updateDropdowns(pimpinan_wilayah_id, pimpinan_daerah_id) {
         document.getElementById(pimpinan_wilayah_id).addEventListener('change', function() {
             var id = this.value;
-            var url_heroku = 'https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children';
-            var url_allorigin = 'https://api.allorigins.win/raw?url=https://sicara.id/api/v0/organisation/' + id + '/children';
-            var url_live = 'https://sicara.id/api/v0/organisation/' + id + '/children';
-            var origin_localhost = 'https://localhost';
-            var origin_live = 'https://lpcr.or.id';
-            fetch(url_allorigin)
+            var url_live = 'https://corsproxy.io/?' + encodeURIComponent('https://sicara.id/api/v0/organisation/' + id + '/children');
+            fetch(url_live)
             .then(response => response.json())
             .then(data => {
                 var pimpinan_daerah = document.getElementById(pimpinan_daerah_id);
