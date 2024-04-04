@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: NotulenMu
- * Description: NotulenMu LPCR.
+ * Description: NotulenMu Lembaga Pengembangan Cabang Ranting dan Pembinaan Masjid 
  * Version:     1.0
  * Author:      Arwan LPCR
  * Author URI:  http://mandatech.co.id/
