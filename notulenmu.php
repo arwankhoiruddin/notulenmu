@@ -103,7 +103,6 @@ function notulenmu_install() {
     }
 }
 
-<?php
 function deactivate_plugin_name() {
     global $wpdb;
 
