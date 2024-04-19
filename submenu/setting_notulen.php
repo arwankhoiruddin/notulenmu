@@ -101,7 +101,7 @@ function notulenmu_settings_page() {
                 <td>
                 <select name="pimpinan_daerah" id="pimpinan_daerah">
                     <?php
-                        if (empty($settings)) {
+                        if (is_null($settings)) {
                             echo '<option value="">No data</option>';
                         } else {
                             $response = wp_remote_get($url . $settings['pdm'], $args);
@@ -117,7 +117,7 @@ function notulenmu_settings_page() {
                 <td>
                 <select name="pimpinan_cabang" id="pimpinan_cabang">
                 <?php
-                    if (empty($settings)) {
+                    if (is_null($settings)) {
                         echo '<option value="">No data</option>';
                     } else {
                         $response = wp_remote_get($url . $settings['pcm'], $args);
@@ -133,7 +133,7 @@ function notulenmu_settings_page() {
                 <td>
                 <select name="pimpinan_ranting" id="pimpinan_ranting">
                 <?php
-                    if (empty($settings)) {
+                    if (is_null($settings)) {
                         echo '<option value="">No data</option>';
                     } else {
                         $response = wp_remote_get($url . $settings['prm'], $args);
