@@ -63,14 +63,15 @@ function notulenmu_install() {
 
         $sql = "CREATE TABLE $table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
-            user_id mediumint(9) NOT NULL,
+            user_id int NOT NULL,
             id_tingkat int NOT NULL,
             tingkat text NOT NULL,
             topik_rapat text NOT NULL,
-            tanggal_rapat datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            tanggal_rapat date DEFAULT '0000-00-00' NOT NULL,
             tempat_rapat text NOT NULL,
             peserta_rapat text NOT NULL,
             notulen_rapat text NOT NULL,
+            image_path text NOT NULL,
             PRIMARY KEY  (id)
         ) $charset_collate;";
 

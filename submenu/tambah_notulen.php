@@ -18,6 +18,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     $peserta_rapat = isset($_POST['peserta_rapat']) ? $_POST['peserta_rapat'] : null;
     $notulen_rapat = isset($_POST['notulen_rapat']) ? $_POST['notulen_rapat'] : null;
 
+    $image_upload = isset($_FILES['image_upload']) ? $_FILES['image_upload'] : null;
+
+    if ($image_upload !== null && $image_upload['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = wp_upload_dir();
+        $upload_file = $upload_dir['path'] . '/' . basename($image_upload['name']);
+
+        if (move_uploaded_file($image_upload['tmp_name'], $upload_file)) {
+            // The file has been uploaded successfully
+            $img_path = $upload_file;
+        } else {
+            // There was an error moving the uploaded file
+        }
+    }
+
     if ($user_id == null) {
         return;
     }
@@ -51,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             'tempat_rapat' => $tempat_rapat,
             'peserta_rapat' => $peserta_rapat,
             'notulen_rapat' => $notulen_rapat,
+            'image_path' => $img_path,
         ),
         array( // Data format
             '%d', // user_id
@@ -61,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             '%s', // tempat_rapat
             '%s', // peserta_rapat
             '%s', // notulen_rapat
+            '%s', // image_path
         )
     );
     if ($result !== false) {
@@ -135,6 +151,10 @@ function notulenmu_add_page() {
     echo '<tr>';
     echo '<th scope="row"><label for="peserta_rapat">Peserta Rapat</label></th>';
     echo '<td><input name="peserta_rapat" id="peserta_rapat" type="text" value="' . ($notulen ? esc_attr($notulen->peserta_rapat) : '') . '" class="regular-text" /></td>';
+    echo '</tr>';
+    echo '<tr>';
+    echo '<th scope="row"><label for="image_upload">Upload Image</label></th>';
+    echo '<td><input name="image_upload" id="image_upload" type="file" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
     echo '<th scope="row"><label for="notulen_rapat">Notulen Rapat</label></th>';
