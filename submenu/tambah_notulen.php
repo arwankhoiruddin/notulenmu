@@ -17,12 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     $tempat_rapat = isset($_POST['tempat_rapat']) ? $_POST['tempat_rapat'] : null;
     $peserta_rapat = isset($_POST['peserta_rapat']) ? $_POST['peserta_rapat'] : null;
     $notulen_rapat = isset($_POST['notulen_rapat']) ? $_POST['notulen_rapat'] : null;
-
     $image_upload = isset($_FILES['image_upload']) ? $_FILES['image_upload'] : null;
 
+    echo "Hallo";
+    echo $image_upload;
+
+    $img_path = '';
     if ($image_upload !== null && $image_upload['error'] === UPLOAD_ERR_OK) {
         $upload_dir = wp_upload_dir();
         $upload_file = $upload_dir['path'] . '/' . basename($image_upload['name']);
+        echo $upload_file;
 
         if (move_uploaded_file($image_upload['tmp_name'], $upload_file)) {
             // The file has been uploaded successfully
@@ -84,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
-        wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+        // wp_redirect(admin_url('admin.php?page=notulenmu-list'));
         exit;
     } else {
         add_notice('error', 'There was an error adding the notulen.');
@@ -149,7 +153,7 @@ function notulenmu_add_page() {
     echo '<td><input name="tempat_rapat" id="tempat_rapat" type="text" value="' . ($notulen ? esc_attr($notulen->tempat_rapat) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="peserta_rapat">Peserta Rapat</label></th>';
+    echo '<th scope="row"><label for="peserta_rapat">Jumlah Peserta Rapat</label></th>';
     echo '<td><input name="peserta_rapat" id="peserta_rapat" type="text" value="' . ($notulen ? esc_attr($notulen->peserta_rapat) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
