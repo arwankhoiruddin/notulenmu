@@ -153,7 +153,7 @@ function notulenmu_settings_page() {
     function updateDropdowns(pimpinan_wilayah_id, pimpinan_daerah_id) {
         document.getElementById(pimpinan_wilayah_id).addEventListener('change', function() {
             var id = this.value;
-            var url_live = 'https://api.allorigins.win/raw?url=https://sicara.id/api/v0/organisation/' + id + '/children');
+            var url_live = 'https://api.allorigins.win/raw?url=https://sicara.id/api/v0/organisation/' + id + '/children';
             fetch(url_live)
             .then(response => response.json())
             .then(data => {
