@@ -162,7 +162,7 @@ function notulenmu_add_page() {
     echo '<td><input name="peserta_rapat" id="peserta_rapat" type="text" value="' . ($notulen ? esc_attr($notulen->peserta_rapat) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="image_upload">Upload Image</label></th>';
+    echo '<th scope="row"><label for="image_upload">Foto Kegiatan</label></th>';
     echo '<td><input name="image_upload" id="image_upload" type="file" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
