@@ -19,14 +19,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     $notulen_rapat = isset($_POST['notulen_rapat']) ? $_POST['notulen_rapat'] : null;
     $image_upload = isset($_FILES['image_upload']) ? $_FILES['image_upload'] : null;
 
-    echo "Hallo";
-    echo $image_upload;
+    echo "Hello";
 
     $img_path = '';
     if ($image_upload !== null && $image_upload['error'] === UPLOAD_ERR_OK) {
         $upload_dir = wp_upload_dir();
-        $upload_file = $upload_dir['path'] . '/' . basename($image_upload['name']);
-        echo $upload_file;
+        $filename = uniqid() . '.' . pathinfo($image_upload['name'], PATHINFO_EXTENSION);
+        $upload_file = $upload_dir['path'] . '/' . $filename;
 
         if (move_uploaded_file($image_upload['tmp_name'], $upload_file)) {
             // The file has been uploaded successfully
@@ -88,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
-        // wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+        wp_redirect(admin_url('admin.php?page=notulenmu-list'));
         exit;
     } else {
         add_notice('error', 'There was an error adding the notulen.');
@@ -122,8 +121,14 @@ function notulenmu_add_page() {
         $notulen = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $id AND user_id = $logged_user");
     }
     
+    if ($notulen && $notulen->image_path) {
+        $upload_dir = wp_upload_dir();
+        $image_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $notulen->image_path);
+        echo '<img src="' . esc_url($image_path) . '" alt="Image for ' . esc_attr($notulen->topik_rapat) . '" style="width: 200px; height: auto;" />';
+    }
+    
     // Form for adding or editing
-    echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+    echo '<form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="form_name" value="notulenmu_add_form">';
     echo '<input type="hidden" name="user_id" value="'. $logged_user. '">';
     echo '<input type="hidden" name="action" value="handle_notulen_form">';
