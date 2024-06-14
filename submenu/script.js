@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     document.getElementById('pwm').addEventListener('change', function() {
         var id = this.value;
-        fetch('https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children', {
+        fetch('https://cors-anywhere.herokuapp.com/https://old.sicara.id/api/v0/organisation/' + id + '/children', {
             headers: {
                 'Origin': 'http://localhost',
                 'X-Requested-With': 'XMLHttpRequest'
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 document.addEventListener('DOMContentLoaded', (event) => {
     document.getElementById('pwm').addEventListener('change', function() {
         var id = this.value;
-        fetch('https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children', {
+        fetch('https://cors-anywhere.herokuapp.com/https://old.sicara.id/api/v0/organisation/' + id + '/children', {
             headers: {
                 'Origin': 'http://localhost',
                 'X-Requested-With': 'XMLHttpRequest'
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     document.getElementById('pdm').addEventListener('change', function() {
         var id = this.value;
-        fetch('https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children', {
+        fetch('https://cors-anywhere.herokuapp.com/https://old.sicara.id/api/v0/organisation/' + id + '/children', {
             headers: {
                 'Origin': 'http://localhost',
                 'X-Requested-With': 'XMLHttpRequest'
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     document.getElementById('pcm').addEventListener('change', function() {
     var id = this.value;
-    fetch('https://cors-anywhere.herokuapp.com/https://sicara.id/api/v0/organisation/' + id + '/children', {
+    fetch('https://cors-anywhere.herokuapp.com/https://old.sicara.id/api/v0/organisation/' + id + '/children', {
         headers: {
             'Origin': 'http://localhost',
             'X-Requested-With': 'XMLHttpRequest'
