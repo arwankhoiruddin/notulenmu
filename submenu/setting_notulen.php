@@ -51,7 +51,7 @@ function notulenmu_settings_page() {
     $user_id = get_current_user_id();
     $settings = $wpdb->get_row("SELECT * FROM $table_name where user_id='$user_id'", ARRAY_A);
 
-    $url = 'https://sicara.id/api/v0/organisation/';
+    $url = 'https://old.sicara.id/api/v0/organisation/';
     $args = array(
         'headers' => array(
             'origin' => get_site_url(),
@@ -153,7 +153,7 @@ function notulenmu_settings_page() {
     function updateDropdowns(pimpinan_wilayah_id, pimpinan_daerah_id) {
         document.getElementById(pimpinan_wilayah_id).addEventListener('change', function() {
             var id = this.value;
-            var url_live = 'https://api.allorigins.win/raw?url=https://sicara.id/api/v0/organisation/' + id + '/children';
+            var url_live = 'https://api.allorigins.win/raw?url=https://old..id/api/v0/organisation/' + id + '/children';
             fetch(url_live)
             .then(response => response.json())
             .then(data => {
