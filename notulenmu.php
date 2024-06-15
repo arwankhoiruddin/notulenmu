@@ -57,16 +57,16 @@ add_action('wp_loaded', 'ignore_on_login');
 function notulenmu_install() {
     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'salammu_notulenmu';
+    $notulen_table_name = $wpdb->prefix . 'salammu_notulenmu';
 
     $wpdb->query("DROP TABLE IF EXISTS $table_name");
 
     // Check if the table already exists
-    if($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+    if($wpdb->get_var("SHOW TABLES LIKE '$notulen_table_name'") != $notulen_table_name) {
         // Table doesn't exist, so create it
         $charset_collate = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE $table_name (
+        $sql = "CREATE TABLE $notulen_table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             user_id int NOT NULL,
             id_tingkat int NOT NULL,
@@ -76,6 +76,33 @@ function notulenmu_install() {
             tempat_rapat text NOT NULL,
             peserta_rapat text NOT NULL,
             notulen_rapat text NOT NULL,
+            image_path text NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
+
+    $kegiatan_table_name = $wpdb->prefix . 'salammu_kegiatanmu';
+
+    $wpdb->query("DROP TABLE IF EXISTS $kegiatan_table_name");
+
+    // Check if the table already exists
+    if($wpdb->get_var("SHOW TABLES LIKE '$kegiatan_table_name'") != $kegiatan_table_name) {
+        // Table doesn't exist, so create it
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $kegiatan_table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            user_id int NOT NULL,
+            id_tingkat int NOT NULL,
+            tingkat text NOT NULL,
+            nama_kegiatan text NOT NULL,
+            tanggal_kegiatan date DEFAULT '0000-00-00' NOT NULL,
+            tempat_kegiatan text NOT NULL,
+            peserta_kegiatan text NOT NULL,
+            detail_kegiatan text NOT NULL,
             image_path text NOT NULL,
             PRIMARY KEY  (id)
         ) $charset_collate;";
