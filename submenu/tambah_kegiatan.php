@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     } else {
         return;
     }
-
+    
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
     // Insert the data into the table
     $result = $wpdb->insert(
@@ -83,96 +83,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         )
     );
     if ($result !== false) {
-        set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
+        set_transient('kegiatanmu_admin_notice', 'The kegiatan was successfully added.', 5);
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
-        wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+        wp_redirect(admin_url('admin.php?page=kegiatanmu-list'));
         exit;
     } else {
-        add_notice('error', 'There was an error adding the notulen.');
+        add_notice('error', 'There was an error adding the kegiatan.');
     }
 
-    add_action('admin_notices', 'notulenmu_admin_notices');
-    function notulenmu_admin_notices() {
-        if ($message = get_transient('notulenmu_admin_notice')) {
+    add_action('admin_notices', 'kegiatanmu_admin_notice');
+    function kegiatanmu_admin_notice() {
+        if ($message = get_transient('kegiatanmu_admin_notice')) {
             echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
-            delete_transient('notulenmu_admin_notice');
+            delete_transient('kegiatanmu_admin_notice');
         }
     }
 }
     
-function notulenmu_add_page() {
+function tambah_kegiatan_page() {
     if (!current_user_can('edit_posts')) {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
 
-    // Check if we are editing an existing notulen
+    // Check if we are editing an existing kegiatan
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();
 
-    echo '<h1>' . ($editing ? 'View' : 'Tambah') . ' Notulen</h1>';
+    echo '<h1>' . ($editing ? 'View' : 'Tambah') . ' Kegiatan</h1>';
 
-    $notulen = null;
+    $kegiatan = null;
     if ($editing) {
         global $wpdb;
         $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-        $table_name = $wpdb->prefix . 'salammu_notulenmu';
-        $notulen = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $id AND user_id = $logged_user");
+        $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
+        $kegiatan = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $id AND user_id = $logged_user");
     }
     
-    if ($notulen && $notulen->image_path) {
+    if ($kegiatan && $kegiatan->image_path) {
         $upload_dir = wp_upload_dir();
-        $image_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $notulen->image_path);
-        echo '<img src="' . esc_url($image_path) . '" alt="Image for ' . esc_attr($notulen->topik_rapat) . '" style="width: 200px; height: auto;" />';
+        $image_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $kegiatan->image_path);
+        echo '<img src="' . esc_url($image_path) . '" alt="Image for ' . esc_attr($kegiatan->nama_kegiatan) . '" style="width: 200px; height: auto;" />';
     }
     
     // Form for adding or editing
     echo '<form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin-post.php')) . '">';
-    echo '<input type="hidden" name="form_name" value="notulenmu_add_form">';
+    echo '<input type="hidden" name="form_name" value="kegiatanmu_add_form">';
     echo '<input type="hidden" name="user_id" value="'. $logged_user. '">';
-    echo '<input type="hidden" name="action" value="handle_notulen_form">';
+    echo '<input type="hidden" name="action" value="handle_kegiatan_form">';
     echo '<table class="form-table">';
     echo '<tbody>';
     echo '<tr>';
     echo '<th scope="row"><label for="tingkat">Tingkat</label></th>';
     echo '<td>';
     echo '<select name="tingkat" id="tingkat">';
-    echo '<option value="wilayah"' . ($notulen && $notulen->tingkat == 'wilayah' ? ' selected' : '') . '>Pimpinan Wilayah</option>';
-    echo '<option value="daerah"' . ($notulen && $notulen->tingkat == 'daerah' ? ' selected' : '') . '>Pimpinan Daerah</option>';
-    echo '<option value="cabang"' . ($notulen && $notulen->tingkat == 'cabang' ? ' selected' : '') . '>Pimpinan Cabang</option>';
-    echo '<option value="ranting"' . ($notulen && $notulen->tingkat == 'ranting' ? ' selected' : '') . '>Pimpinan Ranting</option>';
+    echo '<option value="wilayah"' . ($kegiatan && $kegiatan->tingkat == 'wilayah' ? ' selected' : '') . '>Pimpinan Wilayah</option>';
+    echo '<option value="daerah"' . ($kegiatan && $kegiatan->tingkat == 'daerah' ? ' selected' : '') . '>Pimpinan Daerah</option>';
+    echo '<option value="cabang"' . ($kegiatan && $kegiatan->tingkat == 'cabang' ? ' selected' : '') . '>Pimpinan Cabang</option>';
+    echo '<option value="ranting"' . ($kegiatan && $kegiatan->tingkat == 'ranting' ? ' selected' : '') . '>Pimpinan Ranting</option>';
     echo '</select>';
     echo '</td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="topik_rapat">Topik Rapat</label></th>';
-    echo '<td><input name="topik_rapat" id="topik_rapat" type="text" value="' . ($notulen ? esc_attr($notulen->topik_rapat) : '') . '" class="regular-text" /></td>';
+    echo '<th scope="row"><label for="nama_kegiatan">Nama Kegiatan</label></th>';
+    echo '<td><input name="nama_kegiatan" id="nama_kegiatan" type="text" value="' . ($kegiatan ? esc_attr($kegiatan->nama_kegiatan) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="tanggal_rapat">Tanggal Rapat</label></th>';
-    echo '<td><input name="tanggal_rapat" id="tanggal_rapat" type="date" value="' . ($notulen ? esc_attr($notulen->tanggal_rapat) : '') . '" class="regular-text" /></td>';
+    echo '<th scope="row"><label for="tanggal_kegiatan">Tanggal Kegiatan</label></th>';
+    echo '<td><input name="tanggal_kegiatan" id="tanggal_kegiatan" type="date" value="' . ($kegiatan ? esc_attr($kegiatan->tanggal_kegiatan) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="tempat_rapat">Tempat Rapat</label></th>';
-    echo '<td><input name="tempat_rapat" id="tempat_rapat" type="text" value="' . ($notulen ? esc_attr($notulen->tempat_rapat) : '') . '" class="regular-text" /></td>';
+    echo '<th scope="row"><label for="tempat_kegiatan">Tempat Kegiatan</label></th>';
+    echo '<td><input name="tempat_kegiatan" id="tempat_kegiatan" type="text" value="' . ($kegiatan ? esc_attr($kegiatan->tempat_kegiatan) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="peserta_rapat">Jumlah Peserta Rapat</label></th>';
-    echo '<td><input name="peserta_rapat" id="peserta_rapat" type="text" value="' . ($notulen ? esc_attr($notulen->peserta_rapat) : '') . '" class="regular-text" /></td>';
+    echo '<th scope="row"><label for="peserta_kegiatan">Jumlah Peserta</label></th>';
+    echo '<td><input name="peserta_kegiatan" id="peserta_kegiatan" type="text" value="' . ($kegiatan ? esc_attr($kegiatan->peserta_kegiatan) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="image_upload">Foto Kegiatan</label></th>';
+    echo '<th scope="row"><label for="image_upload">Upload Image</label></th>';
     echo '<td><input name="image_upload" id="image_upload" type="file" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
-    echo '<th scope="row"><label for="notulen_rapat">Notulen Rapat</label></th>';
-    echo '<td><textarea name="notulen_rapat" id="notulen_rapat" rows="10" class="regular-text">' . ($notulen ? esc_textarea($notulen->notulen_rapat) : '') . '</textarea></td>';
+    echo '<th scope="row"><label for="detail_kegiatan">Detail Kegiatan</label></th>';
+    echo '<td><textarea name="detail_kegiatan" id="detail_kegiatan" rows="10" class="regular-text">' . ($kegiatan ? esc_textarea($kegiatan->detail_kegiatan) : '') . '</textarea></td>';
     echo '</tr>';
     echo '</tbody>';
     echo '</table>';
     if (!$editing) {
-        echo '<input type="submit" value="Simpan Notulen" class="button-primary">';
+        echo '<input type="submit" value="Upload Kegiatan" class="button-primary">';
     }
     echo '</form>';
 

@@ -11,15 +11,13 @@
  * Domain Path: /languages
  */
 
-// NotulenMu
 include plugin_dir_path(__FILE__) . 'submenu/list_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/setting_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/about_notulen.php';
-
-// KegiatanMu
-include plugin_dir_path(__FILE__) . 'submenu/list_kegiatan.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_kegiatan.php';
+include plugin_dir_path(__FILE__) . 'submenu/list_kegiatan.php';
+
 
 add_action('send_headers', 'add_cors_headers');
 
@@ -37,12 +35,11 @@ function notulenmu_menu() {
     add_menu_page('Tentang', 'NotulenMu', 'edit_posts', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
 
     // Add submenu pages
+    add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'edit_posts', 'notulenmu-settings', 'notulenmu_settings_page');
     add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'edit_posts', 'notulenmu-add', 'notulenmu_add_page');
     add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'edit_posts', 'notulenmu-list', 'notulenmu_list_page');
-    add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'edit_posts', 'notulenmu-settings', 'notulenmu_settings_page');
-
-    add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'edit_posts', 'kegiatanmu-add', 'kegiatanmu_add_page');
-    add_submenu_page('notulenmu', 'Daftar Kegiatan', 'Daftar Kegiatan', 'edit_posts', 'kegiatanmu-list', 'kegiatanmu_list_page');
+    add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'edit_posts', 'kegiatanmu-add', 'tambah_kegiatan_page');
+    add_submenu_page('notulenmu', 'List Kegiatan', 'List Kegiatan', 'edit_posts', 'kegiatanmu-list', 'kegiatanmu_list_page');
 }
 
 function ignore_on_login() {
@@ -103,33 +100,6 @@ function notulenmu_install() {
             pdm int NOT NULL,
             pcm int NOT NULL,
             prm int NOT NULL,
-            PRIMARY KEY  (id)
-        ) $charset_collate;";
-
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
-    }
-
-    $table_name_kegiatan = $wpdb->prefix . 'salammu_kegiatanmu';
-
-    $wpdb->query("DROP TABLE IF EXISTS $table_name_kegiatan");
-
-    // Check if the table already exists
-    if($wpdb->get_var("SHOW TABLES LIKE '$table_name_kegiatan'") != $table_name_kegiatan) {
-        // Table doesn't exist, so create it
-        $charset_collate = $wpdb->get_charset_collate();
-
-        $sql = "CREATE TABLE $table_name_kegiatan (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            user_id int NOT NULL,
-            id_tingkat int NOT NULL,
-            tingkat text NOT NULL,
-            nama_kegiatan text NOT NULL,
-            tanggal_kegiatan date DEFAULT '0000-00-00' NOT NULL,
-            tempat_kegiatan text NOT NULL,
-            peserta_kegiatan text NOT NULL,
-            detail_kegiatan text NOT NULL,
-            image_path text NOT NULL,
             PRIMARY KEY  (id)
         ) $charset_collate;";
 

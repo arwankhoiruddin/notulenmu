@@ -16,7 +16,7 @@ function kegiatanmu_list_page(){
     $sql .= " order by tingkat";
     $rows = $wpdb->get_results($sql);
 
-    echo "<h1>Daftar Kegiatan</h1>";
+    echo "<h1>List Kegiatan</h1>";
     // Create a dropdown for the filter
     echo "<select id='filter' onchange='if (this.value !== null) window.location.href=\"?page=kegiatanmu-list&filter=\"+this.value'>";
     echo "<option value=''>All</option>";
@@ -32,17 +32,17 @@ function kegiatanmu_list_page(){
     echo "<th><strong>Tingkat</strong></th>";
     echo "<th><strong>Nama Kegiatan</strong></th>";
     echo "<th><strong>Tanggal Kegiatan</strong></th>";
-    echo "<th><strong>Tempat</strong></th>";
-    echo "<th><strong>Detail Kegiatan</strong></th>";
+    echo "<th><strong>Tempat Kegiatan</strong></th>";
+    echo "<th><strong>Detail</strong></th>";
     echo "</tr>";
     echo "</thead>";
     echo "<tbody>";
     foreach ($rows as $row) {
         echo "<tr>";
         echo "<td>{$row->tingkat}</td>";
-        echo "<td>{$row->topik_rapat}</td>";
-        echo "<td>" . date('Y-m-d', strtotime($row->tanggal_rapat)) . "</td>";
-        echo "<td>{$row->tempat_rapat}</td>";
+        echo "<td>{$row->nama_kegiatan}</td>";
+        echo "<td>" . date('Y-m-d', strtotime($row->tanggal_kegiatan)) . "</td>";
+        echo "<td>{$row->tempat_kegiatan}</td>";
         echo "<td><a href='" . admin_url('admin.php?page=kegiatanmu-add&edit=true&id=' . $row->id) . "'>View Details</a></td>";
         echo "</tr>";
     }
