@@ -14,7 +14,7 @@ function get_user_role($user_id) {
 }
 
 function kegiatanmu_list_page(){
-    if (!get_user_role('contributoe')) {
+    if (!get_user_role('contributor')) {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
     global $wpdb;
