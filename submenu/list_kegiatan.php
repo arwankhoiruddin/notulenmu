@@ -14,11 +14,11 @@ function get_user_role($user_id) {
 }
 
 function kegiatanmu_list_page(){
-        if (get_user_role(get_current_user_id()) != 'contributor') {
+    $user_id = get_current_user_id();
+    if (get_user_role(get_current_user_id()) != 'contributor') {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
     global $wpdb;
-    $user_id = get_current_user_id();
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
 
     $filter = isset($_GET['filter']) ? $_GET['filter'] : '';

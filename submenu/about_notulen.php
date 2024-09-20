@@ -15,7 +15,7 @@ function get_user_role($user_id) {
 }
 
 function notulenmu_page(){
-        if (get_user_role(get_current_user_id()) != 'contributor') {
+    if (get_user_role(get_current_user_id()) != 'contributor') {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
     
