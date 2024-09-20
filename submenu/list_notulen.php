@@ -1,23 +1,14 @@
 <?php
-
-function get_user_role($user_id) {
-    // Get user data
-    $user = get_userdata($user_id);
-    
-    // Check if user data exists and has roles
-    if (!empty($user) && is_array($user->roles)) {
-        // Return the first role (primary role) of the user
-        return $user->roles[0];
-    }
-    
-    // Return null if no role is found
-    return null;
-}
-
 function notulenmu_list_page(){
-    if (get_user_role(get_current_user_id()) != 'contributor') {
+    $user_id = get_current_user_id();
+    $user = get_userdata($user_id);
+    if (!empty($user) && is_array($user->roles)) {
+        $role = $user->roles[0];
+    }
+    if ($role != 'contributor') {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
+    
     global $wpdb;
     $user_id = get_current_user_id();
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
