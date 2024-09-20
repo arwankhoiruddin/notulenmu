@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         wp_redirect(admin_url('admin.php?page=notulenmu-list'));
         exit;
     } else {
-        add_notice('error', 'There was an error adding the notulen.');
+        set_transient('notulenmu_admin_notice', 'There was an error adding the notulen.', 5);
     }
 
     add_action('admin_notices', 'notulenmu_admin_notices');
