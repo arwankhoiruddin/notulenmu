@@ -40,26 +40,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     }
     
     $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
-
-    echo "SELECT pwm FROM $setting_table_name WHERE user_id = '$user_id'";
+	
+	$query = $wpdb->prepare(
+        "SELECT pwm FROM $setting_table_name WHERE user_id = %d",
+        $user_id
+    );
 
     if ($tingkat == 'wilayah') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'daerah') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'cabang') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'ranting') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
+		$row = $wpdb->get_row($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
+		$tingkat_id = $row ? $row->pwm : null;
+	} else if ($tingkat == 'daerah') {
+		$row = $wpdb->get_row($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
+		$tingkat_id = $row ? $row->pdm : null;
+	} else if ($tingkat == 'cabang') {
+		$row = $wpdb->get_row($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
+		$tingkat_id = $row ? $row->pcm : null;
+	} else if ($tingkat == 'ranting') {
+		$row = $wpdb->get_row($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
+		$tingkat_id = $row ? $row->pcm : null;
     } else {
         return;
     }
-
-    if (empty($tingkat_id)) {
+	
+	if (is_null($tingkat_id)) {
+		echo "Bismillah";
+        if (!function_exists('wp_redirect')) {
+            require_once(ABSPATH . WPINC . '/pluggable.php');
+        }
         wp_redirect(admin_url('admin.php?page=notulenmu-settings'));
+		echo "null";
         exit;
     }
-    
+	
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
     // Insert the data into the table
     $result = $wpdb->insert(
@@ -87,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             '%s', // image_path
         )
     );
+	echo "Data inserted";
+	
     if ($result !== false) {
         set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
         if (!function_exists('wp_redirect')) {

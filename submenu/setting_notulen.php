@@ -72,6 +72,9 @@ function notulenmu_settings_page() {
     }
     ?>
     <h1>Notulenmu Settings</h1>
+	<h2>
+		Sebelum mengisi NotulenMu, silakan sesuaikan isian di bawah berdasarkan tempat kerja Anda	
+	</h2>
     <form method="POST" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
         <input type="hidden" name="form_name" value="notulenmu_setting_form">
         <input type="hidden" name="action" value="handle_notulenmu_form">
