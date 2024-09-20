@@ -135,17 +135,17 @@ function notulenmu_install() {
     }
 }
 
-function deactivate_plugin_name() {
-    global $wpdb;
+// function deactivate_plugin_name() {
+//     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'salammu_notulenmu';
-    $wpdb->query("DROP TABLE IF EXISTS $table_name");
+//     $table_name = $wpdb->prefix . 'salammu_notulenmu';
+//     $wpdb->query("DROP TABLE IF EXISTS $table_name");
 
-    $table_name_setting = $wpdb->prefix . 'salammu_notulenmu_setting';
-    $wpdb->query("DROP TABLE IF EXISTS $table_name_setting");
-}
+//     $table_name_setting = $wpdb->prefix . 'salammu_notulenmu_setting';
+//     $wpdb->query("DROP TABLE IF EXISTS $table_name_setting");
+// }
 
-register_deactivation_hook( __FILE__, 'deactivate_plugin_name' );
+// register_deactivation_hook( __FILE__, 'deactivate_plugin_name' );
 
 register_activation_hook(__FILE__, 'notulenmu_install');
 ?>
