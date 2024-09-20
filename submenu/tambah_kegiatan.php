@@ -54,7 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     } else {
         return;
     }
-    
+
+    if (empty($tingkat_id)) {
+        wp_redirect(admin_url('admin.php?page=notulenmu-settings'));
+        exit;
+    }
+
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
     // Insert the data into the table
     $result = $wpdb->insert(
