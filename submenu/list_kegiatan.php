@@ -5,7 +5,7 @@ function kegiatanmu_list_page(){
     if (!empty($user) && is_array($user->roles)) {
         $role = $user->roles[0];
     }
-    if ($role != 'contributor') {
+    if ($role != 'contributor' && $role != 'administrator') {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
     

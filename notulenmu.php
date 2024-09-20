@@ -32,14 +32,26 @@ function notulenmu_menu() {
     if ($pagenow === 'wp-login.php') {
         return;
     }
-    add_menu_page('Tentang', 'NotulenMu', 'read', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
 
-    // Add submenu pages
-    add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'read', 'notulenmu-settings', 'notulenmu_settings_page');
-    add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'read', 'notulenmu-add', 'notulenmu_add_page');
-    add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
-    add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
-    add_submenu_page('notulenmu', 'List Kegiatan', 'List Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
+    // Add NotulenMu menu for contributors and administrators
+    if (current_user_can('read') || current_user_can('manage_options')) {
+        add_menu_page('NotulenMu', 'NotulenMu', 'read', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
+
+        // Add submenu pages
+        add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'read', 'notulenmu-settings', 'notulenmu_settings_page');
+        add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'read', 'notulenmu-add', 'notulenmu_add_page');
+        add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
+        add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
+        add_submenu_page('notulenmu', 'List Kegiatan', 'List Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
+    }
+    // add_menu_page('Tentang', 'NotulenMu', 'read', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
+
+    // // Add submenu pages
+    // add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'read', 'notulenmu-settings', 'notulenmu_settings_page');
+    // add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'read', 'notulenmu-add', 'notulenmu_add_page');
+    // add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
+    // add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
+    // add_submenu_page('notulenmu', 'List Kegiatan', 'List Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
 }
 
 function ignore_on_login() {
