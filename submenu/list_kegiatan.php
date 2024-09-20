@@ -1,6 +1,20 @@
 <?php
+function get_user_role($user_id) {
+    // Get user data
+    $user = get_userdata($user_id);
+    
+    // Check if user data exists and has roles
+    if (!empty($user) && is_array($user->roles)) {
+        // Return the first role (primary role) of the user
+        return $user->roles[0];
+    }
+    
+    // Return null if no role is found
+    return null;
+}
+
 function kegiatanmu_list_page(){
-    if (!current_user_can('edit_posts')) {
+    if (!get_user_role('contributoe')) {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
     global $wpdb;
