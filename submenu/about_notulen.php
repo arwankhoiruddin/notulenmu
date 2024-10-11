@@ -14,6 +14,7 @@ function notulenmu_page(){
     echo "<p>Plugin ini dikembangkan oleh <a href='https://mandatech.co.id'>Arwan Ahmad Khoiruddin</a></p>";
     echo "<p>Persembahan dari LPCRPM Pimpinan Pusat Muhammadiyah</p>";
 
+    global $wpdb;
     // Fetch data from the database
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
     $results = $wpdb->get_results("SELECT id_tingkat FROM $table_name");
