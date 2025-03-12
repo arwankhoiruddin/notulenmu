@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: NotulenMu
  * Description: NotulenMu Lembaga Pengembangan Cabang Ranting dan Pembinaan Masjid 
@@ -17,15 +18,21 @@ include plugin_dir_path(__FILE__) . 'submenu/setting_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/about_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_kegiatan.php';
 include plugin_dir_path(__FILE__) . 'submenu/list_kegiatan.php';
+include plugin_dir_path(__FILE__) . 'submenu/data_pengurus.php';
+include plugin_dir_path(__FILE__) . 'includes/styles.php';
 
 
 add_action('send_headers', 'add_cors_headers');
+add_filter('admin_footer_text', '__return_empty_string');
+add_filter('update_footer', '__return_empty_string', 9999);
 
-function add_cors_headers() {
-    header("Access-Control-Allow-Origin: *"); 
+function add_cors_headers()
+{
+    header("Access-Control-Allow-Origin: *");
 }
 
-function notulenmu_menu() {    
+function notulenmu_menu()
+{
     global $pagenow;
 
     // If we're on the login page, return early
@@ -35,7 +42,7 @@ function notulenmu_menu() {
 
     // Add NotulenMu menu for contributors and administrators
     if (current_user_can('read') || current_user_can('manage_options')) {
-        add_menu_page('NotulenMu', 'NotulenMu', 'read', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page' );
+        add_menu_page('NotulenMu', 'NotulenMu', 'read', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page');
 
         // Add submenu pages
         add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'read', 'notulenmu-settings', 'notulenmu_settings_page');
@@ -43,10 +50,12 @@ function notulenmu_menu() {
         add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
         add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
         add_submenu_page('notulenmu', 'List Kegiatan', 'List Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
+        add_submenu_page('notulenmu', 'Data Pengurus', 'Data Pengurus', 'read', 'data-pengurus', 'data_pengurus_page');
     }
 }
 
-function ignore_on_login() {
+function ignore_on_login()
+{
     global $pagenow;
 
     // Don't run on the login page
@@ -58,15 +67,16 @@ function ignore_on_login() {
 add_action('admin_menu', 'notulenmu_menu');
 add_action('wp_loaded', 'ignore_on_login');
 
-function notulenmu_install() {
+function notulenmu_install()
+{
     global $wpdb;
 
     $notulen_table_name = $wpdb->prefix . 'salammu_notulenmu';
 
-    $wpdb->query("DROP TABLE IF EXISTS $table_name");
+    $wpdb->query("DROP TABLE IF EXISTS $notulen_table_name");
 
     // Check if the table already exists
-    if($wpdb->get_var("SHOW TABLES LIKE '$notulen_table_name'") != $notulen_table_name) {
+    if ($wpdb->get_var("SHOW TABLES LIKE '$notulen_table_name'") != $notulen_table_name) {
         // Table doesn't exist, so create it
         $charset_collate = $wpdb->get_charset_collate();
 
@@ -77,10 +87,15 @@ function notulenmu_install() {
             tingkat text NOT NULL,
             topik_rapat text NOT NULL,
             tanggal_rapat date DEFAULT '0000-00-00' NOT NULL,
+            jam_mulai time NOT NULL,
+            jam_selesai time NOT NULL,
             tempat_rapat text NOT NULL,
             peserta_rapat text NOT NULL,
+            peserta_hadir text NOT NULL,
             notulen_rapat text NOT NULL,
             image_path text NOT NULL,
+            lampiran text NOT NULL,
+
             PRIMARY KEY  (id)
         ) $charset_collate;";
 
@@ -93,7 +108,7 @@ function notulenmu_install() {
     $wpdb->query("DROP TABLE IF EXISTS $kegiatan_table_name");
 
     // Check if the table already exists
-    if($wpdb->get_var("SHOW TABLES LIKE '$kegiatan_table_name'") != $kegiatan_table_name) {
+    if ($wpdb->get_var("SHOW TABLES LIKE '$kegiatan_table_name'") != $kegiatan_table_name) {
         // Table doesn't exist, so create it
         $charset_collate = $wpdb->get_charset_collate();
 
@@ -120,7 +135,7 @@ function notulenmu_install() {
     $wpdb->query("DROP TABLE IF EXISTS $table_name_setting");
 
     // Check if the setting table already exists
-    if($wpdb->get_var("SHOW TABLES LIKE '$table_name_setting'") != $table_name_setting) {
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_name_setting'") != $table_name_setting) {
         // Table doesn't exist, so create it
         $charset_collate = $wpdb->get_charset_collate();
 
@@ -149,7 +164,8 @@ function notulenmu_install() {
 //     $wpdb->query("DROP TABLE IF EXISTS $table_name_setting");
 // }
 
-// register_deactivation_hook( __FILE__, 'deactivate_plugin_name' );
+// register_deactivation_hook( _FILE_, 'deactivate_plugin_name' );
 
 register_activation_hook(__FILE__, 'notulenmu_install');
-?>
+add_filter('admin_footer_text', '__return_empty_string');
+add_filter('update_footer', '__return_empty_string', 9999);
