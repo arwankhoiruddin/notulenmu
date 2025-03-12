@@ -168,6 +168,7 @@ function notulenmu_add_page()
         $table_name = $wpdb->prefix . 'salammu_notulenmu';
         $notulen = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $id AND user_id = $logged_user");
     }
+    
     $selected_peserta = $notulen ? json_decode($notulen->peserta_rapat, true) : [];
 
     if ($notulen && $notulen->image_path) {
@@ -316,6 +317,7 @@ function notulenmu_add_page()
 function get_pengurus_by_tingkat()
 {
     global $wpdb;
+    $user_id = get_current_user_id();
     $tingkat = $_GET['tingkat'] ?? '';
 
     if (!$tingkat) {
@@ -323,10 +325,40 @@ function get_pengurus_by_tingkat()
         wp_die();
     }
 
-    $selected_peserta = isset($_POST['peserta_rapat']) ? $_POST['peserta_rapat'] : [];
+    // Ambil pengaturan wilayah user
+    $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
+    $settings = $wpdb->get_row($wpdb->prepare(
+        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+        $user_id
+    ), ARRAY_A);
 
+    if (!$settings) {
+        echo "<p>Pengaturan wilayah tidak ditemukan.</p>";
+        wp_die();
+    }
+
+    $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+
+    if (empty($id_tingkat_list)) {
+        echo "<p>Tidak ada data pengurus yang tersedia.</p>";
+        wp_die();
+    }
+
+    // Query ke data_pengurus
     $pengurus_table = $wpdb->prefix . 'data_pengurus';
-    $pengurus = $wpdb->get_results($wpdb->prepare("SELECT id, nama_lengkap_gelar, tingkat, jabatan FROM $pengurus_table WHERE tingkat = %s", $tingkat));
+    $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%d'));
+
+    $query = "SELECT id, nama_lengkap_gelar, tingkat, jabatan 
+              FROM $pengurus_table 
+              WHERE tingkat = %s AND id_tingkat IN ($placeholders)";
+
+    $query = $wpdb->prepare($query, array_merge([$tingkat], $id_tingkat_list));
+    $pengurus = $wpdb->get_results($query);
+    // echo "<pre>";
+    // print_r($pengurus);
+    // echo "</pre>";
+
+    // error_log("Pengurus ditemukan: " . print_r($pengurus, true));
 
     if (!empty($pengurus)) {
         echo '<table style="border-collapse: collapse; width: 100%;" border="1" cellpadding="5">';
@@ -339,7 +371,13 @@ function get_pengurus_by_tingkat()
         echo '</tr>';
 
         $no = 1;
+        $selected_peserta = isset($selected_peserta) ? $selected_peserta : [];
+
         foreach ($pengurus as $p) {
+            if (!isset($p->nama_lengkap_gelar)) {
+                continue; // Jika data tidak valid, skip ke berikutnya
+            }
+
             $checked = in_array($p->nama_lengkap_gelar, $selected_peserta) ? 'checked' : '';
             echo '<tr>';
             echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">' . esc_html($no) . '</td>';
@@ -354,7 +392,7 @@ function get_pengurus_by_tingkat()
         }
         echo '</table>';
     } else {
-        echo "<p>Tidak ada pengurus pada tingkat ini.</p>";
+        echo "<p style='color: red;'>Tidak ada pengurus pada tingkat ini.</p>";
     }
 
     wp_die();
