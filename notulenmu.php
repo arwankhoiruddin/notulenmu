@@ -73,8 +73,6 @@ function notulenmu_install()
 
     $notulen_table_name = $wpdb->prefix . 'salammu_notulenmu';
 
-    // $wpdb->query("DROP TABLE IF EXISTS $notulen_table_name");
-
     // Check if the table already exists
     if ($wpdb->get_var("SHOW TABLES LIKE '$notulen_table_name'") != $notulen_table_name) {
         // Table doesn't exist, so create it
@@ -105,8 +103,6 @@ function notulenmu_install()
 
     $kegiatan_table_name = $wpdb->prefix . 'salammu_kegiatanmu';
 
-    // $wpdb->query("DROP TABLE IF EXISTS $kegiatan_table_name");
-
     // Check if the table already exists
     if ($wpdb->get_var("SHOW TABLES LIKE '$kegiatan_table_name'") != $kegiatan_table_name) {
         // Table doesn't exist, so create it
@@ -132,8 +128,6 @@ function notulenmu_install()
 
     $table_name_setting = $wpdb->prefix . 'salammu_notulenmu_setting';
 
-    // $wpdb->query("DROP TABLE IF EXISTS $table_name_setting");
-
     // Check if the setting table already exists
     if ($wpdb->get_var("SHOW TABLES LIKE '$table_name_setting'") != $table_name_setting) {
         // Table doesn't exist, so create it
@@ -152,19 +146,27 @@ function notulenmu_install()
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
     }
+
+    $table_pengurus = $wpdb->prefix . 'salamu_data_pengurus';
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_pengurus'") != $table_pengurus) {
+        // Table doesn't exist, so create it
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name_setting (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            user_id mediumint(9) NOT NULL,
+            tingkat int NOT NULL,
+            id_tingkat int NOT NULL,
+            nama_lengkap_gelar VARCHAR(40) NOT NULL,
+            jabatan VARCHAR(30) NOT NULL,
+            no_hp VARCHAR(20) NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
 }
-
-// function deactivate_plugin_name() {
-//     global $wpdb;
-
-//     $table_name = $wpdb->prefix . 'salammu_notulenmu';
-//     $wpdb->query("DROP TABLE IF EXISTS $table_name");
-
-//     $table_name_setting = $wpdb->prefix . 'salammu_notulenmu_setting';
-//     $wpdb->query("DROP TABLE IF EXISTS $table_name_setting");
-// }
-
-// register_deactivation_hook( _FILE_, 'deactivate_plugin_name' );
 
 register_activation_hook(__FILE__, 'notulenmu_install');
 add_filter('admin_footer_text', '__return_empty_string');
