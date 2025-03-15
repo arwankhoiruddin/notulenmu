@@ -147,7 +147,7 @@ function notulenmu_install()
         dbDelta($sql);
     }
 
-    $table_pengurus = $wpdb->prefix . 'salamu_data_pengurus';
+    $table_pengurus = $wpdb->prefix . 'salammu_data_pengurus';
     if ($wpdb->get_var("SHOW TABLES LIKE '$table_pengurus'") != $table_pengurus) {
         // Table doesn't exist, so create it
         $charset_collate = $wpdb->get_charset_collate();
