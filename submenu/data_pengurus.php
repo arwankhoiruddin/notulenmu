@@ -2,7 +2,7 @@
 global $wpdb;
 
 // Definisi tabel data pengurus
-define('DATA_PENGURUS_TABLE', $wpdb->prefix . 'data_pengurus');
+define('DATA_PENGURUS_TABLE', $wpdb->prefix . 'salammu_data_pengurus');
 
 function data_pengurus_page()
 {
@@ -154,7 +154,7 @@ function tampilkan_tabel_pengurus()
 
     $user_id = get_current_user_id();
     $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
-    $pengurus_table = $wpdb->prefix . 'data_pengurus';
+    $pengurus_table = $wpdb->prefix . 'salammu_data_pengurus';
 
     // Ambil data pengaturan tingkat untuk user saat ini
     $settings = $wpdb->get_row($wpdb->prepare("SELECT * FROM $setting_table WHERE user_id = %d", $user_id), ARRAY_A);
