@@ -152,7 +152,7 @@ function notulenmu_install()
         // Table doesn't exist, so create it
         $charset_collate = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE $table_name_setting (
+        $sql = "CREATE TABLE $table_pengurus (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             user_id mediumint(9) NOT NULL,
             tingkat int NOT NULL,
