@@ -13,12 +13,12 @@
  */
 
 include plugin_dir_path(__FILE__) . 'submenu/list_notulen.php';
+include plugin_dir_path(__FILE__) . 'submenu/tambah_pengurus.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/setting_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/about_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_kegiatan.php';
 include plugin_dir_path(__FILE__) . 'submenu/list_kegiatan.php';
-include plugin_dir_path(__FILE__) . 'submenu/data_pengurus.php';
 include plugin_dir_path(__FILE__) . 'includes/styles.php';
 
 
@@ -46,7 +46,7 @@ function notulenmu_menu()
 
         // Add submenu pages
         add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'read', 'notulenmu-settings', 'notulenmu_settings_page');
-        add_submenu_page('notulenmu', 'Data Pengurus', 'Data Pengurus', 'read', 'data-pengurus', 'data_pengurus_page');
+        add_submenu_page('notulenmu', 'Data Pengurus', 'Data Pengurus', 'read', 'pengurus-add', 'pengurus_add_page');
         add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'read', 'notulenmu-add', 'notulenmu_add_page');
         add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
         add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
