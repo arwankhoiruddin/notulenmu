@@ -193,10 +193,11 @@ function pengurus_add_page()
         document.getElementById('tingkat').addEventListener('change', function() {
             let tingkat = this.value;
             let pengurusList = document.getElementById('pengurus-list');
+            console.log(tingkat);
 
             pengurusList.innerHTML = "<p>Loading...</p>";
 
-            fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_pengurus_by_tingkat&tingkat=' + tingkat)
+            fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_data_pengurus&tingkat=' + tingkat)
                 .then(response => response.text())
                 .then(data => {
                     pengurusList.innerHTML = data;
@@ -210,7 +211,7 @@ function pengurus_add_page()
 }
 
 
-function get_pengurus_by_tingkat()
+function get_data_pengurus()
 {
     global $wpdb;
     $user_id = get_current_user_id();
@@ -282,6 +283,6 @@ function get_pengurus_by_tingkat()
     wp_die();
 }
 
-add_action('wp_ajax_get_pengurus_by_tingkat', 'get_pengurus_by_tingkat');
-add_action('wp_ajax_nopriv_get_pengurus_by_tingkat', 'get_pengurus_by_tingkat');
+add_action('wp_ajax_get_data_pengurus', 'get_data_pengurus');
+add_action('wp_ajax_nopriv_get_data_pengurus', 'get_data_pengurus');
 ?>
