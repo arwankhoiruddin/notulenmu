@@ -277,6 +277,7 @@ function get_data_pengurus()
     $pengurus = $wpdb->get_results($query);
 
     if (!empty($pengurus)) {
+        echo '<p>';
         echo '<table style="border-collapse: collapse; width: 100%;" border="1" cellpadding="5">';
         echo '<tr style="background-color: #f2f2f2; text-align: left;">';
         echo '<th style="border: 1px solid black; padding: 8px; width: 10px; text-align: center;">No</th>';
