@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     $nama_lengkap = isset($_POST['nama_lengkap']) ? $_POST['nama_lengkap'] : null;
     $jabatan = isset($_POST['jabatan']) ? $_POST['jabatan'] : null;
     $no_np = isset($_POST['no_hp']) ? $_POST['no_hp'] : null;
+    $edit_id = isset($_POST['edit_id']) ? intval($_POST['edit_id']) : null;
 
     $table_name = $wpdb->prefix . 'salammu_data_pengurus';
 
@@ -50,46 +51,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         exit;
     }
 
-    $user_id = isset($_POST['user_id']) ? $_POST['user_id'] : null;
-    $tingkat = isset($_POST['tingkat']) ? $_POST['tingkat'] : null;
-    $id_tingkat = isset($_POST['id_tingkat']) ? $_POST['id_tingkat'] : null;
-    $nama_lengkap = isset($_POST['nama_lengkap']) ? $_POST['nama_lengkap'] : null;
-    $jabatan = isset($_POST['jabatan']) ? $_POST['jabatan'] : null;
-    $no_np = isset($_POST['no_hp']) ? $_POST['no_hp'] : null;
+    if ($edit_id) {
+        $result = $wpdb->update(
+            $table_name,
+            array(
+                'user_id' => $user_id,
+                'tingkat' => $tingkat,
+                'id_tingkat' => $tingkat_id,
+                'nama_lengkap_gelar' => $nama_lengkap,
+                'jabatan' => $jabatan,
+                'no_hp' => $no_np,
+            ),
+            array('id' => $edit_id),
+            array(
+                '%d',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+            ),
+            array('%d')
+        );
+    } else {
+        $result = $wpdb->insert(
+            $table_name,
+            array(
+                'user_id' => $user_id,
+                'tingkat' => $tingkat,
+                'id_tingkat' => $tingkat_id,
+                'nama_lengkap_gelar' => $nama_lengkap,
+                'jabatan' => $jabatan,
+                'no_hp' => $no_np,
+            ),
+            array(
+                '%d',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+            )
+        );
+    }
 
-    $result = $wpdb->insert(
-        $table_name, // Table name
-        array( // Data
-            'user_id' => $user_id,
-            'tingkat' => $tingkat,
-            'id_tingkat' => $tingkat_id,
-            'nama_lengkap' => $nama_lengkap,
-            'jabatan' => $jabatan,
-            'no_hp' => $no_np,
-        ),
-        array( // Data format
-            '%d', // user_id
-            '%s', // tingkat
-            '%s', // tingkat_id
-            '%s', // nama_lengkap
-            '%s', // jabatan
-            '%s', // no_hp
-        )
-    );
     if ($result === false) {
         echo "Error in SQL: " . $wpdb->last_error;
         exit;
     }
 
     if ($result !== false) {
-        set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
+        set_transient('notulenmu_admin_notice', 'The notulen was successfully ' . ($edit_id ? 'updated' : 'added') . '.', 5);
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
-        wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+        wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat=' . $tingkat));
         exit;
     } else {
-        set_transient('notulenmu_admin_notice', 'There was an error adding the notulen.', 5);
+        set_transient('notulenmu_admin_notice', 'There was an error ' . ($edit_id ? 'updating' : 'adding') . ' the notulen.', 5);
     }
 
     add_action('admin_notices', 'notulenmu_admin_notices');
@@ -108,30 +127,28 @@ function pengurus_add_page()
         wp_die(('You do not have sufficient permissions to access this page.'));
     }
 
+    $tingkat = isset($_GET['tingkat']) ? $_GET['tingkat'] : '';
+
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();
 
-    echo '<h1>' . ($editing ? 'View' : 'Tambah') . ' Notulen</h1>';
+    echo '<h1>' . ($editing ? 'Edit' : 'Tambah') . ' Pengurus</h1>';
 
-    $notulen = null;
+    $pengurus = null;
     if ($editing) {
         global $wpdb;
         $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-        $table_name = $wpdb->prefix . 'salammu_notulenmu';
-        $notulen = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $id AND user_id = $logged_user");
-    }
-    
-    $selected_peserta = $notulen ? json_decode($notulen->peserta_rapat, true) : [];
-
-    if ($notulen && $notulen->image_path) {
-        $upload_dir = wp_upload_dir();
-        $image_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $notulen->image_path);
+        $table_name = $wpdb->prefix . 'salammu_data_pengurus';
+        $pengurus = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d AND user_id = %d", $id, $logged_user));
     }
 
     // Form for adding or editing
     echo '<form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin-post.php')) . '">';
     echo '<input type="hidden" name="form_name" value="pengurus_add_form">';
     echo '<input type="hidden" name="user_id" value="' . $logged_user . '">';
+    if ($editing) {
+        echo '<input type="hidden" name="edit_id" value="' . $pengurus->id . '">';
+    }
     echo '<input type="hidden" name="action" value="handle_notulen_form">';
     echo '<table class="form-table">';
     echo '<tbody>';
@@ -140,30 +157,28 @@ function pengurus_add_page()
     echo '<td>';
     echo '<select name="tingkat" id="tingkat">';
     echo '<option>Pilih Tingkat</option>';
-    echo '<option value="wilayah"' . ($notulen && $notulen->tingkat == 'wilayah' ? ' selected' : '') . '>Pimpinan Wilayah</option>';
-    echo '<option value="daerah"' . ($notulen && $notulen->tingkat == 'daerah' ? ' selected' : '') . '>Pimpinan Daerah</option>';
-    echo '<option value="cabang"' . ($notulen && $notulen->tingkat == 'cabang' ? ' selected' : '') . '>Pimpinan Cabang</option>';
-    echo '<option value="ranting"' . ($notulen && $notulen->tingkat == 'ranting' ? ' selected' : '') . '>Pimpinan Ranting</option>';
+    echo '<option value="wilayah"' . (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat == 'wilayah' ? ' selected' : '') . '>Pimpinan Wilayah</option>';
+    echo '<option value="daerah"' . (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat == 'daerah' ? ' selected' : '') . '>Pimpinan Daerah</option>';
+    echo '<option value="cabang"' . (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat == 'cabang' ? ' selected' : '') . '>Pimpinan Cabang</option>';
+    echo '<option value="ranting"' . (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat == 'ranting' ? ' selected' : '') . '>Pimpinan Ranting</option>';
     echo '</select>';
     echo '</td>';
     echo '</tr>';
     echo '<tr>';
     echo '<th scope="row"><label for="nama_lengkap">Nama Lengkap</label></th>';
-    echo '<td><input name="nama_lengkap" id="nama_lengkap" type="text" value="' . ($notulen ? esc_attr($notulen->nama_lengkap) : '') . '" class="regular-text" /></td>';
+    echo '<td><input name="nama_lengkap" id="nama_lengkap" type="text" value="' . ($pengurus ? esc_attr($pengurus->nama_lengkap_gelar) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
     echo '<th scope="row"><label for="jabatan">Jabatan</label></th>';
-    echo '<td><input name="jabatan" id="jabatan" type="text" value="' . ($notulen ? esc_attr($notulen->jabatan) : '') . '" class="regular-text" /></td>';
+    echo '<td><input name="jabatan" id="jabatan" type="text" value="' . ($pengurus ? esc_attr($pengurus->jabatan) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '<tr>';
     echo '<th scope="row"><label for="no_hp">Nomer HP</label></th>';
-    echo '<td><input name="no_hp" id="no_hp" type="text" value="' . ($notulen ? esc_attr($notulen->no_hp) : '') . '" class="regular-text" /></td>';
+    echo '<td><input name="no_hp" id="no_hp" type="text" value="' . ($pengurus ? esc_attr($pengurus->no_hp) : '') . '" class="regular-text" /></td>';
     echo '</tr>';
     echo '</tbody>';
     echo '</table>';
-    if (!$editing) {
-        echo '<input type="submit" value="Simpan Pengurus" class="bg-[#007bff] hover:bg-[#0069d9] p-1.5 text-white rounded-sm">';
-    }
+    echo '<input type="submit" value="' . ($editing ? 'Update' : 'Simpan') . ' Pengurus" class="bg-[#007bff] hover:bg-[#0069d9] p-1.5 text-white rounded-sm">';
     echo '</form>';
     echo '<div id="pengurus-list"><p>Pilih tingkat untuk melihat daftar Pengurus</p></div>';
 ?>
@@ -205,6 +220,15 @@ function pengurus_add_page()
                 .catch(error => {
                     pengurusList.innerHTML = "<p>Error loading data.</p>";
                 });
+        });
+
+        // If tingkat is not empty, trigger change event to load the table
+        document.addEventListener('DOMContentLoaded', function() {
+            let tingkat = '<?php echo $tingkat; ?>';
+            if (tingkat) {
+                document.getElementById('tingkat').value = tingkat;
+                document.getElementById('tingkat').dispatchEvent(new Event('change'));
+            }
         });
     </script>
 <?php
@@ -258,6 +282,7 @@ function get_data_pengurus()
         echo '<th style="border: 1px solid black; padding: 8px; width: 10px; text-align: center;">No</th>';
         echo '<th style="border: 1px solid black; padding: 8px; text-align: center;">Nama</th>';
         echo '<th style="border: 1px solid black; padding: 8px; text-align: center;">Jabatan</th>';
+        echo '<th style="border: 1px solid black; padding: 8px; text-align: center;">Action</th>';
         echo '</tr>';
 
         $no = 1;
@@ -272,6 +297,10 @@ function get_data_pengurus()
             echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">' . esc_html($no) . '</td>';
             echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->nama_lengkap_gelar) . '</td>';
             echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->jabatan) . '</td>';
+            echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">';
+            echo '<a href="' . admin_url('admin.php?page=pengurus-add&edit=1&id=' . $p->id) . '" class="button">Edit</a> ';
+            echo '<a href="' . admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat=' . $tingkat) . '" class="button" onclick="return confirm(\'Are you sure you want to delete this item?\');">Delete</a>';
+            echo '</td>';
             echo '</tr>';
             $no++;
         }
@@ -285,4 +314,29 @@ function get_data_pengurus()
 
 add_action('wp_ajax_get_data_pengurus', 'get_data_pengurus');
 add_action('wp_ajax_nopriv_get_data_pengurus', 'get_data_pengurus');
+
+function handle_delete_pengurus() {
+    if (!isset($_GET['id']) || !isset($_GET['tingkat'])) {
+        wp_die('Invalid request.');
+    }
+
+    $id = intval($_GET['id']);
+    $tingkat = sanitize_text_field($_GET['tingkat']);
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'salammu_data_pengurus';
+
+    $result = $wpdb->delete($table_name, array('id' => $id), array('%d'));
+
+    if ($result === false) {
+        wp_die('Error deleting record: ' . $wpdb->last_error);
+    }
+
+    if (!function_exists('wp_redirect')) {
+        require_once(ABSPATH . WPINC . '/pluggable.php');
+    }
+    wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat=' . $tingkat));
+    exit;
+}
+
+add_action('admin_post_delete_pengurus', 'handle_delete_pengurus');
 ?>
