@@ -132,7 +132,7 @@ function pengurus_add_page()
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();
 
-    echo '<h1>' . ($editing ? 'Edit' : 'Tambah') . ' Pengurus</h1>';
+    echo '<h1 class="px-6">' . ($editing ? 'Edit' : 'Tambah') . ' Pengurus</h1>';
 
     $pengurus = null;
     if ($editing) {
@@ -142,46 +142,51 @@ function pengurus_add_page()
         $pengurus = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d AND user_id = %d", $id, $logged_user));
     }
 
-    // Form for adding or editing
-    echo '<form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin-post.php')) . '">';
-    echo '<input type="hidden" name="form_name" value="pengurus_add_form">';
-    echo '<input type="hidden" name="user_id" value="' . $logged_user . '">';
-    if ($editing) {
-        echo '<input type="hidden" name="edit_id" value="' . $pengurus->id . '">';
-    }
-    echo '<input type="hidden" name="action" value="handle_notulen_form">';
-    echo '<table class="form-table">';
-    echo '<tbody>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="tingkat">Tingkat</label></th>';
-    echo '<td>';
-    echo '<select name="tingkat" id="tingkat">';
-    echo '<option>Pilih Tingkat</option>';
-    echo '<option value="wilayah"' . (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat == 'wilayah' ? ' selected' : '') . '>Pimpinan Wilayah</option>';
-    echo '<option value="daerah"' . (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat == 'daerah' ? ' selected' : '') . '>Pimpinan Daerah</option>';
-    echo '<option value="cabang"' . (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat == 'cabang' ? ' selected' : '') . '>Pimpinan Cabang</option>';
-    echo '<option value="ranting"' . (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat == 'ranting' ? ' selected' : '') . '>Pimpinan Ranting</option>';
-    echo '</select>';
-    echo '</td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="nama_lengkap">Nama Lengkap</label></th>';
-    echo '<td><input name="nama_lengkap" id="nama_lengkap" type="text" value="' . ($pengurus ? esc_attr($pengurus->nama_lengkap_gelar) : '') . '" class="regular-text" /></td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="jabatan">Jabatan</label></th>';
-    echo '<td><input name="jabatan" id="jabatan" type="text" value="' . ($pengurus ? esc_attr($pengurus->jabatan) : '') . '" class="regular-text" /></td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="no_hp">Nomer HP</label></th>';
-    echo '<td><input name="no_hp" id="no_hp" type="text" value="' . ($pengurus ? esc_attr($pengurus->no_hp) : '') . '" class="regular-text" /></td>';
-    echo '</tr>';
-    echo '</tbody>';
-    echo '</table>';
-    echo '<input type="submit" value="' . ($editing ? 'Update' : 'Simpan') . ' Pengurus" class="bg-[#007bff] hover:bg-[#0069d9] p-1.5 text-white rounded-sm">';
-    echo '</form>';
-    echo '<div id="pengurus-list"><p>Pilih tingkat untuk melihat daftar Pengurus</p></div>';
 ?>
+    <div class="px-6">
+        <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="bg-white p-6 mr-6 rounded-lg shadow-md">
+            <input type="hidden" name="form_name" value="pengurus_add_form">
+            <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
+            <?php if ($editing) : ?>
+                <input type="hidden" name="edit_id" value="<?php echo $pengurus->id; ?>">
+            <?php endif; ?>
+            <input type="hidden" name="action" value="handle_notulen_form">
+
+            <div class="mb-4 space-y-3">
+                <label for="tingkat" class="block text-gray-700 font-medium">Tingkat</label>
+                <select name="tingkat" id="tingkat" class="w-full mt-1 p-2 border rounded-md" style="min-width: 100%;">
+                    <option>Pilih Tingkat</option>
+                    <option value="wilayah" <?php echo (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat == 'wilayah') ? 'selected' : ''; ?>>Pimpinan Wilayah</option>
+                    <option value="daerah" <?php echo (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat == 'daerah') ? 'selected' : ''; ?>>Pimpinan Daerah</option>
+                    <option value="cabang" <?php echo (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat == 'cabang') ? 'selected' : ''; ?>>Pimpinan Cabang</option>
+                    <option value="ranting" <?php echo (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat == 'ranting') ? 'selected' : ''; ?>>Pimpinan Ranting</option>
+                </select>
+            </div>
+
+            <div class="mb-4 space-y-3">
+                <label for="nama_lengkap" class="block text-gray-700 font-medium">Nama Lengkap</label>
+                <input name="nama_lengkap" id="nama_lengkap" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->nama_lengkap_gelar) : ''; ?>" class="w-full mt-1 p-2 border rounded-md" />
+            </div>
+
+            <div class="mb-4 space-y-3">
+                <label for="jabatan" class="block text-gray-700 font-medium">Jabatan</label>
+                <input name="jabatan" id="jabatan" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->jabatan) : ''; ?>" class="w-full mt-1 p-2 border rounded-md" />
+            </div>
+
+            <div class="mb-4 space-y-3">
+                <label for="no_hp" class="block text-gray-700 font-medium">Nomor HP</label>
+                <input name="no_hp" id="no_hp" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->no_hp) : ''; ?>" class="w-full mt-1 p-2 border rounded-md" />
+            </div>
+
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-medium">
+                <?php echo $editing ? 'Update' : 'Simpan'; ?> Pengurus
+            </button>
+        </form>
+
+        <div id="pengurus-list" class="mt-4 text-gray-700 text-center  rounded-md">
+            <p>Pilih tingkat untuk melihat daftar Pengurus</p>
+        </div>
+    </div>
     <script>
         function previewImage(event) {
             const file = event.target.files[0];
@@ -231,7 +236,7 @@ function pengurus_add_page()
             }
         });
     </script>
-<?php
+    <?php
 }
 
 
@@ -276,39 +281,51 @@ function get_data_pengurus()
     $query = $wpdb->prepare($query, array_merge([$tingkat], $id_tingkat_list));
     $pengurus = $wpdb->get_results($query);
 
-    if (!empty($pengurus)) {
-        echo '<p>';
-        echo '<table style="border-collapse: collapse; width: 100%;" border="1" cellpadding="5">';
-        echo '<tr style="background-color: #f2f2f2; text-align: left;">';
-        echo '<th style="border: 1px solid black; padding: 8px; width: 10px; text-align: center;">No</th>';
-        echo '<th style="border: 1px solid black; padding: 8px; text-align: center;">Nama</th>';
-        echo '<th style="border: 1px solid black; padding: 8px; text-align: center;">Jabatan</th>';
-        echo '<th style="border: 1px solid black; padding: 8px; text-align: center;">Action</th>';
-        echo '</tr>';
-
-        $no = 1;
-        $selected_peserta = isset($selected_peserta) ? $selected_peserta : [];
-
-        foreach ($pengurus as $p) {
-            if (!isset($p->nama_lengkap_gelar)) {
-                continue; // Jika data tidak valid, skip ke berikutnya
-            }
-
-            echo '<tr>';
-            echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">' . esc_html($no) . '</td>';
-            echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->nama_lengkap_gelar) . '</td>';
-            echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->jabatan) . '</td>';
-            echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">';
-            echo '<a href="' . admin_url('admin.php?page=pengurus-add&edit=1&id=' . $p->id) . '" class="button">Edit</a> ';
-            echo '<a href="' . admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat=' . $tingkat) . '" class="button" onclick="return confirm(\'Are you sure you want to delete this item?\');">Delete</a>';
-            echo '</td>';
-            echo '</tr>';
-            $no++;
-        }
-        echo '</table>';
-    } else {
-        echo "<p style='color: red;'>Tidak ada pengurus pada tingkat ini.</p>";
-    }
+    if (!empty($pengurus)) :
+    ?>
+        <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md">
+            <table class="min-w-full border border-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2 text-center">No</th>
+                        <th class="border border-gray-300 px-4 py-2 text-center">Nama</th>
+                        <th class="border border-gray-300 px-4 py-2 text-center">Jabatan</th>
+                        <th class="border border-gray-300 px-4 py-2 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <?php
+                    $no = 1;
+                    foreach ($pengurus as $p) :
+                        if (!isset($p->nama_lengkap_gelar)) continue;
+                    ?>
+                        <tr class="hover:bg-gray-50">
+                            <td class="border border-gray-300 px-4 py-2 text-center"><?php echo esc_html($no); ?></td>
+                            <td class="border border-gray-300 px-4 py-2"><?php echo esc_html($p->nama_lengkap_gelar); ?></td>
+                            <td class="border border-gray-300 px-4 py-2"><?php echo esc_html($p->jabatan); ?></td>
+                            <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=pengurus-add&edit=1&id=' . $p->id)); ?>"
+                                    class="px-3 border border-blue-500 text-blue-500 rounded-md hover:text-white transition">
+                                    Edit
+                                </a>
+                                <a href="<?php echo esc_url(admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat=' . $tingkat)); ?>"
+                                    class="px-3 border border-red-500 text-red-500 rounded-md  hover:text-white transition"
+                                    onclick="return confirm('Are you sure you want to delete this item?');">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                    <?php
+                        $no++;
+                    endforeach;
+                    ?>
+                </tbody>
+            </table>
+        </div>
+<?php
+    else :
+        echo "<p class='text-red-500'>Tidak ada pengurus pada tingkat ini.</p>";
+    endif;
 
     wp_die();
 }
@@ -316,7 +333,8 @@ function get_data_pengurus()
 add_action('wp_ajax_get_data_pengurus', 'get_data_pengurus');
 add_action('wp_ajax_nopriv_get_data_pengurus', 'get_data_pengurus');
 
-function handle_delete_pengurus() {
+function handle_delete_pengurus()
+{
     if (!isset($_GET['id']) || !isset($_GET['tingkat'])) {
         wp_die('Invalid request.');
     }

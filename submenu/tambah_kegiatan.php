@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     if ($user_id == null) {
         return;
     }
-    
+
     $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
 
     echo "SELECT pwm FROM $setting_table_name WHERE user_id = '$user_id'";
@@ -55,14 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         return;
     }
 
-	if (empty($tingkat_id)) {
+    if (empty($tingkat_id)) {
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
         wp_redirect(admin_url('admin.php?page=notulenmu-settings'));
         exit;
     }
-    
+
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
     // Insert the data into the table
     $result = $wpdb->insert(
@@ -102,15 +102,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     }
 
     add_action('admin_notices', 'kegiatanmu_admin_notice');
-    function kegiatanmu_admin_notice() {
+    function kegiatanmu_admin_notice()
+    {
         if ($message = get_transient('kegiatanmu_admin_notice')) {
             echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
             delete_transient('kegiatanmu_admin_notice');
         }
     }
 }
-    
-function tambah_kegiatan_page() {
+
+function tambah_kegiatan_page()
+{
     if (!current_user_can('edit_posts')) {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
@@ -128,60 +130,112 @@ function tambah_kegiatan_page() {
         $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
         $kegiatan = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $id AND user_id = $logged_user");
     }
-    
+
     if ($kegiatan && $kegiatan->image_path) {
         $upload_dir = wp_upload_dir();
         $image_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $kegiatan->image_path);
-        echo '<img src="' . esc_url($image_path) . '" alt="Image for ' . esc_attr($kegiatan->nama_kegiatan) . '" style="width: 200px; height: auto;" />';
     }
-    
-    // Form for adding or editing
-    echo '<form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin-post.php')) . '">';
-    echo '<input type="hidden" name="form_name" value="kegiatanmu_add_form">';
-    echo '<input type="hidden" name="user_id" value="'. $logged_user. '">';
-    echo '<input type="hidden" name="action" value="handle_kegiatan_form">';
-    echo '<table class="form-table">';
-    echo '<tbody>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="tingkat">Tingkat</label></th>';
-    echo '<td>';
-    echo '<select name="tingkat" id="tingkat">';
-    echo '<option value="wilayah"' . ($kegiatan && $kegiatan->tingkat == 'wilayah' ? ' selected' : '') . '>Pimpinan Wilayah</option>';
-    echo '<option value="daerah"' . ($kegiatan && $kegiatan->tingkat == 'daerah' ? ' selected' : '') . '>Pimpinan Daerah</option>';
-    echo '<option value="cabang"' . ($kegiatan && $kegiatan->tingkat == 'cabang' ? ' selected' : '') . '>Pimpinan Cabang</option>';
-    echo '<option value="ranting"' . ($kegiatan && $kegiatan->tingkat == 'ranting' ? ' selected' : '') . '>Pimpinan Ranting</option>';
-    echo '</select>';
-    echo '</td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="nama_kegiatan">Nama Kegiatan</label></th>';
-    echo '<td><input name="nama_kegiatan" id="nama_kegiatan" type="text" value="' . ($kegiatan ? esc_attr($kegiatan->nama_kegiatan) : '') . '" class="regular-text" /></td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="tanggal_kegiatan">Tanggal Kegiatan</label></th>';
-    echo '<td><input name="tanggal_kegiatan" id="tanggal_kegiatan" type="date" value="' . ($kegiatan ? esc_attr($kegiatan->tanggal_kegiatan) : '') . '" class="regular-text" /></td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="tempat_kegiatan">Tempat Kegiatan</label></th>';
-    echo '<td><input name="tempat_kegiatan" id="tempat_kegiatan" type="text" value="' . ($kegiatan ? esc_attr($kegiatan->tempat_kegiatan) : '') . '" class="regular-text" /></td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="peserta_kegiatan">Jumlah Peserta</label></th>';
-    echo '<td><input name="peserta_kegiatan" id="peserta_kegiatan" type="text" value="' . ($kegiatan ? esc_attr($kegiatan->peserta_kegiatan) : '') . '" class="regular-text" /></td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="image_upload">Upload Image</label></th>';
-    echo '<td><input name="image_upload" id="image_upload" type="file" class="regular-text" /></td>';
-    echo '</tr>';
-    echo '<tr>';
-    echo '<th scope="row"><label for="detail_kegiatan">Detail Kegiatan</label></th>';
-    echo '<td><textarea name="detail_kegiatan" id="detail_kegiatan" rows="10" class="regular-text">' . ($kegiatan ? esc_textarea($kegiatan->detail_kegiatan) : '') . '</textarea></td>';
-    echo '</tr>';
-    echo '</tbody>';
-    echo '</table>';
-    if (!$editing) {
-        echo '<input type="submit" value="Upload Kegiatan" class="button-primary">';
-    }
-    echo '</form>';
 
+    // Form for adding or editing
+?>
+    <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white p-6 rounded-lg shadow-md">
+        <input type="hidden" name="form_name" value="kegiatanmu_add_form">
+        <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
+        <input type="hidden" name="action" value="handle_kegiatan_form">
+
+        <div class="grid gap-7 w-full">
+            <div class="space-y-3">
+                <label for="tingkat" class="block text-sm font-medium text-gray-700">Tingkat</label>
+                <select name="tingkat" id="tingkat" class="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300">
+                    <option value="wilayah" <?php echo ($kegiatan && $kegiatan->tingkat == 'wilayah') ? 'selected' : ''; ?>>Pimpinan Wilayah</option>
+                    <option value="daerah" <?php echo ($kegiatan && $kegiatan->tingkat == 'daerah') ? 'selected' : ''; ?>>Pimpinan Daerah</option>
+                    <option value="cabang" <?php echo ($kegiatan && $kegiatan->tingkat == 'cabang') ? 'selected' : ''; ?>>Pimpinan Cabang</option>
+                    <option value="ranting" <?php echo ($kegiatan && $kegiatan->tingkat == 'ranting') ? 'selected' : ''; ?>>Pimpinan Ranting</option>
+                </select>
+            </div>
+
+            <div class="space-y-3">
+                <label for="nama_kegiatan" class="block text-sm font-medium text-gray-700">Nama Kegiatan</label>
+                <input type="text" name="nama_kegiatan" id="nama_kegiatan" value="<?php echo esc_attr($kegiatan->nama_kegiatan ?? ''); ?>" class="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300">
+            </div>
+
+            <div class="space-y-3">
+                <label for="tanggal_kegiatan" class="block text-sm font-medium text-gray-700">Tanggal Kegiatan</label>
+                <input type="date" name="tanggal_kegiatan" id="tanggal_kegiatan" value="<?php echo esc_attr($kegiatan->tanggal_kegiatan ?? ''); ?>" class="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300">
+            </div>
+
+            <div class="space-y-3">
+                <label for="tempat_kegiatan" class="block text-sm font-medium text-gray-700">Tempat Kegiatan</label>
+                <input type="text" name="tempat_kegiatan" id="tempat_kegiatan" value="<?php echo esc_attr($kegiatan->tempat_kegiatan ?? ''); ?>" class="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300">
+            </div>
+
+            <div class="space-y-3">
+                <label for="peserta_kegiatan" class="block text-sm font-medium text-gray-700">Jumlah Peserta</label>
+                <input type="text" name="peserta_kegiatan" id="peserta_kegiatan" value="<?php echo esc_attr($kegiatan->peserta_kegiatan ?? ''); ?>" class="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300">
+            </div>
+
+            <label class="flex flex-col space-y-3">
+                <label class="font-semibold text-[15px]">Upload Gambar</label>
+                <div>
+                    <label class="flex flex-col items-center justify-center w-full h-32 border border-dashed rounded-md cursor-pointer hover:bg-gray-100">
+                        <svg class="text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-upload">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                            <path d="M7 9l5 -5l5 5" />
+                            <path d="M12 4l0 12" />
+                        </svg>
+                        <span id="image-upload-text" class="mt-2 text-gray-600">Upload Gambar</span>
+                        <input name="image_upload" id="image_upload" type="file" class="hidden" onchange="previewImage(this, 'image-preview', 'image-upload-text')" />
+                    </label>
+                </div>
+
+                <?php if (!empty($image_path)) { ?>
+                    <img id="image-preview" src="<?php echo esc_url($image_path); ?>" class="mt-2 w-70">
+                <?php } else { ?>
+                    <img id="image-preview" src="" class="mt-2 w-40 hidden">
+                <?php } ?>
+            </label>
+
+            <div class="space-y-3">
+                <label for="detail_kegiatan" class="block text-sm font-medium text-gray-700">Detail Kegiatan</label>
+                <textarea name="detail_kegiatan" id="detail_kegiatan" rows="5" class="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300"><?php echo esc_textarea($kegiatan->detail_kegiatan ?? ''); ?></textarea>
+            </div>
+        </div>
+
+        <?php if (!$editing) { ?>
+            <button type="submit" class="w-full bg-blue-600 mt-7 text-white p-2 rounded-md hover:bg-blue-700">Upload Kegiatan</button>
+        <?php } ?>
+    </form>
+
+<?php
+?>
+<script>
+    function previewImage(input, imgId, textId) {
+            const file = input.files[0];
+
+            if (!file) {
+                // Reset jika tidak ada file yang dipilih
+                document.getElementById(imgId).classList.add('hidden');
+                document.getElementById(imgId).src = "";
+                document.getElementById(textId).textContent = "Upload File";
+                return;
+            }
+
+            if (!file.type.startsWith("image/")) {
+                alert("Harap pilih file gambar yang valid.");
+                input.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById(imgId).src = e.target.result;
+                document.getElementById(imgId).classList.remove('hidden');
+                document.getElementById(textId).textContent = file.name;
+            };
+
+            reader.readAsDataURL(file);
+        }
+</script>
+<?php
 }
