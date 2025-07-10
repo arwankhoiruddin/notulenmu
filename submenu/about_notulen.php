@@ -1,4 +1,16 @@
 <?php
+// Ambil nama dari API eksternal
+if (!function_exists('get_nama_organisasi')) {
+    function get_nama_organisasi($id) {
+        if (empty($id) || $id === '0') return 'Tidak diketahui';
+        $url = 'https://old.sicara.id/api/v0/organisation/' . $id;
+        $response = wp_remote_get($url, ['timeout' => 3]);
+        if (is_wp_error($response)) return 'ID:'.$id;
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        return isset($data['data']['nama']) && $data['data']['nama'] ? $data['data']['nama'] : 'ID:'.$id;
+    }
+}
+
 function notulenmu_page()
 {
     $user_id = get_current_user_id();
@@ -102,33 +114,81 @@ function notulenmu_page()
             $tingkat_group[$tingkat][$row->id_tingkat] = (int)$row->jumlah;
         }
     }
-    // Ambil nama dari API eksternal
-    function get_nama_organisasi($id) {
-        $url = 'https://old.sicara.id/api/v0/organisation/' . $id;
-        $response = wp_remote_get($url);
-        if (is_wp_error($response)) return $id;
-        $data = json_decode(wp_remote_retrieve_body($response), true);
-        return $data['data']['nama'] ?? $id;
+
+    // --- AMBIL DATA JUMLAH KEGIATAN PER TINGKAT ---
+    $kegiatan_table = $wpdb->prefix . 'salammu_kegiatanmu';
+    $kegiatan_group = [
+        'wilayah' => [],
+        'daerah' => [],
+        'cabang' => [],
+        'ranting' => []
+    ];
+    foreach (['wilayah', 'daerah', 'cabang', 'ranting'] as $tingkat) {
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT id_tingkat, COUNT(*) as jumlah FROM $kegiatan_table WHERE tingkat = %s GROUP BY id_tingkat",
+            $tingkat
+        ));
+        foreach ($results as $row) {
+            $kegiatan_group[$tingkat][$row->id_tingkat] = (int)$row->jumlah;
+        }
     }
+    // --- PASTIKAN VARIABEL LABEL/DATA TIDAK NULL ---
     $wilayah_labels = $wilayah_data = [];
-    foreach ($tingkat_group['wilayah'] as $id => $jumlah) {
-        $wilayah_labels[] = get_nama_organisasi($id);
-        $wilayah_data[] = $jumlah;
+    if (!empty($tingkat_group['wilayah'])) {
+        foreach ($tingkat_group['wilayah'] as $id => $jumlah) {
+            $wilayah_labels[] = get_nama_organisasi($id);
+            $wilayah_data[] = $jumlah;
+        }
     }
     $daerah_labels = $daerah_data = [];
-    foreach ($tingkat_group['daerah'] as $id => $jumlah) {
-        $daerah_labels[] = get_nama_organisasi($id);
-        $daerah_data[] = $jumlah;
+    if (!empty($tingkat_group['daerah'])) {
+        foreach ($tingkat_group['daerah'] as $id => $jumlah) {
+            $daerah_labels[] = get_nama_organisasi($id);
+            $daerah_data[] = $jumlah;
+        }
     }
     $cabang_labels = $cabang_data = [];
-    foreach ($tingkat_group['cabang'] as $id => $jumlah) {
-        $cabang_labels[] = get_nama_organisasi($id);
-        $cabang_data[] = $jumlah;
+    if (!empty($tingkat_group['cabang'])) {
+        foreach ($tingkat_group['cabang'] as $id => $jumlah) {
+            $cabang_labels[] = get_nama_organisasi($id);
+            $cabang_data[] = $jumlah;
+        }
     }
     $ranting_labels = $ranting_data = [];
-    foreach ($tingkat_group['ranting'] as $id => $jumlah) {
-        $ranting_labels[] = get_nama_organisasi($id);
-        $ranting_data[] = $jumlah;
+    if (!empty($tingkat_group['ranting'])) {
+        foreach ($tingkat_group['ranting'] as $id => $jumlah) {
+            $ranting_labels[] = get_nama_organisasi($id);
+            $ranting_data[] = $jumlah;
+        }
+    }
+    // --- PASTIKAN VARIABEL LABEL/DATA KEGIATAN TIDAK NULL ---
+    $kegiatan_wilayah_labels = $kegiatan_wilayah_data = [];
+    if (!empty($kegiatan_group['wilayah'])) {
+        foreach ($kegiatan_group['wilayah'] as $id => $jumlah) {
+            $kegiatan_wilayah_labels[] = get_nama_organisasi($id);
+            $kegiatan_wilayah_data[] = $jumlah;
+        }
+    }
+    $kegiatan_daerah_labels = $kegiatan_daerah_data = [];
+    if (!empty($kegiatan_group['daerah'])) {
+        foreach ($kegiatan_group['daerah'] as $id => $jumlah) {
+            $kegiatan_daerah_labels[] = get_nama_organisasi($id);
+            $kegiatan_daerah_data[] = $jumlah;
+        }
+    }
+    $kegiatan_cabang_labels = $kegiatan_cabang_data = [];
+    if (!empty($kegiatan_group['cabang'])) {
+        foreach ($kegiatan_group['cabang'] as $id => $jumlah) {
+            $kegiatan_cabang_labels[] = get_nama_organisasi($id);
+            $kegiatan_cabang_data[] = $jumlah;
+        }
+    }
+    $kegiatan_ranting_labels = $kegiatan_ranting_data = [];
+    if (!empty($kegiatan_group['ranting'])) {
+        foreach ($kegiatan_group['ranting'] as $id => $jumlah) {
+            $kegiatan_ranting_labels[] = get_nama_organisasi($id);
+            $kegiatan_ranting_data[] = $jumlah;
+        }
     }
 ?>
     <div class="relative p-6 bg-[#2d3476] shadow-lg rounded-lg m-4 ml-0 text-white overflow-hidden">
@@ -188,6 +248,22 @@ function notulenmu_page()
     <div class="pr-4">
         <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Ranting (nasional)</h2>
         <canvas id="grafikRanting" width="400" height="<?php echo max(250, count($ranting_labels)*40); ?>"></canvas>
+    </div>
+    <div class="pr-4">
+        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Kegiatan per Wilayah (nasional)</h2>
+        <canvas id="grafikKegiatanWilayah" width="400" height="<?php echo max(250, count($kegiatan_wilayah_labels)*40); ?>"></canvas>
+    </div>
+    <div class="pr-4">
+        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Kegiatan per Daerah (nasional)</h2>
+        <canvas id="grafikKegiatanDaerah" width="400" height="<?php echo max(250, count($kegiatan_daerah_labels)*40); ?>"></canvas>
+    </div>
+    <div class="pr-4">
+        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Kegiatan per Cabang (nasional)</h2>
+        <canvas id="grafikKegiatanCabang" width="400" height="<?php echo max(250, count($kegiatan_cabang_labels)*40); ?>"></canvas>
+    </div>
+    <div class="pr-4">
+        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Kegiatan per Ranting (nasional)</h2>
+        <canvas id="grafikKegiatanRanting" width="400" height="<?php echo max(250, count($kegiatan_ranting_labels)*40); ?>"></canvas>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
@@ -310,8 +386,70 @@ function notulenmu_page()
                 },
                 options: { plugins: { legend: {display: false} }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
+            // --- GRAFIK KEGIATAN ---
+            new Chart(document.getElementById('grafikKegiatanWilayah').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: <?php echo json_encode($kegiatan_wilayah_labels); ?>,
+                    datasets: [{
+                        label: 'Jumlah Kegiatan',
+                        data: <?php echo json_encode($kegiatan_wilayah_data); ?>,
+                        backgroundColor: '#f59e42',
+                    }]
+                },
+                options: { plugins: { legend: {display: false} }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+            new Chart(document.getElementById('grafikKegiatanDaerah').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: <?php echo json_encode($kegiatan_daerah_labels); ?>,
+                    datasets: [{
+                        label: 'Jumlah Kegiatan',
+                        data: <?php echo json_encode($kegiatan_daerah_data); ?>,
+                        backgroundColor: '#f7c873',
+                    }]
+                },
+                options: { plugins: { legend: {display: false} }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+            new Chart(document.getElementById('grafikKegiatanCabang').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: <?php echo json_encode($kegiatan_cabang_labels); ?>,
+                    datasets: [{
+                        label: 'Jumlah Kegiatan',
+                        data: <?php echo json_encode($kegiatan_cabang_data); ?>,
+                        backgroundColor: '#fbe6b2',
+                    }]
+                },
+                options: { plugins: { legend: {display: false} }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+            new Chart(document.getElementById('grafikKegiatanRanting').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: <?php echo json_encode($kegiatan_ranting_labels); ?>,
+                    datasets: [{
+                        label: 'Jumlah Kegiatan',
+                        data: <?php echo json_encode($kegiatan_ranting_data); ?>,
+                        backgroundColor: '#fbe6b2',
+                    }]
+                },
+                options: { plugins: { legend: {display: false} }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
         });
     </script>
+
+    <!-- Debug output for chart data -->
+    <!--
+    Wilayah: <?php echo json_encode($wilayah_labels); ?> | <?php echo json_encode($wilayah_data); ?>
+    Daerah: <?php echo json_encode($daerah_labels); ?> | <?php echo json_encode($daerah_data); ?>
+    Cabang: <?php echo json_encode($cabang_labels); ?> | <?php echo json_encode($cabang_data); ?>
+    Ranting: <?php echo json_encode($ranting_labels); ?> | <?php echo json_encode($ranting_data); ?>
+    Kegiatan Wilayah: <?php echo json_encode($kegiatan_wilayah_labels); ?> | <?php echo json_encode($kegiatan_wilayah_data); ?>
+    Kegiatan Daerah: <?php echo json_encode($kegiatan_daerah_labels); ?> | <?php echo json_encode($kegiatan_daerah_data); ?>
+    Kegiatan Cabang: <?php echo json_encode($kegiatan_cabang_labels); ?> | <?php echo json_encode($kegiatan_cabang_data); ?>
+    Kegiatan Ranting: <?php echo json_encode($kegiatan_ranting_labels); ?> | <?php echo json_encode($kegiatan_ranting_data); ?>
+    Wordcloud: <?php echo json_encode($word_data); ?>
+    -->
 <?php
 }
 
