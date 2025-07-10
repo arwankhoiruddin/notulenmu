@@ -78,7 +78,7 @@ function notulenmu_settings_page()
     </h2>
 
     <div class="flex justify-center w-full">
-        <form method="POST" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="w-[100%] bg-white p-6 rounded-lg shadow-md max-w-2xl">
+        <form method="POST" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg w-full">
             <input type="hidden" name="form_name" value="notulenmu_setting_form">
             <input type="hidden" name="action" value="handle_notulenmu_form">
             <input type="hidden" name="user_id" value="<?php echo esc_attr(get_current_user_id()); ?>">
