@@ -13,6 +13,34 @@ function notulenmu_page()
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
+    $user_id = get_current_user_id();
+    $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
+    $settings = $wpdb->get_row($wpdb->prepare(
+        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+        $user_id
+    ), ARRAY_A);
+    $id_tingkat_map = [
+        'wilayah' => $settings['pwm'] ?? '',
+        'daerah' => $settings['pdm'] ?? '',
+        'cabang' => $settings['pcm'] ?? '',
+        'ranting' => $settings['prm'] ?? ''
+    ];
+    $tingkat_labels = ['Wilayah', 'Daerah', 'Cabang', 'Ranting'];
+    $tingkat_keys = ['wilayah', 'daerah', 'cabang', 'ranting'];
+    $jumlah_per_tingkat = [];
+    foreach ($tingkat_keys as $tingkat) {
+        $id_tingkat = $id_tingkat_map[$tingkat];
+        if ($id_tingkat) {
+            $jumlah = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM $table_name WHERE tingkat = %s AND id_tingkat = %s AND user_id = %d",
+                $tingkat, $id_tingkat, $user_id
+            ));
+        } else {
+            $jumlah = 0;
+        }
+        $jumlah_per_tingkat[] = (int)$jumlah;
+    }
+
     $results = $wpdb->get_results("SELECT topik_rapat FROM $table_name", ARRAY_A);
 
     $text = "";
@@ -26,8 +54,19 @@ function notulenmu_page()
     $word_counts = array_count_values($words);
 
     $word_data = [];
-    foreach ($word_counts as $word => $count) {
-        $word_data[] = ['text' => $word, 'size' => $count * 10]; 
+    if (!empty($word_counts)) {
+        $min_size = 16;
+        $max_size = 60;
+        $min_count = min($word_counts);
+        $max_count = max($word_counts);
+        foreach ($word_counts as $word => $count) {
+            if ($max_count == $min_count) {
+                $size = ($min_size + $max_size) / 2;
+            } else {
+                $size = $min_size + ($count - $min_count) * ($max_size - $min_size) / ($max_count - $min_count);
+            }
+            $word_data[] = ['text' => $word, 'size' => round($size)];
+        }
     }
 ?>
     <div class="relative p-6 bg-[#2d3476] shadow-lg rounded-lg m-4 ml-0 text-white overflow-hidden">
@@ -68,8 +107,14 @@ function notulenmu_page()
         <div id="wordcloud" class="flex items-center justify-center text-center bg-white w-auto h-auto rounded-lg shadow-md"></div>
     </div>
 
+    <div class="pr-4">
+        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu)</h2>
+        <canvas id="grafikNotulen" width="400" height="250"></canvas>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-cloud/build/d3.layout.cloud.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var words = <?php echo json_encode($word_data); ?>;
@@ -102,6 +147,39 @@ function notulenmu_page()
                     .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
                     .text(d => d.text);
             }
+
+            // Grafik Notulen per Tingkat (Horizontal Bar)
+            var ctx = document.getElementById('grafikNotulen').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: <?php echo json_encode($tingkat_labels); ?>,
+                    datasets: [{
+                        label: 'Jumlah Notulen',
+                        data: <?php echo json_encode($jumlah_per_tingkat); ?>,
+                        backgroundColor: [
+                            '#2d3476', '#4e5ba6', '#6c7fd1', '#a3b0e0'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Membuat barchart horizontal
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
         });
     </script>
 <?php
