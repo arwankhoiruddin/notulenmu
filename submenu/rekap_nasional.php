@@ -4,60 +4,40 @@ Plugin submenu page: Rekap Notulen dan Kegiatan (nasional)
 */
 function notulenmu_rekap_nasional_page() {
     global $wpdb;
-    // --- Data Notulen per Wilayah/Daerah/Cabang/Ranting (nasional) ---
-    $table_name = $wpdb->prefix . 'salammu_notulenmu';
-    $tingkat_group = [
-        'wilayah' => [],
-        'daerah' => [],
-        'cabang' => [],
-        'ranting' => []
-    ];
-    // Check if columns exist before querying
-    $columns = $wpdb->get_col( 'SHOW COLUMNS FROM ' . $table_name );
-    $has_tingkat = in_array('tingkat', $columns);
-    $has_id_tingkat = in_array('id_tingkat', $columns);
-    foreach (['wilayah', 'daerah', 'cabang', 'ranting'] as $tingkat) {
-        if ($has_tingkat && $has_id_tingkat) {
-            $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT id_tingkat, COUNT(*) as jumlah FROM $table_name WHERE tingkat = %s GROUP BY id_tingkat",
-                $tingkat
-            ));
-            foreach ($results as $row) {
-                $tingkat_group[$tingkat][$row->id_tingkat] = (int)$row->jumlah;
-            }
-        }
+    // --- Optimized Data Notulen & Kegiatan per Wilayah/Daerah/Cabang/Ranting (nasional) ---
+    $table_notulen = $wpdb->prefix . 'salammu_notulenmu';
+    $table_kegiatan = $wpdb->prefix . 'salammu_kegiatanmu';
+    $tingkat_list = ['wilayah', 'daerah', 'cabang', 'ranting'];
+    $tingkat_group = $kegiatan_group = [];
+    foreach ($tingkat_list as $tingkat) {
+        $tingkat_group[$tingkat] = [];
+        $kegiatan_group[$tingkat] = [];
     }
-    // --- Data Kegiatan per Wilayah/Daerah/Cabang/Ranting (nasional) ---
-    $kegiatan_table = $wpdb->prefix . 'salammu_kegiatanmu';
-    $kegiatan_group = [
-        'wilayah' => [],
-        'daerah' => [],
-        'cabang' => [],
-        'ranting' => []
-    ];
-    $kegiatan_columns = $wpdb->get_col( 'SHOW COLUMNS FROM ' . $kegiatan_table );
-    $has_kegiatan_tingkat = in_array('tingkat', $kegiatan_columns);
-    $has_kegiatan_id_tingkat = in_array('id_tingkat', $kegiatan_columns);
-    foreach (['wilayah', 'daerah', 'cabang', 'ranting'] as $tingkat) {
-        if ($has_kegiatan_tingkat && $has_kegiatan_id_tingkat) {
-            $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT id_tingkat, COUNT(*) as jumlah FROM $kegiatan_table WHERE tingkat = %s GROUP BY id_tingkat",
-                $tingkat
-            ));
-            foreach ($results as $row) {
-                $kegiatan_group[$tingkat][$row->id_tingkat] = (int)$row->jumlah;
-            }
-        }
+    // Query notulen: satu query untuk semua tingkat
+    $tingkat_in = implode(",", array_map(function($t){return "'".$t."'";}, $tingkat_list));
+    $notulen_results = $wpdb->get_results("SELECT tingkat, id_tingkat, COUNT(*) as jumlah FROM $table_notulen WHERE tingkat IN ($tingkat_in) GROUP BY tingkat, id_tingkat");
+    foreach ($notulen_results as $row) {
+        $tingkat_group[$row->tingkat][$row->id_tingkat] = (int)$row->jumlah;
     }
-    // --- Helper for organization name ---
+    // Query kegiatan: satu query untuk semua tingkat
+    $kegiatan_results = $wpdb->get_results("SELECT tingkat, id_tingkat, COUNT(*) as jumlah FROM $table_kegiatan WHERE tingkat IN ($tingkat_in) GROUP BY tingkat, id_tingkat");
+    foreach ($kegiatan_results as $row) {
+        $kegiatan_group[$row->tingkat][$row->id_tingkat] = (int)$row->jumlah;
+    }
+    // --- Helper for organization name with caching ---
     if (!function_exists('get_nama_organisasi')) {
         function get_nama_organisasi($id) {
             if (empty($id) || $id === '0') return 'Tidak diketahui';
+            $cache_key = 'org_nama_' . $id;
+            $cached = get_transient($cache_key);
+            if ($cached !== false) return $cached;
             $url = 'https://old.sicara.id/api/v0/organisation/' . $id;
             $response = wp_remote_get($url, ['timeout' => 3]);
             if (is_wp_error($response)) return 'ID:'.$id;
             $data = json_decode(wp_remote_retrieve_body($response), true);
-            return isset($data['data']['nama']) && $data['data']['nama'] ? $data['data']['nama'] : 'ID:'.$id;
+            $nama = isset($data['data']['nama']) && $data['data']['nama'] ? $data['data']['nama'] : 'ID:'.$id;
+            set_transient($cache_key, $nama, 12 * HOUR_IN_SECONDS);
+            return $nama;
         }
     }
     // --- Prepare labels/data ---
