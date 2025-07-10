@@ -58,6 +58,7 @@ function notulenmu_menu()
         add_submenu_page('notulenmu', 'View Notulen', '', 'read', 'notulenmu-view', 'notulenmu_view_page');
         add_submenu_page('notulenmu', 'Rekap Wilayah Kerja', 'Rekap Wilayah Kerja', 'read', 'rekap-topik', 'rekap_topik_page');
         add_submenu_page('notulenmu', 'Rekap Nasional', 'Rekap Nasional', 'read', 'rekap-nasional', 'notulenmu_rekap_nasional_page');
+        add_submenu_page('notulenmu', 'View Kegiatan', '', 'read', 'kegiatanmu-view', 'kegiatanmu_view_page');
     }
 }
 
