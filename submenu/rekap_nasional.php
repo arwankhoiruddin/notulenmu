@@ -12,13 +12,19 @@ function notulenmu_rekap_nasional_page() {
         'cabang' => [],
         'ranting' => []
     ];
+    // Check if columns exist before querying
+    $columns = $wpdb->get_col( 'SHOW COLUMNS FROM ' . $table_name );
+    $has_tingkat = in_array('tingkat', $columns);
+    $has_id_tingkat = in_array('id_tingkat', $columns);
     foreach (['wilayah', 'daerah', 'cabang', 'ranting'] as $tingkat) {
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT id_tingkat, COUNT(*) as jumlah FROM $table_name WHERE tingkat = %s GROUP BY id_tingkat",
-            $tingkat
-        ));
-        foreach ($results as $row) {
-            $tingkat_group[$tingkat][$row->id_tingkat] = (int)$row->jumlah;
+        if ($has_tingkat && $has_id_tingkat) {
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT id_tingkat, COUNT(*) as jumlah FROM $table_name WHERE tingkat = %s GROUP BY id_tingkat",
+                $tingkat
+            ));
+            foreach ($results as $row) {
+                $tingkat_group[$tingkat][$row->id_tingkat] = (int)$row->jumlah;
+            }
         }
     }
     // --- Data Kegiatan per Wilayah/Daerah/Cabang/Ranting (nasional) ---
@@ -29,13 +35,18 @@ function notulenmu_rekap_nasional_page() {
         'cabang' => [],
         'ranting' => []
     ];
+    $kegiatan_columns = $wpdb->get_col( 'SHOW COLUMNS FROM ' . $kegiatan_table );
+    $has_kegiatan_tingkat = in_array('tingkat', $kegiatan_columns);
+    $has_kegiatan_id_tingkat = in_array('id_tingkat', $kegiatan_columns);
     foreach (['wilayah', 'daerah', 'cabang', 'ranting'] as $tingkat) {
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT id_tingkat, COUNT(*) as jumlah FROM $kegiatan_table WHERE tingkat = %s GROUP BY id_tingkat",
-            $tingkat
-        ));
-        foreach ($results as $row) {
-            $kegiatan_group[$tingkat][$row->id_tingkat] = (int)$row->jumlah;
+        if ($has_kegiatan_tingkat && $has_kegiatan_id_tingkat) {
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT id_tingkat, COUNT(*) as jumlah FROM $kegiatan_table WHERE tingkat = %s GROUP BY id_tingkat",
+                $tingkat
+            ));
+            foreach ($results as $row) {
+                $kegiatan_group[$tingkat][$row->id_tingkat] = (int)$row->jumlah;
+            }
         }
     }
     // --- Helper for organization name ---
