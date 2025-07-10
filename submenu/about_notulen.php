@@ -41,7 +41,24 @@ function notulenmu_page()
         $jumlah_per_tingkat[] = (int)$jumlah;
     }
 
-    $results = $wpdb->get_results("SELECT topik_rapat FROM $table_name", ARRAY_A);
+    // Ambil topik_rapat hanya dari tingkat dan id_tingkat sesuai setting
+    $topik_query_parts = [];
+    $params = [];
+    foreach ($id_tingkat_map as $tingkat => $id_tingkat) {
+        if ($id_tingkat) {
+            $topik_query_parts[] = "(tingkat = %s AND id_tingkat = %s AND user_id = %d)";
+            $params[] = $tingkat;
+            $params[] = $id_tingkat;
+            $params[] = $user_id;
+        }
+    }
+    $where_clause = implode(' OR ', $topik_query_parts);
+    if (!empty($where_clause)) {
+        $query = "SELECT topik_rapat FROM $table_name WHERE $where_clause";
+        $results = $wpdb->get_results($wpdb->prepare($query, ...$params), ARRAY_A);
+    } else {
+        $results = [];
+    }
 
     $text = "";
     foreach ($results as $row) {
@@ -148,7 +165,7 @@ function notulenmu_page()
     </div>
 
     <div class="pr-4">
-        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Topik Rapat yang Sering Dibahas</h2>
+        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Topik Rapat yang Sering Dibahas di Wilayah Kerja Anda</h2>
         <div id="wordcloud" class="flex items-center justify-center text-center bg-white w-auto h-auto rounded-lg shadow-md"></div>
     </div>
 
