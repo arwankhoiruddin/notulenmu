@@ -15,22 +15,31 @@ function rekap_topik_page() {
         'cabang' => $settings['pcm'] ?? '',
         'ranting' => $settings['prm'] ?? ''
     ];
-    $topik_query_parts = [];
-    $params = [];
+    // Optimasi: Query topik dan jumlah notulen sekaligus
+    $tingkat_id_pairs = [];
     foreach ($id_tingkat_map as $tingkat => $id_tingkat) {
         if ($id_tingkat) {
-            $topik_query_parts[] = "(tingkat = %s AND id_tingkat = %s)";
-            $params[] = $tingkat;
-            $params[] = $id_tingkat;
+            $tingkat_id_pairs[] = $wpdb->prepare('(tingkat = %s AND id_tingkat = %s)', $tingkat, $id_tingkat);
         }
     }
-    $where_clause = implode(' OR ', $topik_query_parts);
+    $where_clause = implode(' OR ', $tingkat_id_pairs);
+    $results = [];
+    $jumlah_per_tingkat = [0,0,0,0];
     if (!empty($where_clause)) {
-        $query = "SELECT topik_rapat FROM $table_name WHERE $where_clause";
-        $results = $wpdb->get_results($wpdb->prepare($query, ...$params), ARRAY_A);
-    } else {
-        $results = [];
+        // Query semua data sekaligus
+        $query = "SELECT tingkat, id_tingkat, topik_rapat FROM $table_name WHERE $where_clause";
+        $results = $wpdb->get_results($query, ARRAY_A);
+        // Hitung jumlah per tingkat
+        $tingkat_keys = ['wilayah', 'daerah', 'cabang', 'ranting'];
+        $counts = array_fill_keys($tingkat_keys, 0);
+        foreach ($results as $row) {
+            if (isset($counts[$row['tingkat']])) {
+                $counts[$row['tingkat']]++;
+            }
+        }
+        $jumlah_per_tingkat = array_values($counts);
     }
+    // Gabungkan semua topik_rapat
     $text = "";
     foreach ($results as $row) {
         $text .= " " . $row['topik_rapat'];
@@ -54,20 +63,6 @@ function rekap_topik_page() {
         }
     }
     $tingkat_labels = ['Wilayah', 'Daerah', 'Cabang', 'Ranting'];
-    $tingkat_keys = ['wilayah', 'daerah', 'cabang', 'ranting'];
-    $jumlah_per_tingkat = [];
-    foreach ($tingkat_keys as $tingkat) {
-        $id_tingkat = $id_tingkat_map[$tingkat];
-        if ($id_tingkat) {
-            $jumlah = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM $table_name WHERE tingkat = %s AND id_tingkat = %s",
-                $tingkat, $id_tingkat
-            ));
-        } else {
-            $jumlah = 0;
-        }
-        $jumlah_per_tingkat[] = (int)$jumlah;
-    }
     ?>
     <div class="pr-4">
         <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Rekap Topik Rapat yang Sering Dibahas di Wilayah Kerja Anda</h2>
