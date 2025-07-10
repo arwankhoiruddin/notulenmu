@@ -109,7 +109,7 @@ function rekap_topik_page() {
     <!-- Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu) dipindahkan dari about_notulen.php -->
     <div class="pr-4 mt-8">
         <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu)</h2>
-        <canvas id="grafikNotulen" width="400" height="250"></canvas>
+        <canvas id="grafikNotulen" width="250" height="120"></canvas>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -139,7 +139,11 @@ function rekap_topik_page() {
                     scales: {
                         x: {
                             beginAtZero: true,
-                            ticks: { stepSize: 1 }
+                            ticks: { stepSize: 1, font: { size: 18 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { font: { size: 18 } }
                         }
                     }
                 }
