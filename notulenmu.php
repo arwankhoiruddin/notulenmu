@@ -23,6 +23,7 @@ include plugin_dir_path(__FILE__) . 'submenu/kegiatanmu-view.php';
 include plugin_dir_path(__FILE__) . 'submenu/notulenmu-view.php';
 include plugin_dir_path(__FILE__) . 'includes/styles.php';
 include plugin_dir_path(__FILE__) . 'submenu/rekap_topik.php';
+include plugin_dir_path(__FILE__) . 'submenu/rekap_nasional.php';
 
 
 add_action('send_headers', 'add_cors_headers');
@@ -56,6 +57,7 @@ function notulenmu_menu()
         add_submenu_page('notulenmu', 'List Kegiatan', 'List Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
         add_submenu_page('notulenmu', 'View Notulen', '', 'read', 'notulenmu-view', 'notulenmu_view_page');
         add_submenu_page('notulenmu', 'Rekap Topik', 'Rekap Topik', 'read', 'rekap-topik', 'rekap_topik_page');
+        add_submenu_page('notulenmu', 'Rekap Notulen dan Kegiatan (nasional)', 'Rekap Notulen dan Kegiatan (nasional)', 'read', 'rekap-nasional', 'notulenmu_rekap_nasional_page');
     }
 }
 

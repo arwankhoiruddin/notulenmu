@@ -228,57 +228,12 @@ function notulenmu_page()
         <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu)</h2>
         <canvas id="grafikNotulen" width="400" height="250"></canvas>
     </div>
-    <div class="pr-4">
-        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Wilayah (nasional), Daerah, Cabang, dan Ranting</h2>
-        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex:1; min-width:200px; text-align:center;">
-                <span class="font-semibold">Wilayah</span>
-                <canvas id="pieWilayah" width="200" height="200"></canvas>
-            </div>
-            <div style="flex:1; min-width:200px; text-align:center;">
-                <span class="font-semibold">Daerah</span>
-                <canvas id="pieDaerah" width="200" height="200"></canvas>
-            </div>
-            <div style="flex:1; min-width:200px; text-align:center;">
-                <span class="font-semibold">Cabang</span>
-                <canvas id="pieCabang" width="200" height="200"></canvas>
-            </div>
-            <div style="flex:1; min-width:200px; text-align:center;">
-                <span class="font-semibold">Ranting</span>
-                <canvas id="pieRanting" width="200" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="pr-4">
-        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Kegiatan per Wilayah (nasional), Daerah, Cabang, dan Ranting</h2>
-        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex:1; min-width:200px; text-align:center;">
-                <span class="font-semibold">Wilayah</span>
-                <canvas id="pieKegiatanWilayah" width="200" height="200"></canvas>
-            </div>
-            <div style="flex:1; min-width:200px; text-align:center;">
-                <span class="font-semibold">Daerah</span>
-                <canvas id="pieKegiatanDaerah" width="200" height="200"></canvas>
-            </div>
-            <div style="flex:1; min-width:200px; text-align:center;">
-                <span class="font-semibold">Cabang</span>
-                <canvas id="pieKegiatanCabang" width="200" height="200"></canvas>
-            </div>
-            <div style="flex:1; min-width:200px; text-align:center;">
-                <span class="font-semibold">Ranting</span>
-                <canvas id="pieKegiatanRanting" width="200" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-
+    <!-- Grafik nasional dipindah ke halaman rekap_nasional -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-cloud/build/d3.layout.cloud.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // HAPUS BAGIAN WORDCLOUD DARI SINI
-            // var words = <?php echo json_encode($word_data); ?>;
-
             // Grafik Notulen per Tingkat (Horizontal Bar)
             var ctx = document.getElementById('grafikNotulen').getContext('2d');
             var chart = new Chart(ctx, {
@@ -309,98 +264,6 @@ function notulenmu_page()
                         }
                     }
                 }
-            });
-
-            // Pie Chart Notulen per Wilayah/Daerah/Cabang/Ranting
-            new Chart(document.getElementById('pieWilayah').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode($wilayah_labels); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode($wilayah_data); ?>,
-                        backgroundColor: Chart.helpers.color('#2d3476').alpha(0.7).rgbString(),
-                    }]
-                },
-                options: { plugins: { legend: {position: 'bottom'} } }
-            });
-            new Chart(document.getElementById('pieDaerah').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode($daerah_labels); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode($daerah_data); ?>,
-                        backgroundColor: Chart.helpers.color('#4e5ba6').alpha(0.7).rgbString(),
-                    }]
-                },
-                options: { plugins: { legend: {position: 'bottom'} } }
-            });
-            new Chart(document.getElementById('pieCabang').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode($cabang_labels); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode($cabang_data); ?>,
-                        backgroundColor: Chart.helpers.color('#6c7fd1').alpha(0.7).rgbString(),
-                    }]
-                },
-                options: { plugins: { legend: {position: 'bottom'} } }
-            });
-            new Chart(document.getElementById('pieRanting').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode($ranting_labels); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode($ranting_data); ?>,
-                        backgroundColor: Chart.helpers.color('#a3b0e0').alpha(0.7).rgbString(),
-                    }]
-                },
-                options: { plugins: { legend: {position: 'bottom'} } }
-            });
-
-            // Pie Chart Kegiatan per Wilayah/Daerah/Cabang/Ranting
-            new Chart(document.getElementById('pieKegiatanWilayah').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode($kegiatan_wilayah_labels); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode($kegiatan_wilayah_data); ?>,
-                        backgroundColor: Chart.helpers.color('#f59e42').alpha(0.7).rgbString(),
-                    }]
-                },
-                options: { plugins: { legend: {position: 'bottom'} } }
-            });
-            new Chart(document.getElementById('pieKegiatanDaerah').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode($kegiatan_daerah_labels); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode($kegiatan_daerah_data); ?>,
-                        backgroundColor: Chart.helpers.color('#f7c873').alpha(0.7).rgbString(),
-                    }]
-                },
-                options: { plugins: { legend: {position: 'bottom'} } }
-            });
-            new Chart(document.getElementById('pieKegiatanCabang').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode($kegiatan_cabang_labels); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode($kegiatan_cabang_data); ?>,
-                        backgroundColor: Chart.helpers.color('#fbe6b2').alpha(0.7).rgbString(),
-                    }]
-                },
-                options: { plugins: { legend: {position: 'bottom'} } }
-            });
-            new Chart(document.getElementById('pieKegiatanRanting').getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode($kegiatan_ranting_labels); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode($kegiatan_ranting_data); ?>,
-                        backgroundColor: Chart.helpers.color('#fbe6b2').alpha(0.7).rgbString(),
-                    }]
-                },
-                options: { plugins: { legend: {position: 'bottom'} } }
             });
         });
     </script>
