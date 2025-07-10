@@ -54,6 +54,21 @@ function rekap_topik_page() {
             $word_data[] = ['text' => $word, 'size' => round($size)];
         }
     }
+    $tingkat_labels = ['Wilayah', 'Daerah', 'Cabang', 'Ranting'];
+    $tingkat_keys = ['wilayah', 'daerah', 'cabang', 'ranting'];
+    $jumlah_per_tingkat = [];
+    foreach ($tingkat_keys as $tingkat) {
+        $id_tingkat = $id_tingkat_map[$tingkat];
+        if ($id_tingkat) {
+            $jumlah = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM $table_name WHERE tingkat = %s AND id_tingkat = %s AND user_id = %d",
+                $tingkat, $id_tingkat, $user_id
+            ));
+        } else {
+            $jumlah = 0;
+        }
+        $jumlah_per_tingkat[] = (int)$jumlah;
+    }
     ?>
     <div class="pr-4">
         <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Rekap Topik Rapat yang Sering Dibahas di Wilayah Kerja Anda</h2>
@@ -89,6 +104,46 @@ function rekap_topik_page() {
                     .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
                     .text(d => d.text);
             }
+        });
+    </script>
+    <!-- Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu) dipindahkan dari about_notulen.php -->
+    <div class="pr-4 mt-8">
+        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu)</h2>
+        <canvas id="grafikNotulen" width="400" height="250"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var ctx = document.getElementById('grafikNotulen').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: <?php echo json_encode($tingkat_labels); ?>,
+                    datasets: [{
+                        label: 'Jumlah Notulen',
+                        data: <?php echo json_encode($jumlah_per_tingkat); ?>,
+                        backgroundColor: [
+                            '#2d3476', '#4e5ba6', '#6c7fd1', '#a3b0e0'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
         });
     </script>
     <?php

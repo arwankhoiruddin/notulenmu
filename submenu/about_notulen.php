@@ -223,63 +223,7 @@ function notulenmu_page()
                 }
                 ?> -->
     </div>
-
-    <div class="pr-4">
-        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu)</h2>
-        <canvas id="grafikNotulen" width="400" height="250"></canvas>
-    </div>
     <!-- Grafik nasional dipindah ke halaman rekap_nasional -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3-cloud/build/d3.layout.cloud.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Grafik Notulen per Tingkat (Horizontal Bar)
-            var ctx = document.getElementById('grafikNotulen').getContext('2d');
-            var chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: <?php echo json_encode($tingkat_labels); ?>,
-                    datasets: [{
-                        label: 'Jumlah Notulen',
-                        data: <?php echo json_encode($jumlah_per_tingkat); ?>,
-                        backgroundColor: [
-                            '#2d3476', '#4e5ba6', '#6c7fd1', '#a3b0e0'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
-
-    <!-- Debug output for chart data -->
-    <!--
-    Wilayah: <?php echo json_encode($wilayah_labels); ?> | <?php echo json_encode($wilayah_data); ?>
-    Daerah: <?php echo json_encode($daerah_labels); ?> | <?php echo json_encode($daerah_data); ?>
-    Cabang: <?php echo json_encode($cabang_labels); ?> | <?php echo json_encode($cabang_data); ?>
-    Ranting: <?php echo json_encode($ranting_labels); ?> | <?php echo json_encode($ranting_data); ?>
-    Kegiatan Wilayah: <?php echo json_encode($kegiatan_wilayah_labels); ?> | <?php echo json_encode($kegiatan_wilayah_data); ?>
-    Kegiatan Daerah: <?php echo json_encode($kegiatan_daerah_labels); ?> | <?php echo json_encode($kegiatan_daerah_data); ?>
-    Kegiatan Cabang: <?php echo json_encode($kegiatan_cabang_labels); ?> | <?php echo json_encode($kegiatan_cabang_data); ?>
-    Kegiatan Ranting: <?php echo json_encode($kegiatan_ranting_labels); ?> | <?php echo json_encode($kegiatan_ranting_data); ?>
-    Wordcloud: <?php echo json_encode($word_data); ?>
-    -->
 <?php
 }
 
