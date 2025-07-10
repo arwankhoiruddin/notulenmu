@@ -1,24 +1,29 @@
 <?php
-// Handle delete action before any output
-if (isset($_GET['delete_notulen']) && !empty($_GET['delete_notulen'])) {
-    global $wpdb;
-    $user_id = get_current_user_id();
-    $delete_id = intval($_GET['delete_notulen']);
-    if (wp_verify_nonce($_GET['_wpnonce'], 'delete_notulen_' . $delete_id)) {
-        $table_name = $wpdb->prefix . 'salammu_notulenmu';
-        $deleted = $wpdb->delete($table_name, array('id' => $delete_id, 'user_id' => $user_id));
-        if ($deleted) {
-            set_transient('notulenmu_admin_notice', 'Notulen berhasil dihapus.', 5);
-        } else {
-            set_transient('notulenmu_admin_notice', 'Gagal menghapus notulen.', 5);
+// Prevent direct access
+defined('ABSPATH') || exit;
+
+// Handle delete action only after WordPress is fully loaded
+add_action('admin_init', function() {
+    if (isset($_GET['delete_notulen']) && !empty($_GET['delete_notulen'])) {
+        global $wpdb;
+        $user_id = get_current_user_id();
+        $delete_id = intval($_GET['delete_notulen']);
+        if (isset($_GET['_wpnonce']) && wp_verify_nonce($_GET['_wpnonce'], 'delete_notulen_' . $delete_id)) {
+            $table_name = $wpdb->prefix . 'salammu_notulenmu';
+            $deleted = $wpdb->delete($table_name, array('id' => $delete_id, 'user_id' => $user_id));
+            if ($deleted) {
+                set_transient('notulenmu_admin_notice', 'Notulen berhasil dihapus.', 5);
+            } else {
+                set_transient('notulenmu_admin_notice', 'Gagal menghapus notulen.', 5);
+            }
+            if (!function_exists('wp_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+            exit;
         }
-        if (!function_exists('wp_redirect')) {
-            require_once(ABSPATH . WPINC . '/pluggable.php');
-        }
-        wp_redirect(admin_url('admin.php?page=notulenmu-list'));
-        exit;
     }
-}
+});
 
 function notulenmu_list_page()
 {
