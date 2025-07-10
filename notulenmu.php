@@ -169,6 +169,60 @@ function notulenmu_install()
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
     }
+
+    // Helper function to add missing columns
+    function add_missing_columns($table, $expected_columns) {
+        global $wpdb;
+        $existing_columns = $wpdb->get_col("DESC $table", 0);
+        foreach ($expected_columns as $col => $type) {
+            if (!in_array($col, $existing_columns)) {
+                $wpdb->query("ALTER TABLE $table ADD $col $type");
+            }
+        }
+    }
+
+    // Check and add missing columns for each table
+    add_missing_columns($notulen_table_name, array(
+        'user_id' => 'int NOT NULL',
+        'id_tingkat' => 'int NOT NULL',
+        'tingkat' => 'text NOT NULL',
+        'topik_rapat' => 'text NOT NULL',
+        'tanggal_rapat' => "date DEFAULT '0000-00-00' NOT NULL",
+        'jam_mulai' => 'time NOT NULL',
+        'jam_selesai' => 'time NOT NULL',
+        'tempat_rapat' => 'text NOT NULL',
+        'peserta_rapat' => 'text NOT NULL',
+        'peserta_hadir' => 'text NOT NULL',
+        'notulen_rapat' => 'text NOT NULL',
+        'image_path' => 'text NOT NULL',
+        'lampiran' => 'text NOT NULL',
+    ));
+    add_missing_columns($kegiatan_table_name, array(
+        'user_id' => 'int NOT NULL',
+        'id_tingkat' => 'int NOT NULL',
+        'tingkat' => 'text NOT NULL',
+        'nama_kegiatan' => 'text NOT NULL',
+        'tanggal_kegiatan' => "date DEFAULT '0000-00-00' NOT NULL",
+        'tempat_kegiatan' => 'text NOT NULL',
+        'peserta_kegiatan' => 'text NOT NULL',
+        'detail_kegiatan' => 'text NOT NULL',
+        'image_path' => 'text NOT NULL',
+    ));
+    add_missing_columns($table_name_setting, array(
+        'user_id' => 'mediumint(9) NOT NULL',
+        'pwm' => 'int NOT NULL',
+        'pdm' => 'int NOT NULL',
+        'pcm' => 'int NOT NULL',
+        'prm' => 'int NOT NULL',
+    ));
+    add_missing_columns($table_pengurus, array(
+        'user_id' => 'mediumint(9) NOT NULL',
+        'tingkat' => 'int NOT NULL',
+        'id_tingkat' => 'int NOT NULL',
+        'nama_lengkap_gelar' => 'VARCHAR(40) NOT NULL',
+        'jabatan' => 'VARCHAR(30) NOT NULL',
+        'no_hp' => 'VARCHAR(20) NOT NULL',
+    ));
 }
 
 register_activation_hook(__FILE__, 'notulenmu_install');
