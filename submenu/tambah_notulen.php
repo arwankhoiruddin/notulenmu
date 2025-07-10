@@ -19,7 +19,8 @@ if (
     $tanggal_rapat = isset($_POST['tanggal_rapat']) ? $_POST['tanggal_rapat'] : null;
     $jam_mulai = isset($_POST['jam_mulai']) ? $_POST['jam_mulai'] : null;
     $jam_selesai = isset($_POST['jam_selesai']) ? $_POST['jam_selesai'] : null;
-    $tempat_rapat = isset($_POST['tempat_rapat']) ? json_encode($_POST['tempat_rapat']) : json_encode([]);
+    $sifat_rapat = isset($_POST['sifat_rapat']) ? json_encode($_POST['sifat_rapat']) : json_encode([]);
+    $tempat_rapat = isset($_POST['tempat_rapat']) ? $_POST['tempat_rapat'] : null;
     $lampiran = isset($_FILES['lampiran']) ? $_FILES['lampiran'] : null;
     $notulen_rapat = isset($_POST['notulen_rapat']) ? $_POST['notulen_rapat'] : null;
     $image_upload = isset($_FILES['image_upload']) ? $_FILES['image_upload'] : null;
@@ -45,11 +46,15 @@ if (
     }
     $img_path = '';
     if ($image_upload !== null && $image_upload['error'] === UPLOAD_ERR_OK) {
-        $upload_dir = wp_upload_dir();
-        $filename = uniqid() . '.' . pathinfo($image_upload['name'], PATHINFO_EXTENSION);
-        $upload_file = $upload_dir['path'] . '/' . $filename;
-        if (move_uploaded_file($image_upload['tmp_name'], $upload_file)) {
-            $img_path = $upload_file;
+        $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $file_ext = strtolower(pathinfo($image_upload['name'], PATHINFO_EXTENSION));
+        if (in_array($file_ext, $allowed_types)) {
+            $upload_dir = wp_upload_dir();
+            $filename = uniqid() . '.' . $file_ext;
+            $upload_file = $upload_dir['path'] . '/' . $filename;
+            if (move_uploaded_file($image_upload['tmp_name'], $upload_file)) {
+                $img_path = $upload_file;
+            }
         }
     }
 
@@ -82,6 +87,7 @@ if (
             'tanggal_rapat' => $tanggal_rapat,
             'jam_mulai' => $jam_mulai,
             'jam_selesai' => $jam_selesai,
+            'sifat_rapat' => $sifat_rapat,
             'tempat_rapat' => $tempat_rapat,
             'peserta_rapat' => $peserta_json,
             'notulen_rapat' => $notulen_rapat
@@ -152,6 +158,7 @@ if (
                 'tanggal_rapat' => $tanggal_rapat,
                 'jam_mulai' => $jam_mulai,
                 'jam_selesai' => $jam_selesai,
+                'sifat_rapat' => $sifat_rapat,
                 'tempat_rapat' => $tempat_rapat,
                 'peserta_rapat' => $peserta_json,
                 'notulen_rapat' => $notulen_rapat,
@@ -166,6 +173,7 @@ if (
                 '%s', // tanggal_rapat
                 '%s', // jam_mulai
                 '%s', // jam_selesai
+                '%s', // sifat_rapat
                 '%s', // tempat_rapat
                 '%s', // peserta_rapat
                 '%s', // notulen_rapat
@@ -220,6 +228,8 @@ function notulenmu_add_page()
     }
 
     $selected_peserta = $notulen ? json_decode($notulen->peserta_rapat, true) : [];
+    // Tambahkan variabel JS untuk peserta yang sudah hadir
+    echo '<script>var selectedPeserta = ' . json_encode($selected_peserta) . ';</script>';
 
     if ($notulen && $notulen->image_path) {
         $upload_dir = wp_upload_dir();
@@ -267,7 +277,7 @@ function notulenmu_add_page()
                 <div id="pengurus-list">
                     <p>Pilih tingkat untuk melihat daftar peserta.</p>
                 </div>
-                <input type="text" value="<?php echo ($notulen ? esc_attr($notulen->peserta_rapat) : ''); ?>" name="peserta_tambahan" placeholder="Tambah peserta (opsional)" class="w-full p-2 border rounded-md">
+                <input type="text" name="peserta_tambahan" placeholder="Tambah peserta (opsional)" class="w-full p-2 border rounded-md">
             </div>
 
             <div class="flex flex-col space-y-2">
@@ -332,23 +342,35 @@ function notulenmu_add_page()
                         <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
                         <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z" />
                     </svg>
-                    <fieldset class="block font-semibold text-[15px]">Tempat Rapat</fieldset>
+                    <fieldset class="block font-semibold text-[15px]">Sifat Rapat</fieldset>
                 </div>
                 <div class="flex flex-wrap gap-4">
                     <?php
-                    $tempat_options = ['Daring', 'Luring', 'Blended', 'Di luar kantor'];
-                    $saved_tempat_rapat = $notulen ? json_decode($notulen->tempat_rapat, true) : [];
-                    if (!is_array($saved_tempat_rapat)) {
-                        $saved_tempat_rapat = [];
+                    $sifat_options = ['Daring', 'Luring', 'Blended', 'Di luar kantor'];
+                    $saved_sifat_rapat = $notulen ? json_decode($notulen->sifat_rapat, true) : [];
+                    if (!is_array($saved_sifat_rapat)) {
+                        $saved_sifat_rapat = [];
                     }
-                    foreach ($tempat_options as $option) {
-                        $checked = in_array($option, $saved_tempat_rapat) ? 'checked' : '';
+                    foreach ($sifat_options as $option) {
+                        $checked = in_array($option, $saved_sifat_rapat) ? 'checked' : '';
                     ?>
                         <label class="block mt-3">
-                            <input type="checkbox" name="tempat_rapat[]" value="<?php echo esc_attr($option); ?>" class="mr-2" <?php echo $checked; ?>> <?php echo esc_html($option); ?>
+                            <input type="checkbox" name="sifat_rapat[]" value="<?php echo esc_attr($option); ?>" class="mr-2" <?php echo $checked; ?>> <?php echo esc_html($option); ?>
                         </label>
                     <?php } ?>
                 </div>
+            </div>
+            <div class="flex flex-col space-y-2">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-building">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M3 21v-13a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v13" />
+                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                        <path d="M9 9h6" />
+                    </svg>
+                    <label class="block font-semibold text-[15px]">Tempat Rapat</label>
+                </div>
+                <input name="tempat_rapat" id="tempat_rapat" type="text" value="<?php echo ($notulen ? esc_attr($notulen->tempat_rapat) : ''); ?>" class="w-full p-2 border rounded-md" />
             </div>
 
             <div class="flex flex-col space-y-2">
@@ -370,7 +392,7 @@ function notulenmu_add_page()
                         <path d="M12 4l0 12" />
                     </svg>
                     <span id="image-upload-text" class="mt-2 text-gray-600">Upload File</span>
-                    <input name="image_upload" id="image_upload" type="file" class="hidden" onchange="previewImage(this, 'image-preview', 'image-upload-text')" />
+                    <input name="image_upload" id="image_upload" type="file" accept="image/*" class="hidden" onchange="previewImage(this, 'image-preview', 'image-upload-text')" />
                 </label>
 
                 <?php if (!empty($image_path)) { ?>
@@ -488,21 +510,35 @@ function notulenmu_add_page()
             }
         }
 
+        function loadPengurusList(tingkat, selectedPeserta) {
+            let pengurusList = document.getElementById('pengurus-list');
+            pengurusList.innerHTML = "<p>Loading...</p>";
+            fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_pengurus_by_tingkat&tingkat=' + tingkat, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'selected_peserta=' + encodeURIComponent(JSON.stringify(selectedPeserta))
+            })
+            .then(response => response.text())
+            .then(data => {
+                pengurusList.innerHTML = data;
+            })
+            .catch(error => {
+                pengurusList.innerHTML = "<p>Error loading data.</p>";
+            });
+        }
+
         document.getElementById('tingkat').addEventListener('change', function() {
             let tingkat = this.value;
-            let pengurusList = document.getElementById('pengurus-list');
-
-            pengurusList.innerHTML = "<p>Loading...</p>";
-
-            fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_pengurus_by_tingkat&tingkat=' + tingkat)
-                .then(response => response.text())
-                .then(data => {
-                    pengurusList.innerHTML = data;
-                })
-                .catch(error => {
-                    pengurusList.innerHTML = "<p>Error loading data.</p>";
-                });
+            loadPengurusList(tingkat, selectedPeserta);
         });
+
+        // Jika mode edit, langsung tampilkan tabel peserta sesuai tingkat dan peserta yang sudah dipilih
+        <?php if ($editing && $notulen) { ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            let tingkat = document.getElementById('tingkat').value;
+            loadPengurusList(tingkat, selectedPeserta);
+        });
+        <?php } ?>
     </script>
 <?php
 }
@@ -513,6 +549,13 @@ function get_pengurus_by_tingkat()
     global $wpdb;
     $user_id = get_current_user_id();
     $tingkat = $_GET['tingkat'] ?? '';
+
+    // Ambil peserta yang sudah hadir dari POST
+    $selected_peserta = [];
+    if (isset($_POST['selected_peserta'])) {
+        $selected_peserta = json_decode(stripslashes($_POST['selected_peserta']), true);
+        if (!is_array($selected_peserta)) $selected_peserta = [];
+    }
 
     if (!$tingkat) {
         echo "<p>Pilih tingkat terlebih dahulu.</p>";

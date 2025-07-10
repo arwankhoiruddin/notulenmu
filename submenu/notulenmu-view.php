@@ -20,7 +20,8 @@ function notulenmu_view_page() {
         $upload_dir = wp_upload_dir();
         $lampiran_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $notulen->lampiran);
     }
-    $tempat_rapat = $notulen->tempat_rapat ? json_decode($notulen->tempat_rapat, true) : [];
+    $sifat_rapat = $notulen->sifat_rapat ? json_decode($notulen->sifat_rapat, true) : [];
+    $tempat_rapat = $notulen->tempat_rapat ? $notulen->tempat_rapat : '';
     $peserta_rapat = $notulen->peserta_rapat ? json_decode($notulen->peserta_rapat, true) : [];
 ?>
 <div class="max-w-2xl mx-auto p-6 mt-7 bg-white shadow-md rounded-lg border-x border-gray-300">
@@ -42,7 +43,10 @@ function notulenmu_view_page() {
             <span class="font-semibold">Jam Selesai:</span> <?php echo esc_html($notulen->jam_selesai); ?>
         </div>
         <div>
-            <span class="font-semibold">Tempat Rapat:</span> <?php echo esc_html(implode(', ', $tempat_rapat)); ?>
+            <span class="font-semibold">Sifat Rapat:</span> <?php echo esc_html(implode(', ', $sifat_rapat)); ?>
+        </div>
+        <div>
+            <span class="font-semibold">Tempat Rapat:</span> <?php echo esc_html($tempat_rapat); ?>
         </div>
         <div>
             <span class="font-semibold">Peserta Rapat:</span> <?php echo esc_html(implode(', ', $peserta_rapat)); ?>
