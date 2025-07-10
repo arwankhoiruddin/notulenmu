@@ -56,8 +56,8 @@ function notulenmu_menu()
         add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
         add_submenu_page('notulenmu', 'List Kegiatan', 'List Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
         add_submenu_page('notulenmu', 'View Notulen', '', 'read', 'notulenmu-view', 'notulenmu_view_page');
-        add_submenu_page('notulenmu', 'Rekap Topik', 'Rekap Topik', 'read', 'rekap-topik', 'rekap_topik_page');
-        add_submenu_page('notulenmu', 'Rekap Notulen dan Kegiatan (nasional)', 'Rekap Notulen dan Kegiatan (nasional)', 'read', 'rekap-nasional', 'notulenmu_rekap_nasional_page');
+        add_submenu_page('notulenmu', 'Rekap Wilayah Kerja', 'Rekap Wilayah Kerja', 'read', 'rekap-topik', 'rekap_topik_page');
+        add_submenu_page('notulenmu', 'Rekap Nasional', 'Rekap Nasional', 'read', 'rekap-nasional', 'notulenmu_rekap_nasional_page');
     }
 }
 
