@@ -19,10 +19,9 @@ function rekap_topik_page() {
     $params = [];
     foreach ($id_tingkat_map as $tingkat => $id_tingkat) {
         if ($id_tingkat) {
-            $topik_query_parts[] = "(tingkat = %s AND id_tingkat = %s AND user_id = %d)";
+            $topik_query_parts[] = "(tingkat = %s AND id_tingkat = %s)";
             $params[] = $tingkat;
             $params[] = $id_tingkat;
-            $params[] = $user_id;
         }
     }
     $where_clause = implode(' OR ', $topik_query_parts);
@@ -61,8 +60,8 @@ function rekap_topik_page() {
         $id_tingkat = $id_tingkat_map[$tingkat];
         if ($id_tingkat) {
             $jumlah = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM $table_name WHERE tingkat = %s AND id_tingkat = %s AND user_id = %d",
-                $tingkat, $id_tingkat, $user_id
+                "SELECT COUNT(*) FROM $table_name WHERE tingkat = %s AND id_tingkat = %s",
+                $tingkat, $id_tingkat
             ));
         } else {
             $jumlah = 0;
