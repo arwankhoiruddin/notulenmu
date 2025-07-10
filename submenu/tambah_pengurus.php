@@ -277,7 +277,7 @@ function get_data_pengurus()
     $pengurus_table = $wpdb->prefix . 'salammu_data_pengurus';
     $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%d'));
 
-    $query = "SELECT id, tingkat, nama_lengkap_gelar, jabatan 
+    $query = "SELECT id, nama_lengkap_gelar, jabatan 
               FROM $pengurus_table 
               WHERE tingkat = %s AND id_tingkat IN ($placeholders)";
 
@@ -291,7 +291,6 @@ function get_data_pengurus()
                 <thead class="bg-gray-100">
                     <tr>
                         <th class="border border-gray-300 px-4 py-2 text-center">No</th>
-                        <th class="border border-gray-300 px-4 py-2 text-center">Tingkat</th>
                         <th class="border border-gray-300 px-4 py-2 text-center">Nama</th>
                         <th class="border border-gray-300 px-4 py-2 text-center">Jabatan</th>
                         <th class="border border-gray-300 px-4 py-2 text-center">Action</th>
@@ -305,7 +304,6 @@ function get_data_pengurus()
                     ?>
                         <tr class="hover:bg-gray-50">
                             <td class="border border-gray-300 px-4 py-2 text-center"><?php echo esc_html($no); ?></td>
-                            <td class="border border-gray-300 px-4 py-2 text-center"><?php echo esc_html($p->tingkat); ?></td>
                             <td class="border border-gray-300 px-4 py-2"><?php echo esc_html($p->nama_lengkap_gelar); ?></td>
                             <td class="border border-gray-300 px-4 py-2"><?php echo esc_html($p->jabatan); ?></td>
                             <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
