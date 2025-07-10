@@ -6,7 +6,10 @@ if ($pagenow === 'wp-login.php') {
     return;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POST['form_name'] === 'notulenmu_add_form') {
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST' &&
+    isset($_POST['form_name']) && $_POST['form_name'] === 'notulenmu_add_form'
+) {
     global $wpdb;
 
     // Get the data from the form
@@ -28,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     $peserta_json = json_encode($selected_peserta);
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
 
-    echo "Hello";
     $lampiran_path = '';
     if ($lampiran && $lampiran['error'] === UPLOAD_ERR_OK) {
         $file_ext = pathinfo($lampiran['name'], PATHINFO_EXTENSION);
@@ -46,26 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         $upload_dir = wp_upload_dir();
         $filename = uniqid() . '.' . pathinfo($image_upload['name'], PATHINFO_EXTENSION);
         $upload_file = $upload_dir['path'] . '/' . $filename;
-
         if (move_uploaded_file($image_upload['tmp_name'], $upload_file)) {
-            // The file has been uploaded successfully
             $img_path = $upload_file;
-        } else {
-            // There was an error moving the uploaded file
         }
     }
 
-    if ($user_id == null) {
-        return;
-    }
-
     $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
-
-    $query = $wpdb->prepare(
-        "SELECT pwm FROM $setting_table_name WHERE user_id = %d",
-        $user_id
-    );
-
+    $tingkat_id = null;
     if ($tingkat == 'wilayah') {
         $row = $wpdb->get_row($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
         $tingkat_id = $row ? $row->pwm : null;
@@ -78,25 +67,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     } else if ($tingkat == 'ranting') {
         $row = $wpdb->get_row($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
         $tingkat_id = $row ? $row->prm : null;
-    } else {
-        return;
     }
 
-    if (is_null($tingkat_id)) {
-        echo "Bismillah";
-        if (!function_exists('wp_redirect')) {
-            require_once(ABSPATH . WPINC . '/pluggable.php');
-        }
-        wp_redirect(admin_url('admin.php?page=notulenmu-settings'));
-        echo "null";
-        exit;
-    }
+    // Check if this is an edit
+    $is_edit = isset($_POST['edit_id']) && !empty($_POST['edit_id']);
+    $edit_id = $is_edit ? intval($_POST['edit_id']) : null;
 
-    $table_name = $wpdb->prefix . 'salammu_notulenmu';
-    $result = $wpdb->insert(
-        $table_name, // Table name
-        array( // Data
-            'user_id' => $user_id,
+    if ($is_edit && $edit_id) {
+        // Update existing record
+        $update_data = array(
             'tingkat' => $tingkat,
             'id_tingkat' => $tingkat_id,
             'topik_rapat' => $topik_rapat,
@@ -105,39 +84,110 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             'jam_selesai' => $jam_selesai,
             'tempat_rapat' => $tempat_rapat,
             'peserta_rapat' => $peserta_json,
-            'notulen_rapat' => $notulen_rapat,
-            'image_path' => $img_path,
-            'lampiran' => $lampiran_path
-        ),
-        array( // Data format
-            '%d', // user_id
-            '%s', // tingkat
-            '%s', // tingkat_id
-            '%s', // topik_rapat
-            '%s', // tanggal_rapat
-            '%s', // jam_mulai
-            '%s', // jam_selesai
-            '%s', // tempat_rapat
-            '%s', // peserta_rapat
-            '%s', // notulen_rapat
-            '%s', // image_path
-            '%s', // lampiran
-        )
-    );
-    if ($result === false) {
-        echo "Error in SQL: " . $wpdb->last_error;
-        exit;
-    }
-
-    if ($result !== false) {
-        set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
-        if (!function_exists('wp_redirect')) {
-            require_once(ABSPATH . WPINC . '/pluggable.php');
+            'notulen_rapat' => $notulen_rapat
+        );
+        if ($img_path) $update_data['image_path'] = $img_path;
+        if ($lampiran_path) $update_data['lampiran'] = $lampiran_path;
+        $result = $wpdb->update(
+            $table_name,
+            $update_data,
+            array('id' => $edit_id, 'user_id' => $user_id)
+        );
+        if ($result !== false) {
+            set_transient('notulenmu_admin_notice', 'The notulen was successfully updated.', 5);
+            if (!function_exists('wp_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+            exit;
+        } else {
+            set_transient('notulenmu_admin_notice', 'There was an error updating the notulen.', 5);
         }
-        wp_redirect(admin_url('admin.php?page=notulenmu-list'));
-        exit;
     } else {
-        set_transient('notulenmu_admin_notice', 'There was an error adding the notulen.', 5);
+        if ($user_id == null) {
+            return;
+        }
+
+        $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+
+        $query = $wpdb->prepare(
+            "SELECT pwm FROM $setting_table_name WHERE user_id = %d",
+            $user_id
+        );
+
+        if ($tingkat == 'wilayah') {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
+            $tingkat_id = $row ? $row->pwm : null;
+        } else if ($tingkat == 'daerah') {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
+            $tingkat_id = $row ? $row->pdm : null;
+        } else if ($tingkat == 'cabang') {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
+            $tingkat_id = $row ? $row->pcm : null;
+        } else if ($tingkat == 'ranting') {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
+            $tingkat_id = $row ? $row->prm : null;
+        } else {
+            return;
+        }
+
+        if (is_null($tingkat_id)) {
+            echo "Bismillah";
+            if (!function_exists('wp_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_redirect(admin_url('admin.php?page=notulenmu-settings'));
+            echo "null";
+            exit;
+        }
+
+        $table_name = $wpdb->prefix . 'salammu_notulenmu';
+        $result = $wpdb->insert(
+            $table_name, // Table name
+            array( // Data
+                'user_id' => $user_id,
+                'tingkat' => $tingkat,
+                'id_tingkat' => $tingkat_id,
+                'topik_rapat' => $topik_rapat,
+                'tanggal_rapat' => $tanggal_rapat,
+                'jam_mulai' => $jam_mulai,
+                'jam_selesai' => $jam_selesai,
+                'tempat_rapat' => $tempat_rapat,
+                'peserta_rapat' => $peserta_json,
+                'notulen_rapat' => $notulen_rapat,
+                'image_path' => $img_path,
+                'lampiran' => $lampiran_path
+            ),
+            array( // Data format
+                '%d', // user_id
+                '%s', // tingkat
+                '%s', // tingkat_id
+                '%s', // topik_rapat
+                '%s', // tanggal_rapat
+                '%s', // jam_mulai
+                '%s', // jam_selesai
+                '%s', // tempat_rapat
+                '%s', // peserta_rapat
+                '%s', // notulen_rapat
+                '%s', // image_path
+                '%s', // lampiran
+            )
+        );
+        if ($result === false) {
+            echo "Error in SQL: " . $wpdb->last_error;
+            exit;
+        }
+
+        if ($result !== false) {
+            set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
+            if (!function_exists('wp_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+            exit;
+        } else {
+            set_transient('notulenmu_admin_notice', 'There was an error adding the notulen.', 5);
+        }
     }
 
     add_action('admin_notices', 'notulenmu_admin_notices');
@@ -159,7 +209,7 @@ function notulenmu_add_page()
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();
 
-    echo '<h1>' . ($editing ? 'View' : 'Tambah') . ' Notulen</h1>';
+    echo '<h1>' . ($editing ? 'Edit' : 'Tambah') . ' Notulen</h1>';
 
     $notulen = null;
     if ($editing) {
@@ -175,12 +225,14 @@ function notulenmu_add_page()
         $upload_dir = wp_upload_dir();
         $image_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $notulen->image_path);
     }
-
 ?>
     <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg">
         <input type="hidden" name="form_name" value="notulenmu_add_form">
         <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
         <input type="hidden" name="action" value="handle_notulen_form">
+        <?php if ($editing && $notulen) { ?>
+            <input type="hidden" name="edit_id" value="<?php echo esc_attr($notulen->id); ?>">
+        <?php } ?>
 
         <div class="grid gap-7 w-full">
             <div class="flex flex-col space-y-2">
@@ -203,6 +255,20 @@ function notulenmu_add_page()
                 </select>
             </div>
 
+            <div class="flex flex-col space-y-2 ">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                        <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                    </svg>
+                    <label class="font-semibold text-[15px]">Peserta</label>
+                </div>
+                <div id="pengurus-list">
+                    <p>Pilih tingkat untuk melihat daftar peserta.</p>
+                </div>
+                <input type="text" value="<?php echo ($notulen ? esc_attr($notulen->peserta_rapat) : ''); ?>" name="peserta_tambahan" placeholder="Tambah peserta (opsional)" class="w-full p-2 border rounded-md">
+            </div>
 
             <div class="flex flex-col space-y-2">
                 <div class="flex items-center gap-2">
@@ -272,6 +338,9 @@ function notulenmu_add_page()
                     <?php
                     $tempat_options = ['Daring', 'Luring', 'Blended', 'Di luar kantor'];
                     $saved_tempat_rapat = $notulen ? json_decode($notulen->tempat_rapat, true) : [];
+                    if (!is_array($saved_tempat_rapat)) {
+                        $saved_tempat_rapat = [];
+                    }
                     foreach ($tempat_options as $option) {
                         $checked = in_array($option, $saved_tempat_rapat) ? 'checked' : '';
                     ?>
@@ -338,7 +407,7 @@ function notulenmu_add_page()
                     <embed id="pdf-preview" type="application/pdf" width="100%" height="500px">
                 </div>
 
-                <?php if ($notulen && $notulen->lampiran): ?>
+                <?php if ($notulen && isset($notulen->lampiran) && $notulen->lampiran): ?>
                     <?php
                     $upload_dir = wp_upload_dir();
                     $lampiran_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $notulen->lampiran);
@@ -347,21 +416,6 @@ function notulenmu_add_page()
                         <embed id="existing-pdf-preview" src="<?php echo esc_url($lampiran_path); ?>" type="application/pdf" width="100%" height="500px">
                     </div>
                 <?php endif; ?>
-            </div>
-
-            <div class="flex flex-col space-y-2 ">
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
-                        <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                    </svg>
-                    <label class="font-semibold text-[15px]">Peserta</label>
-                </div>
-                <div id="pengurus-list">
-                    <p>Pilih tingkat untuk melihat daftar peserta.</p>
-                </div>
-                <input type="text" value="<?php echo ($notulen ? esc_attr($notulen->peserta_rapat) : ''); ?>" name="peserta_tambahan" placeholder="Tambah peserta (opsional)" class="w-full p-2 border rounded-md">
             </div>
 
             <div class="flex flex-col space-y-2 ">
@@ -380,6 +434,10 @@ function notulenmu_add_page()
         <?php if (!$editing) { ?>
             <div class="flex justify-end mt-9">
                 <input type="submit" value="Simpan Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+            </div>
+        <?php } else { ?>
+            <div class="flex justify-end mt-9">
+                <input type="submit" value="Update Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
             </div>
         <?php } ?>
     </form>
@@ -481,7 +539,7 @@ function get_pengurus_by_tingkat()
     }
 
     // Query ke data_pengurus
-    $pengurus_table = $wpdb->prefix . 'data_pengurus';
+    $pengurus_table = $wpdb->prefix . 'salammu_data_pengurus';
     $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%d'));
 
     $query = "SELECT id, nama_lengkap_gelar, tingkat, jabatan 
