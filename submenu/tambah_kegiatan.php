@@ -19,8 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     $detail_kegiatan = isset($_POST['detail_kegiatan']) ? $_POST['detail_kegiatan'] : null;
     $image_upload = isset($_FILES['image_upload']) ? $_FILES['image_upload'] : null;
 
-    echo "Hello";
-
     $img_path = '';
     if ($image_upload !== null && $image_upload['error'] === UPLOAD_ERR_OK) {
         $upload_dir = wp_upload_dir();
@@ -40,8 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     }
 
     $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
-
-    echo "SELECT pwm FROM $setting_table_name WHERE user_id = '$user_id'";
 
     if ($tingkat == 'wilayah') {
         $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
@@ -64,41 +60,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     }
 
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
-    // Insert the data into the table
-    $result = $wpdb->insert(
-        $table_name, // Table name
-        array( // Data
-            'user_id' => $user_id,
+    $is_edit = isset($_POST['edit_id']) && !empty($_POST['edit_id']);
+    $edit_id = $is_edit ? intval($_POST['edit_id']) : null;
+
+    if ($is_edit && $edit_id) {
+        // UPDATE data
+        $update_data = array(
             'tingkat' => $tingkat,
             'id_tingkat' => $tingkat_id,
             'nama_kegiatan' => $nama_kegiatan,
             'tanggal_kegiatan' => $tanggal_kegiatan,
             'tempat_kegiatan' => $tempat_kegiatan,
             'peserta_kegiatan' => $peserta_kegiatan,
-            'detail_kegiatan' => $detail_kegiatan,
-            'image_path' => $img_path,
-        ),
-        array( // Data format
-            '%d', // user_id
-            '%s', // tingkat
-            '%s', // tingkat_id
-            '%s', // nama_kegiatan
-            '%s', // tanggal_kegiatan
-            '%s', // tempat_kegiatan
-            '%s', // peserta_kegiatan
-            '%s', // detail_kegiatan
-            '%s', // image_path
-        )
-    );
-    if ($result !== false) {
-        set_transient('kegiatanmu_admin_notice', 'The kegiatan was successfully added.', 5);
-        if (!function_exists('wp_redirect')) {
-            require_once(ABSPATH . WPINC . '/pluggable.php');
+            'detail_kegiatan' => $detail_kegiatan
+        );
+        if ($img_path) $update_data['image_path'] = $img_path;
+        $result = $wpdb->update(
+            $table_name,
+            $update_data,
+            array('id' => $edit_id, 'user_id' => $user_id)
+        );
+        if ($result !== false) {
+            set_transient('kegiatanmu_admin_notice', 'Kegiatan berhasil diupdate.', 5);
+            if (!function_exists('wp_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_redirect(admin_url('admin.php?page=kegiatanmu-list'));
+            exit;
+        } else {
+            set_transient('kegiatanmu_admin_notice', 'Gagal update kegiatan.', 5);
         }
-        wp_redirect(admin_url('admin.php?page=kegiatanmu-list'));
-        exit;
     } else {
-        set_transient('kegiatanmu_admin_notice', 'There was an error adding the kegiatan.', 5);
+        // INSERT data
+        $result = $wpdb->insert(
+            $table_name, // Table name
+            array( // Data
+                'user_id' => $user_id,
+                'tingkat' => $tingkat,
+                'id_tingkat' => $tingkat_id,
+                'nama_kegiatan' => $nama_kegiatan,
+                'tanggal_kegiatan' => $tanggal_kegiatan,
+                'tempat_kegiatan' => $tempat_kegiatan,
+                'peserta_kegiatan' => $peserta_kegiatan,
+                'detail_kegiatan' => $detail_kegiatan,
+                'image_path' => $img_path,
+            ),
+            array( // Data format
+                '%d', // user_id
+                '%s', // tingkat
+                '%s', // tingkat_id
+                '%s', // nama_kegiatan
+                '%s', // tanggal_kegiatan
+                '%s', // tempat_kegiatan
+                '%s', // peserta_kegiatan
+                '%s', // detail_kegiatan
+                '%s', // image_path
+            )
+        );
+        if ($result !== false) {
+            set_transient('kegiatanmu_admin_notice', 'The kegiatan was successfully added.', 5);
+            if (!function_exists('wp_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_redirect(admin_url('admin.php?page=kegiatanmu-list'));
+            exit;
+        } else {
+            set_transient('kegiatanmu_admin_notice', 'There was an error adding the kegiatan.', 5);
+        }
     }
 
     add_action('admin_notices', 'kegiatanmu_admin_notice');

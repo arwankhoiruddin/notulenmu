@@ -19,6 +19,8 @@ include plugin_dir_path(__FILE__) . 'submenu/setting_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/about_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_kegiatan.php';
 include plugin_dir_path(__FILE__) . 'submenu/list_kegiatan.php';
+include plugin_dir_path(__FILE__) . 'submenu/kegiatanmu-view.php';
+include plugin_dir_path(__FILE__) . 'submenu/notulenmu-view.php';
 include plugin_dir_path(__FILE__) . 'includes/styles.php';
 
 
@@ -51,6 +53,7 @@ function notulenmu_menu()
         add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
         add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
         add_submenu_page('notulenmu', 'List Kegiatan', 'List Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
+        add_submenu_page('notulenmu', 'View Notulen', '', 'read', 'notulenmu-view', 'notulenmu_view_page');
     }
 }
 

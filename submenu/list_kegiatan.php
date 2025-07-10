@@ -1,4 +1,28 @@
 <?php
+// Handle delete action before any output
+if (isset($_GET['delete_kegiatan']) && !empty($_GET['delete_kegiatan'])) {
+    if (!function_exists('wp_verify_nonce')) {
+        require_once(ABSPATH . WPINC . '/pluggable.php');
+    }
+    global $wpdb;
+    $user_id = get_current_user_id();
+    $delete_id = intval($_GET['delete_kegiatan']);
+    if (wp_verify_nonce($_GET['_wpnonce'], 'delete_kegiatan_' . $delete_id)) {
+        $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
+        $deleted = $wpdb->delete($table_name, array('id' => $delete_id, 'user_id' => $user_id));
+        if ($deleted) {
+            set_transient('kegiatanmu_admin_notice', 'Kegiatan berhasil dihapus.', 5);
+        } else {
+            set_transient('kegiatanmu_admin_notice', 'Gagal menghapus kegiatan.', 5);
+        }
+        if (!function_exists('wp_redirect')) {
+            require_once(ABSPATH . WPINC . '/pluggable.php');
+        }
+        wp_redirect(admin_url('admin.php?page=kegiatanmu-list'));
+        exit;
+    }
+}
+
 function kegiatanmu_list_page()
 {
     $user_id = get_current_user_id();
@@ -22,13 +46,17 @@ function kegiatanmu_list_page()
     $sql .= " order by tingkat";
     $rows = $wpdb->get_results($sql);
 
+    // Notifikasi
+    if ($message = get_transient('kegiatanmu_admin_notice')) {
+        echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
+        delete_transient('kegiatanmu_admin_notice');
+    }
 ?>
     <div class="max-w-5xl mx-auto p-6 mt-7 bg-white shadow-md rounded-lg border-x border-gray-300">
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-semibold  text-gray-700">List Kegiatan</h1>
-
             <div>
-                <select id="filter" class="p-2 border rounded-md w-full" onchange="if (this.value !== null) window.location.href='?page=notulenmu-list&filter='+this.value">
+                <select id="filter" class="p-2 border rounded-md w-full" onchange="if (this.value !== null) window.location.href='?page=kegiatanmu-list&filter='+this.value">
                     <option value="">Semua</option>
                     <option value="ranting" <?php echo ($filter === 'ranting' ? 'selected' : ''); ?>>Ranting</option>
                     <option value="cabang" <?php echo ($filter === 'cabang' ? 'selected' : ''); ?>>Cabang</option>
@@ -37,8 +65,6 @@ function kegiatanmu_list_page()
                 </select>
             </div>
         </div>
-
-
         <!-- Tabel -->
         <div class="overflow-x-auto">
             <table class="w-full border border-gray-300 rounded-md">
@@ -49,6 +75,7 @@ function kegiatanmu_list_page()
                         <th class="py-2 px-4 border border-gray-300">Tanggal Kegiatan</th>
                         <th class="py-2 px-4 border border-gray-300">Tempat Kegiatan</th>
                         <th class="py-2 px-4 border border-gray-300">Detail</th>
+                        <th class="py-2 px-4 border border-gray-300">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -59,7 +86,11 @@ function kegiatanmu_list_page()
                             <td class="py-2 px-4 border border-gray-300"><?php echo date('Y-m-d', strtotime($row->tanggal_kegiatan)); ?></td>
                             <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tempat_kegiatan); ?></td>
                             <td class="py-2 px-4 border border-gray-300 text-center">
-                                <a href="<?php echo admin_url('admin.php?page=kegiatanmu-add&edit=true&id=' . $row->id); ?>" class="text-blue-500 hover:text-blue-700">View Details</a>
+                                <a href="<?php echo admin_url('admin.php?page=kegiatanmu-view&id=' . $row->id); ?>" class="text-blue-500 hover:text-blue-700">View Details</a>
+                            </td>
+                            <td class="py-2 px-4 border border-gray-300 text-center">
+                                <a href="<?php echo admin_url('admin.php?page=kegiatanmu-add&edit=true&id=' . $row->id); ?>" class="text-green-500 hover:text-green-700 mr-2">Edit</a>
+                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=kegiatanmu-list&delete_kegiatan=' . $row->id), 'delete_kegiatan_' . $row->id); ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus kegiatan ini?');">Delete</a>
                             </td>
                         </tr>
                     <?php } ?>
@@ -67,5 +98,4 @@ function kegiatanmu_list_page()
             </table>
         </div>
     </div>
-
 <?php } ?>
