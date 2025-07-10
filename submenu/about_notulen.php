@@ -225,11 +225,6 @@ function notulenmu_page()
     </div>
 
     <div class="pr-4">
-        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Topik Rapat yang Sering Dibahas di Wilayah Kerja Anda</h2>
-        <div id="wordcloud" class="flex items-center justify-center text-center bg-white w-auto h-auto rounded-lg shadow-md"></div>
-    </div>
-
-    <div class="pr-4">
         <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu)</h2>
         <canvas id="grafikNotulen" width="400" height="250"></canvas>
     </div>
@@ -281,36 +276,8 @@ function notulenmu_page()
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            var words = <?php echo json_encode($word_data); ?>;
-
-            var width = 400,
-                height = 300;
-            var svg = d3.select("#wordcloud").append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-            var layout = d3.layout.cloud()
-                .size([width, height])
-                .words(words)
-                .padding(5)
-                .rotate(() => (~~(Math.random() * 2) * 90))
-                .fontSize(d => d.size)
-                .on("end", draw);
-
-            layout.start();
-
-            function draw(words) {
-                svg.selectAll("text")
-                    .data(words)
-                    .enter().append("text")
-                    .style("font-size", d => d.size + "px")
-                    .style("fill", "#2d3476")
-                    .attr("text-anchor", "middle")
-                    .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")")
-                    .text(d => d.text);
-            }
+            // HAPUS BAGIAN WORDCLOUD DARI SINI
+            // var words = <?php echo json_encode($word_data); ?>;
 
             // Grafik Notulen per Tingkat (Horizontal Bar)
             var ctx = document.getElementById('grafikNotulen').getContext('2d');
