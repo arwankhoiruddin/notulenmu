@@ -24,25 +24,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         return;
     }
 
-    $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
-
-    if ($tingkat == 'wilayah') {
-        $row = $wpdb->get_row($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
-        $tingkat_id = $row ? $row->pwm : null;
-    } else if ($tingkat == 'daerah') {
-        $row = $wpdb->get_row($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
-        $tingkat_id = $row ? $row->pdm : null;
-    } else if ($tingkat == 'cabang') {
-        $row = $wpdb->get_row($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
-        $tingkat_id = $row ? $row->pcm : null;
-    } else if ($tingkat == 'ranting') {
-        $row = $wpdb->get_row($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
-        $tingkat_id = $row ? $row->prm : null;
-    } else {
-        return;
+    // Ambil id_tingkat dari POST, bukan dari setting user
+    if (!$id_tingkat) {
+        // fallback lama jika id_tingkat tidak dikirim
+        $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+        if ($tingkat == 'wilayah') {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
+            $id_tingkat = $row ? $row->pwm : null;
+        } else if ($tingkat == 'daerah') {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
+            $id_tingkat = $row ? $row->pdm : null;
+        } else if ($tingkat == 'cabang') {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
+            $id_tingkat = $row ? $row->pcm : null;
+        } else if ($tingkat == 'ranting') {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
+            $id_tingkat = $row ? $row->prm : null;
+        } else {
+            return;
+        }
     }
 
-    if (is_null($tingkat_id)) {
+    if (is_null($id_tingkat)) {
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
@@ -57,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             array(
                 'user_id' => $user_id,
                 'tingkat' => $tingkat,
-                'id_tingkat' => $tingkat_id,
+                'id_tingkat' => $id_tingkat,
                 'nama_lengkap_gelar' => $nama_lengkap,
                 'jabatan' => $jabatan,
                 'no_hp' => $no_np,
@@ -79,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             array(
                 'user_id' => $user_id,
                 'tingkat' => $tingkat,
-                'id_tingkat' => $tingkat_id,
+                'id_tingkat' => $id_tingkat,
                 'nama_lengkap_gelar' => $nama_lengkap,
                 'jabatan' => $jabatan,
                 'no_hp' => $no_np,
