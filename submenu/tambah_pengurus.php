@@ -12,6 +12,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     // Get the data from the form
     $user_id = isset($_POST['user_id']) ? $_POST['user_id'] : null;
     $tingkat_pengurus = isset($_POST['tingkat_pengurus']) ? $_POST['tingkat_pengurus'] : null;
+    $valid_tingkat = ['wilayah', 'daerah', 'cabang', 'ranting'];
+    if (!in_array($tingkat_pengurus, $valid_tingkat, true)) {
+        // Coba ambil tingkat dari database setting user
+        global $wpdb;
+        $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+        $row = $wpdb->get_row($wpdb->prepare("SELECT pwm, pdm, pcm, prm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        if ($row) {
+            if ($row->pwm) $tingkat_pengurus = 'wilayah';
+            else if ($row->pdm) $tingkat_pengurus = 'daerah';
+            else if ($row->pcm) $tingkat_pengurus = 'cabang';
+            else if ($row->prm) $tingkat_pengurus = 'ranting';
+        }
+    }
+    // Jika masih tidak valid, tampilkan pesan error
+    if (!in_array($tingkat_pengurus, $valid_tingkat, true)) {
+        wp_die('Tingkat pengurus tidak valid. Silakan pilih ulang tingkat pada form.');
+    }
     $id_tingkat_pengurus = isset($_POST['id_tingkat_pengurus']) ? $_POST['id_tingkat_pengurus'] : null;
     $nama_lengkap = isset($_POST['nama_lengkap']) ? $_POST['nama_lengkap'] : null;
     $jabatan = isset($_POST['jabatan']) ? $_POST['jabatan'] : null;
