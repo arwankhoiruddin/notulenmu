@@ -65,6 +65,9 @@ function kegiatanmu_list_page()
                 </select>
             </div>
         </div>
+        <div class="mb-4">
+            <a href="<?php echo esc_url(admin_url('admin.php?page=kegiatanmu-add')); ?>" class="inline-block bg-gray-400 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded">+ Tambah Kegiatan</a>
+        </div>
         <!-- Tabel -->
         <table class="min-w-full border border-gray-300">
                 <thead class="bg-gray-100 text-gray-700">

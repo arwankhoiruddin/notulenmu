@@ -149,6 +149,9 @@ function tambah_kegiatan_page()
     $logged_user = get_current_user_id();
 
     echo '<h1>' . ($editing ? 'Edit' : 'Tambah') . ' Kegiatan</h1>';
+    echo '<div class="mb-4">'
+        . '<a href="' . esc_url(admin_url('admin.php?page=kegiatanmu-list')) . '" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>'
+        . '</div>';
 
     $kegiatan = null;
     if ($editing) {

@@ -55,8 +55,8 @@ function notulenmu_menu()
         add_submenu_page('notulenmu', 'Pengurus', 'Pengurus', 'read', 'pengurus-list', 'pengurus_list_page');
         add_submenu_page('__hidden', 'Tambah Notulen', 'Tambah Notulen', 'read', 'notulenmu-add', 'notulenmu_add_page');
         add_submenu_page('notulenmu', 'Notulen', 'Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
-        add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
-        add_submenu_page('notulenmu', 'List Kegiatan', 'Daftar Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
+        add_submenu_page('__hidden', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
+        add_submenu_page('notulenmu', 'Kegiatan', 'Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
         add_submenu_page('notulenmu', 'View Notulen', '', 'read', 'notulenmu-view', 'notulenmu_view_page');
         add_submenu_page('notulenmu', 'Rekap Wilayah Kerja', 'Rekap Wilayah Kerja', 'read', 'rekap-topik', 'rekap_topik_page');
         add_submenu_page('notulenmu', 'Rekap Nasional', 'Rekap Nasional', 'manage_options', 'rekap-nasional', 'notulenmu_rekap_nasional_page');
