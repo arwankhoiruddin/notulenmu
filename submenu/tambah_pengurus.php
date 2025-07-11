@@ -125,7 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
-        wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat_pengurus=' . $tingkat_pengurus));
+        if ($edit_id) {
+            wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat_pengurus=' . $tingkat_pengurus));
+        } else {
+            wp_redirect(admin_url('admin.php?page=pengurus-list&tingkat_pengurus=' . $id_tingkat_pengurus));
+        }
         exit;
     } else {
         set_transient('notulenmu_admin_notice', 'There was an error ' . ($edit_id ? 'updating' : 'adding') . ' the notulen.', 5);
@@ -147,7 +151,21 @@ function pengurus_add_page()
         wp_die(('You do not have sufficient permissions to access this page.'));
     }
 
-    $tingkat_pengurus = isset($_GET['tingkat_pengurus']) ? $_GET['tingkat_pengurus'] : '';
+    $tingkat_pengurus = '';
+    $id_tingkat_pengurus = '';
+    if (isset($_GET['tingkat_pengurus'])) {
+        $id_tingkat_pengurus = $_GET['tingkat_pengurus'];
+        // Mapping id_tingkat ke nama tingkat
+        global $wpdb;
+        $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+        $row = $wpdb->get_row($wpdb->prepare("SELECT pwm, pdm, pcm, prm FROM $setting_table_name WHERE user_id = %d", get_current_user_id()));
+        if ($row) {
+            if ($row->pwm && $row->pwm == $id_tingkat_pengurus) $tingkat_pengurus = 'wilayah';
+            else if ($row->pdm && $row->pdm == $id_tingkat_pengurus) $tingkat_pengurus = 'daerah';
+            else if ($row->pcm && $row->pcm == $id_tingkat_pengurus) $tingkat_pengurus = 'cabang';
+            else if ($row->prm && $row->prm == $id_tingkat_pengurus) $tingkat_pengurus = 'ranting';
+        }
+    }
 
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();
@@ -160,6 +178,7 @@ function pengurus_add_page()
         $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
         $table_name = $wpdb->prefix . 'salammu_data_pengurus';
         $pengurus = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d AND user_id = %d", $id, $logged_user));
+        $tingkat_pengurus = $pengurus ? $pengurus->tingkat : $tingkat_pengurus;
     }
 
 ?>
@@ -217,7 +236,7 @@ function pengurus_add_page()
             </div>
 
             <div class="flex justify-end mt-9">
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                <button type="submit" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">
                     <?php echo $editing ? 'Update' : 'Simpan'; ?> Pengurus
                 </button>
             </div>
