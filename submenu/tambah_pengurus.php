@@ -173,14 +173,13 @@ function pengurus_add_page()
             <input type="hidden" name="action" value="handle_notulen_form">
 
             <div class="mb-4 space-y-3">
-                <label for="tingkat" class="block text-gray-700 font-medium">Tingkat</label>
-                <select name="tingkat_pengurus" id="tingkat_pengurus" class="w-full mt-1 p-2 border rounded-md" style="min-width: 100%;">
-                    <option>Pilih Tingkat</option>
-                    <option value="wilayah" <?php echo (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat_pengurus == 'wilayah') ? 'selected' : ''; ?>>Pimpinan Wilayah</option>
-                    <option value="daerah" <?php echo (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat_pengurus == 'daerah') ? 'selected' : ''; ?>>Pimpinan Daerah</option>
-                    <option value="cabang" <?php echo (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat_pengurus == 'cabang') ? 'selected' : ''; ?>>Pimpinan Cabang</option>
-                    <option value="ranting" <?php echo (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat_pengurus == 'ranting') ? 'selected' : ''; ?>>Pimpinan Ranting</option>
-                </select>
+                <label class="block text-gray-700 font-medium">Tingkat</label>
+                <div class="flex flex-col space-y-2">
+                    <label><input type="radio" name="tingkat_pengurus" value="wilayah" <?php echo (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat_pengurus == 'wilayah') ? 'checked' : ''; ?>> Pimpinan Wilayah</label>
+                    <label><input type="radio" name="tingkat_pengurus" value="daerah" <?php echo (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat_pengurus == 'daerah') ? 'checked' : ''; ?>> Pimpinan Daerah</label>
+                    <label><input type="radio" name="tingkat_pengurus" value="cabang" <?php echo (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat_pengurus == 'cabang') ? 'checked' : ''; ?>> Pimpinan Cabang</label>
+                    <label><input type="radio" name="tingkat_pengurus" value="ranting" <?php echo (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat_pengurus == 'ranting') ? 'checked' : ''; ?>> Pimpinan Ranting</label>
+                </div>
             </div>
 
             <div class="mb-4 space-y-3">
@@ -230,28 +229,31 @@ function pengurus_add_page()
             }
         }
 
-        document.getElementById('tingkat_pengurus').addEventListener('change', function() {
-            let tingkat_pengurus = this.value;
-            let pengurusList = document.getElementById('pengurus-list');
-            console.log(tingkat_pengurus);
-
-            pengurusList.innerHTML = "<p>Loading...</p>";
-
-            fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_data_pengurus&tingkat_pengurus=' + tingkat_pengurus)
-                .then(response => response.text())
-                .then(data => {
-                    pengurusList.innerHTML = data;
-                })
-                .catch(error => {
-                    pengurusList.innerHTML = "<p>Error loading data.</p>";
-                });
+        // Handler untuk radio button tingkat_pengurus
+        document.querySelectorAll('input[name="tingkat_pengurus"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                let tingkat_pengurus = this.value;
+                let pengurusList = document.getElementById('pengurus-list');
+                pengurusList.innerHTML = "<p>Loading...</p>";
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_data_pengurus&tingkat_pengurus=' + tingkat_pengurus)
+                    .then(response => response.text())
+                    .then(data => {
+                        pengurusList.innerHTML = data;
+                    })
+                    .catch(error => {
+                        pengurusList.innerHTML = "<p>Error loading data.</p>";
+                    });
+            });
         });
 
         document.addEventListener('DOMContentLoaded', function() {
             let tingkat_pengurus = '<?php echo $tingkat_pengurus; ?>';
             if (tingkat_pengurus) {
-                document.getElementById('tingkat_pengurus').value = tingkat_pengurus;
-                document.getElementById('tingkat_pengurus').dispatchEvent(new Event('change'));
+                let radio = document.querySelector('input[name="tingkat_pengurus"][value="' + tingkat_pengurus + '"]');
+                if (radio) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change'));
+                }
             }
         });
     </script>
