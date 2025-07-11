@@ -68,7 +68,6 @@ function notulenmu_list_page()
     <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md mt-7">
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-semibold  text-gray-700">List Notulen</h1>
-
             <div>
                 <select id="filter" class="p-2 border rounded-md w-full" onchange="if (this.value !== null) window.location.href='?page=notulenmu-list&filter='+this.value">
                     <option value="">Semua</option>
@@ -78,6 +77,9 @@ function notulenmu_list_page()
                     <option value="wilayah" <?php echo ($filter === 'wilayah' ? 'selected' : ''); ?>>Wilayah</option>
                 </select>
             </div>
+        </div>
+        <div class="mb-4">
+            <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-add')); ?>" class="inline-block bg-gray-400 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded">+ Tambah Notulen</a>
         </div>
 
 

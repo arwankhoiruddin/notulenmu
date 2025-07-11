@@ -218,6 +218,9 @@ function notulenmu_add_page()
     $logged_user = get_current_user_id();
 
     echo '<h1>' . ($editing ? 'Edit' : 'Tambah') . ' Notulen</h1>';
+    echo '<div class="mb-4">
+        <a href="' . esc_url(admin_url('admin.php?page=notulenmu-list')) . '" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>
+    </div>';
 
     $notulen = null;
     if ($editing) {
@@ -454,12 +457,14 @@ function notulenmu_add_page()
         </div>
 
         <?php if (!$editing) { ?>
-            <div class="flex justify-end mt-9">
+            <div class="flex justify-end mt-9 gap-3">
                 <input type="submit" value="Simpan Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-list')); ?>" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Kembali</a>
             </div>
         <?php } else { ?>
-            <div class="flex justify-end mt-9">
+            <div class="flex justify-end mt-9 gap-3">
                 <input type="submit" value="Update Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-list')); ?>" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Kembali</a>
             </div>
         <?php } ?>
     </form>
