@@ -65,7 +65,7 @@ function notulenmu_list_page()
     $rows = $wpdb->get_results($sql);
 
 ?>
-    <div class="max-w-5xl mx-auto p-6 mt-7 bg-white shadow-md rounded-lg border-x border-gray-300">
+    <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md mt-7">
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-semibold  text-gray-700">List Notulen</h1>
 
@@ -82,9 +82,8 @@ function notulenmu_list_page()
 
 
         <!-- Tabel -->
-        <div class="overflow-x-auto">
-            <table class="w-full border border-gray-300 rounded-md">
-                <thead class="bg-gray-200 text-gray-700">
+        <table class="min-w-full border border-gray-300">
+                <thead class="bg-gray-100 text-gray-700">
                     <tr>
                         <th class="py-2 px-4 border border-gray-300">Tingkat</th>
                         <th class="py-2 px-4 border border-gray-300">Topik Rapat</th>
@@ -94,7 +93,7 @@ function notulenmu_list_page()
                         <th class="py-2 px-4 border border-gray-300">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-200">
                     <?php foreach ($rows as $row) { ?>
                         <tr class="hover:bg-gray-100">
                             <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tingkat); ?></td>
