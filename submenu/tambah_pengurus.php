@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
         if ($edit_id) {
-            wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat_pengurus=' . $tingkat_pengurus));
+            wp_redirect(admin_url('admin.php?page=pengurus-list&tingkat_pengurus=' . $id_tingkat_pengurus));
         } else {
             wp_redirect(admin_url('admin.php?page=pengurus-list&tingkat_pengurus=' . $id_tingkat_pengurus));
         }
