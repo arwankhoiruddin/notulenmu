@@ -3,6 +3,10 @@
 Plugin submenu page: Rekap Notulen dan Kegiatan (nasional)
 */
 function notulenmu_rekap_nasional_page() {
+    if (!current_user_can('manage_options')) {
+        echo '<div class="notice notice-error"><p>Hanya administrator yang dapat mengakses halaman ini.</p></div>';
+        return;
+    }
     global $wpdb;
     // --- Optimized Data Notulen & Kegiatan per Wilayah/Daerah/Cabang/Ranting (nasional) ---
     $table_notulen = $wpdb->prefix . 'salammu_notulenmu';
