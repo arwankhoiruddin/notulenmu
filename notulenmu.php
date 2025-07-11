@@ -52,7 +52,7 @@ function notulenmu_menu()
         // Add submenu pages
         add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'read', 'notulenmu-settings', 'notulenmu_settings_page');
         add_submenu_page('__hidden', 'Data Pengurus', 'Tambah Pengurus', 'read', 'pengurus-add', 'pengurus_add_page');
-        add_submenu_page('notulenmu', 'Pengurus', 'Daftar Pengurus', 'read', 'pengurus-list', 'pengurus_list_page');
+        add_submenu_page('notulenmu', 'Pengurus', 'Pengurus', 'read', 'pengurus-list', 'pengurus_list_page');
         add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'read', 'notulenmu-add', 'notulenmu_add_page');
         add_submenu_page('notulenmu', 'List Notulen', 'Daftar Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
         add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
