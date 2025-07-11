@@ -11,8 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
 
     // Get the data from the form
     $user_id = isset($_POST['user_id']) ? $_POST['user_id'] : null;
-    $tingkat = isset($_POST['tingkat']) ? $_POST['tingkat'] : null;
-    $id_tingkat = isset($_POST['id_tingkat']) ? $_POST['id_tingkat'] : null;
+    $tingkat_pengurus = isset($_POST['tingkat_pengurus']) ? $_POST['tingkat_pengurus'] : null;
+    $id_tingkat_pengurus = isset($_POST['id_tingkat_pengurus']) ? $_POST['id_tingkat_pengurus'] : null;
     $nama_lengkap = isset($_POST['nama_lengkap']) ? $_POST['nama_lengkap'] : null;
     $jabatan = isset($_POST['jabatan']) ? $_POST['jabatan'] : null;
     $no_np = isset($_POST['no_hp']) ? $_POST['no_hp'] : null;
@@ -25,27 +25,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     }
 
     // Ambil id_tingkat dari POST, bukan dari setting user
-    if (!$id_tingkat) {
+    if (!$id_tingkat_pengurus) {
         // fallback lama jika id_tingkat tidak dikirim
         $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
-        if ($tingkat == 'wilayah') {
+        if ($tingkat_pengurus == 'wilayah') {
             $row = $wpdb->get_row($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
-            $id_tingkat = $row ? $row->pwm : null;
-        } else if ($tingkat == 'daerah') {
+            $id_tingkat_pengurus = $row ? $row->pwm : null;
+        } else if ($tingkat_pengurus == 'daerah') {
             $row = $wpdb->get_row($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
-            $id_tingkat = $row ? $row->pdm : null;
-        } else if ($tingkat == 'cabang') {
+            $id_tingkat_pengurus = $row ? $row->pdm : null;
+        } else if ($tingkat_pengurus == 'cabang') {
             $row = $wpdb->get_row($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
-            $id_tingkat = $row ? $row->pcm : null;
-        } else if ($tingkat == 'ranting') {
+            $id_tingkat_pengurus = $row ? $row->pcm : null;
+        } else if ($tingkat_pengurus == 'ranting') {
             $row = $wpdb->get_row($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
-            $id_tingkat = $row ? $row->prm : null;
+            $id_tingkat_pengurus = $row ? $row->prm : null;
         } else {
             return;
         }
     }
 
-    if (is_null($id_tingkat)) {
+    if (is_null($id_tingkat_pengurus)) {
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
@@ -59,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             $table_name,
             array(
                 'user_id' => $user_id,
-                'tingkat' => $tingkat,
-                'id_tingkat' => $id_tingkat,
+                'tingkat' => $tingkat_pengurus,
+                'id_tingkat' => $id_tingkat_pengurus,
                 'nama_lengkap_gelar' => $nama_lengkap,
                 'jabatan' => $jabatan,
                 'no_hp' => $no_np,
@@ -81,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
             $table_name,
             array(
                 'user_id' => $user_id,
-                'tingkat' => $tingkat,
-                'id_tingkat' => $id_tingkat,
+                'tingkat' => $tingkat_pengurus,
+                'id_tingkat' => $id_tingkat_pengurus,
                 'nama_lengkap_gelar' => $nama_lengkap,
                 'jabatan' => $jabatan,
                 'no_hp' => $no_np,
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
         }
-        wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat=' . $tingkat));
+        wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat_pengurus=' . $tingkat_pengurus));
         exit;
     } else {
         set_transient('notulenmu_admin_notice', 'There was an error ' . ($edit_id ? 'updating' : 'adding') . ' the notulen.', 5);
@@ -130,7 +130,7 @@ function pengurus_add_page()
         wp_die(('You do not have sufficient permissions to access this page.'));
     }
 
-    $tingkat = isset($_GET['tingkat']) ? $_GET['tingkat'] : '';
+    $tingkat_pengurus = isset($_GET['tingkat_pengurus']) ? $_GET['tingkat_pengurus'] : '';
 
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();
@@ -157,12 +157,12 @@ function pengurus_add_page()
 
             <div class="mb-4 space-y-3">
                 <label for="tingkat" class="block text-gray-700 font-medium">Tingkat</label>
-                <select name="tingkat" id="tingkat" class="w-full mt-1 p-2 border rounded-md" style="min-width: 100%;">
+                <select name="tingkat_pengurus" id="tingkat_pengurus" class="w-full mt-1 p-2 border rounded-md" style="min-width: 100%;">
                     <option>Pilih Tingkat</option>
-                    <option value="wilayah" <?php echo (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat == 'wilayah') ? 'selected' : ''; ?>>Pimpinan Wilayah</option>
-                    <option value="daerah" <?php echo (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat == 'daerah') ? 'selected' : ''; ?>>Pimpinan Daerah</option>
-                    <option value="cabang" <?php echo (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat == 'cabang') ? 'selected' : ''; ?>>Pimpinan Cabang</option>
-                    <option value="ranting" <?php echo (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat == 'ranting') ? 'selected' : ''; ?>>Pimpinan Ranting</option>
+                    <option value="wilayah" <?php echo (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat_pengurus == 'wilayah') ? 'selected' : ''; ?>>Pimpinan Wilayah</option>
+                    <option value="daerah" <?php echo (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat_pengurus == 'daerah') ? 'selected' : ''; ?>>Pimpinan Daerah</option>
+                    <option value="cabang" <?php echo (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat_pengurus == 'cabang') ? 'selected' : ''; ?>>Pimpinan Cabang</option>
+                    <option value="ranting" <?php echo (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat_pengurus == 'ranting') ? 'selected' : ''; ?>>Pimpinan Ranting</option>
                 </select>
             </div>
 
@@ -213,14 +213,14 @@ function pengurus_add_page()
             }
         }
 
-        document.getElementById('tingkat').addEventListener('change', function() {
-            let tingkat = this.value;
+        document.getElementById('tingkat_pengurus').addEventListener('change', function() {
+            let tingkat_pengurus = this.value;
             let pengurusList = document.getElementById('pengurus-list');
-            console.log(tingkat);
+            console.log(tingkat_pengurus);
 
             pengurusList.innerHTML = "<p>Loading...</p>";
 
-            fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_data_pengurus&tingkat=' + tingkat)
+            fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_data_pengurus&tingkat_pengurus=' + tingkat_pengurus)
                 .then(response => response.text())
                 .then(data => {
                     pengurusList.innerHTML = data;
@@ -230,12 +230,11 @@ function pengurus_add_page()
                 });
         });
 
-        // If tingkat is not empty, trigger change event to load the table
         document.addEventListener('DOMContentLoaded', function() {
-            let tingkat = '<?php echo $tingkat; ?>';
-            if (tingkat) {
-                document.getElementById('tingkat').value = tingkat;
-                document.getElementById('tingkat').dispatchEvent(new Event('change'));
+            let tingkat_pengurus = '<?php echo $tingkat_pengurus; ?>';
+            if (tingkat_pengurus) {
+                document.getElementById('tingkat_pengurus').value = tingkat_pengurus;
+                document.getElementById('tingkat_pengurus').dispatchEvent(new Event('change'));
             }
         });
     </script>
@@ -247,9 +246,9 @@ function get_data_pengurus()
 {
     global $wpdb;
     $user_id = get_current_user_id();
-    $tingkat = $_GET['tingkat'] ?? '';
+    $tingkat_pengurus = $_GET['tingkat_pengurus'] ?? '';
 
-    if (!$tingkat) {
+    if (!$tingkat_pengurus) {
         echo "<p>Pilih tingkat terlebih dahulu.</p>";
         wp_die();
     }
@@ -281,7 +280,7 @@ function get_data_pengurus()
               FROM $pengurus_table 
               WHERE tingkat = %s AND id_tingkat IN ($placeholders)";
 
-    $query = $wpdb->prepare($query, array_merge([$tingkat], $id_tingkat_list));
+    $query = $wpdb->prepare($query, array_merge([$tingkat_pengurus], $id_tingkat_list));
     $pengurus = $wpdb->get_results($query);
 
     if (!empty($pengurus)) :
@@ -311,7 +310,7 @@ function get_data_pengurus()
                                     class="px-3 border border-blue-500 text-blue-500 rounded-md hover:text-white transition">
                                     Edit
                                 </a>
-                                <a href="<?php echo esc_url(admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat=' . $tingkat)); ?>"
+                                <a href="<?php echo esc_url(admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat_pengurus=' . $tingkat_pengurus)); ?>"
                                     class="px-3 border border-red-500 text-red-500 rounded-md  hover:text-white transition"
                                     onclick="return confirm('Are you sure you want to delete this item?');">
                                     Delete
@@ -338,12 +337,12 @@ add_action('wp_ajax_nopriv_get_data_pengurus', 'get_data_pengurus');
 
 function handle_delete_pengurus()
 {
-    if (!isset($_GET['id']) || !isset($_GET['tingkat'])) {
+    if (!isset($_GET['id']) || !isset($_GET['tingkat_pengurus'])) {
         wp_die('Invalid request.');
     }
 
     $id = intval($_GET['id']);
-    $tingkat = sanitize_text_field($_GET['tingkat']);
+    $tingkat_pengurus = sanitize_text_field($_GET['tingkat_pengurus']);
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_data_pengurus';
 
@@ -356,7 +355,7 @@ function handle_delete_pengurus()
     if (!function_exists('wp_redirect')) {
         require_once(ABSPATH . WPINC . '/pluggable.php');
     }
-    wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat=' . $tingkat));
+    wp_redirect(admin_url('admin.php?page=pengurus-add&tingkat_pengurus=' . $tingkat_pengurus));
     exit;
 }
 
