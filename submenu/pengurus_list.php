@@ -53,6 +53,10 @@ function pengurus_list_page() {
     $pengurus = $wpdb->get_results($query);
 
     echo '<h1 class="px-6">Daftar Pengurus</h1>';
+    // Tombol tambah pengurus
+    echo '<div class="px-6 mb-4">';
+    echo '<a href="' . esc_url(admin_url('admin.php?page=pengurus-add')) . '" class="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded mb-2">+ Tambah Pengurus</a>';
+    echo '</div>';
     // Dropdown filter tingkat tanpa "Semua Tingkat"
     echo '<form method="get" class="mb-4 px-6">';
     foreach ($_GET as $key => $val) {

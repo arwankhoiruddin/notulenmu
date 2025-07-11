@@ -164,7 +164,12 @@ function pengurus_add_page()
 
 ?>
     <div class="px-6">
-        <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="bg-white p-6 mr-6 rounded-lg shadow-md">
+        <div class="mb-4">
+            <a href="<?php echo esc_url(admin_url('admin.php?page=pengurus-list')); ?>" class="inline-block bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md mr-2">
+                &larr; Kembali
+            </a>
+        </div>
+        <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg">
             <input type="hidden" name="form_name" value="pengurus_add_form">
             <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
             <?php if ($editing) : ?>
@@ -172,69 +177,53 @@ function pengurus_add_page()
             <?php endif; ?>
             <input type="hidden" name="action" value="handle_notulen_form">
 
-            <div class="mb-4 space-y-3">
-                <label class="block text-gray-700 font-medium">Tingkat</label>
+            <div class="grid gap-7 w-full">
                 <div class="flex flex-col space-y-2">
-                    <label><input type="radio" name="tingkat_pengurus" value="wilayah" <?php echo (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat_pengurus == 'wilayah') ? 'checked' : ''; ?>> Pimpinan Wilayah</label>
-                    <label><input type="radio" name="tingkat_pengurus" value="daerah" <?php echo (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat_pengurus == 'daerah') ? 'checked' : ''; ?>> Pimpinan Daerah</label>
-                    <label><input type="radio" name="tingkat_pengurus" value="cabang" <?php echo (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat_pengurus == 'cabang') ? 'checked' : ''; ?>> Pimpinan Cabang</label>
-                    <label><input type="radio" name="tingkat_pengurus" value="ranting" <?php echo (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat_pengurus == 'ranting') ? 'checked' : ''; ?>> Pimpinan Ranting</label>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 9.5l-3 1.5l8 4l8 -4l-3 -1.5" /><path d="M4 15l8 4l8 -4" /><path d="M12 11v-7" /><path d="M9 7l3 -3l3 3" /></svg>
+                        <label for="tingkat_pengurus" class="block font-semibold text-[15px]">Tingkat</label>
+                    </div>
+                    <select name="tingkat_pengurus" id="tingkat_pengurus" class="w-full p-2 border rounded-md">
+                        <option value="wilayah" <?php echo (($pengurus && $pengurus->tingkat == 'wilayah') || $tingkat_pengurus == 'wilayah') ? 'selected' : ''; ?>>Pimpinan Wilayah</option>
+                        <option value="daerah" <?php echo (($pengurus && $pengurus->tingkat == 'daerah') || $tingkat_pengurus == 'daerah') ? 'selected' : ''; ?>>Pimpinan Daerah</option>
+                        <option value="cabang" <?php echo (($pengurus && $pengurus->tingkat == 'cabang') || $tingkat_pengurus == 'cabang') ? 'selected' : ''; ?>>Pimpinan Cabang</option>
+                        <option value="ranting" <?php echo (($pengurus && $pengurus->tingkat == 'ranting') || $tingkat_pengurus == 'ranting') ? 'selected' : ''; ?>>Pimpinan Ranting</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg>
+                        <label for="nama_lengkap" class="block font-semibold text-[15px]">Nama Lengkap</label>
+                    </div>
+                    <input name="nama_lengkap" id="nama_lengkap" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->nama_lengkap_gelar) : ''; ?>" class="w-full p-2 border rounded-md" />
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 12v-7" /><path d="M9 7l3 -3l3 3" /><path d="M7 9.5l-3 1.5l8 4l8 -4l-3 -1.5" /><path d="M4 15l8 4l8 -4" /></svg>
+                        <label for="jabatan" class="block font-semibold text-[15px]">Jabatan</label>
+                    </div>
+                    <input name="jabatan" id="jabatan" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->jabatan) : ''; ?>" class="w-full p-2 border rounded-md" />
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></svg>
+                        <label for="no_hp" class="block font-semibold text-[15px]">Nomor HP</label>
+                    </div>
+                    <input name="no_hp" id="no_hp" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->no_hp) : ''; ?>" class="w-full p-2 border rounded-md" />
                 </div>
             </div>
 
-            <div class="mb-4 space-y-3">
-                <label for="nama_lengkap" class="block text-gray-700 font-medium">Nama Lengkap</label>
-                <input name="nama_lengkap" id="nama_lengkap" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->nama_lengkap_gelar) : ''; ?>" class="w-full mt-1 p-2 border rounded-md" />
+            <div class="flex justify-end mt-9">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                    <?php echo $editing ? 'Update' : 'Simpan'; ?> Pengurus
+                </button>
             </div>
-
-            <div class="mb-4 space-y-3">
-                <label for="jabatan" class="block text-gray-700 font-medium">Jabatan</label>
-                <input name="jabatan" id="jabatan" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->jabatan) : ''; ?>" class="w-full mt-1 p-2 border rounded-md" />
-            </div>
-
-            <div class="mb-4 space-y-3">
-                <label for="no_hp" class="block text-gray-700 font-medium">Nomor HP</label>
-                <input name="no_hp" id="no_hp" type="text" value="<?php echo $pengurus ? esc_attr($pengurus->no_hp) : ''; ?>" class="w-full mt-1 p-2 border rounded-md" />
-            </div>
-
-            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-medium">
-                <?php echo $editing ? 'Update' : 'Simpan'; ?> Pengurus
-            </button>
         </form>
-
-        <div id="pengurus-list" class="mt-4 text-gray-700 text-center  rounded-md">
-            <p>Pilih tingkat untuk melihat daftar Pengurus</p>
-        </div>
     </div>
-    <script>
-        // Handler untuk radio button tingkat_pengurus
-        document.querySelectorAll('input[name="tingkat_pengurus"]').forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                let tingkat_pengurus = this.value;
-                let pengurusList = document.getElementById('pengurus-list');
-                pengurusList.innerHTML = "<p>Loading...</p>";
-                fetch('<?php echo admin_url('admin-ajax.php'); ?>?action=get_data_pengurus&tingkat_pengurus=' + tingkat_pengurus)
-                    .then(response => response.text())
-                    .then(data => {
-                        pengurusList.innerHTML = data;
-                    })
-                    .catch(error => {
-                        pengurusList.innerHTML = "<p>Error loading data.</p>";
-                    });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            let tingkat_pengurus = '<?php echo $tingkat_pengurus; ?>';
-            if (tingkat_pengurus) {
-                let radio = document.querySelector('input[name="tingkat_pengurus"][value="' + tingkat_pengurus + '"]');
-                if (radio) {
-                    radio.checked = true;
-                    radio.dispatchEvent(new Event('change'));
-                }
-            }
-        });
-    </script>
+    <!-- Handler JS untuk tingkat_pengurus dihapus sesuai permintaan -->
     <?php
 }
 
