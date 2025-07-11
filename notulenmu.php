@@ -24,6 +24,7 @@ include plugin_dir_path(__FILE__) . 'submenu/notulenmu-view.php';
 include plugin_dir_path(__FILE__) . 'includes/styles.php';
 include plugin_dir_path(__FILE__) . 'submenu/rekap_topik.php';
 include plugin_dir_path(__FILE__) . 'submenu/rekap_nasional.php';
+include plugin_dir_path(__FILE__) . 'submenu/pengurus_list.php';
 
 
 add_action('send_headers', 'add_cors_headers');
@@ -51,6 +52,7 @@ function notulenmu_menu()
         // Add submenu pages
         add_submenu_page('notulenmu', 'Setting Notulen', 'Setting Notulen', 'read', 'notulenmu-settings', 'notulenmu_settings_page');
         add_submenu_page('notulenmu', 'Data Pengurus', 'Data Pengurus', 'read', 'pengurus-add', 'pengurus_add_page');
+        add_submenu_page('notulenmu', 'Pengurus', 'Pengurus', 'read', 'pengurus-list', 'pengurus_list_page');
         add_submenu_page('notulenmu', 'Tambah Notulen', 'Tambah Notulen', 'read', 'notulenmu-add', 'notulenmu_add_page');
         add_submenu_page('notulenmu', 'List Notulen', 'List Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
         add_submenu_page('notulenmu', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');

@@ -278,53 +278,16 @@ function get_data_pengurus()
               WHERE tingkat = %s AND id_tingkat IN ($placeholders)";
 
     $query = $wpdb->prepare($query, array_merge([$tingkat_pengurus], $id_tingkat_list));
+    echo $query;
+
     $pengurus = $wpdb->get_results($query);
 
-    if (!empty($pengurus)) :
-    ?>
-        <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md">
-            <table class="min-w-full border border-gray-200">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="border border-gray-300 px-4 py-2 text-center">No</th>
-                        <th class="border border-gray-300 px-4 py-2 text-center">Nama</th>
-                        <th class="border border-gray-300 px-4 py-2 text-center">Jabatan</th>
-                        <th class="border border-gray-300 px-4 py-2 text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <?php
-                    $no = 1;
-                    foreach ($pengurus as $p) :
-                        if (!isset($p->nama_lengkap_gelar)) continue;
-                    ?>
-                        <tr class="hover:bg-gray-50">
-                            <td class="border border-gray-300 px-4 py-2 text-center"><?php echo esc_html($no); ?></td>
-                            <td class="border border-gray-300 px-4 py-2"><?php echo esc_html($p->nama_lengkap_gelar); ?></td>
-                            <td class="border border-gray-300 px-4 py-2"><?php echo esc_html($p->jabatan); ?></td>
-                            <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=pengurus-add&edit=1&id=' . $p->id)); ?>"
-                                    class="px-3 border border-blue-500 text-blue-500 rounded-md hover:text-white transition">
-                                    Edit
-                                </a>
-                                <a href="<?php echo esc_url(admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat_pengurus=' . $tingkat_pengurus)); ?>"
-                                    class="px-3 border border-red-500 text-red-500 rounded-md  hover:text-white transition"
-                                    onclick="return confirm('Are you sure you want to delete this item?');">
-                                    Delete
-                                </a>
-                            </td>
-                        </tr>
-                    <?php
-                        $no++;
-                    endforeach;
-                    ?>
-                </tbody>
-            </table>
-        </div>
-<?php
-    else :
+    // Tabel pengurus dihapus dari sini. Silakan gunakan fungsi ini di menu terpisah "Pengurus" untuk menampilkan data pengurus.
+    if (!empty($pengurus)) {
+        echo "<p class='text-green-500'>Data pengurus tersedia. Silakan lihat di menu Pengurus.</p>";
+    } else {
         echo "<p class='text-red-500'>Tidak ada pengurus pada tingkat ini.</p>";
-    endif;
+    }
 
     wp_die();
 }
