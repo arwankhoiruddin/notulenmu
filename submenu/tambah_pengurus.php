@@ -207,28 +207,6 @@ function pengurus_add_page()
         </div>
     </div>
     <script>
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file && file.type.startsWith("image/")) {
-                const objectURL = URL.createObjectURL(file);
-                document.getElementById("image-preview").src = objectURL;
-                document.getElementById("image-preview-container").style.display = "block";
-                document.getElementById("image-view-link").href = objectURL;
-                document.getElementById("image-view-link").style.display = "block";
-            }
-        }
-
-        function previewPDF(event) {
-            const file = event.target.files[0];
-            if (file && file.type === "application/pdf") {
-                const objectURL = URL.createObjectURL(file);
-                document.getElementById("pdf-preview").src = objectURL;
-                document.getElementById("pdf-preview-container").style.display = "block";
-                document.getElementById("pdf-download-link").href = objectURL;
-                document.getElementById("pdf-download-link").style.display = "block";
-            }
-        }
-
         // Handler untuk radio button tingkat_pengurus
         document.querySelectorAll('input[name="tingkat_pengurus"]').forEach(function(radio) {
             radio.addEventListener('change', function() {
