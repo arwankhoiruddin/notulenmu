@@ -248,9 +248,32 @@ function notulenmu_add_page()
             <input type="hidden" name="edit_id" value="<?php echo esc_attr($notulen->id); ?>">
         <?php } ?>
 
-        <!-- Step 1: Pilih Tingkat -->
-        <div id="step-1">
-            <div class="flex flex-col space-y-2">
+        <!-- Tingkat Info or Selection -->
+        <?php if ($editing && $notulen) { ?>
+            <input type="hidden" name="tingkat" value="<?php echo esc_attr($notulen->tingkat); ?>">
+            <div class="flex flex-col space-y-2 mb-4">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-stack-pop">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M7 9.5l-3 1.5l8 4l8 -4l-3 -1.5" />
+                        <path d="M4 15l8 4l8 -4" />
+                        <path d="M12 11v-7" />
+                        <path d="M9 7l3 -3l3 3" />
+                    </svg>
+                    <label class="block font-semibold text-[15px]">Tingkat</label>
+                </div>
+                <div class="p-2 border rounded-md bg-gray-100 text-gray-700">
+                    <?php
+                    if ($notulen->tingkat == 'wilayah') echo 'Pimpinan Wilayah';
+                    else if ($notulen->tingkat == 'daerah') echo 'Pimpinan Daerah';
+                    else if ($notulen->tingkat == 'cabang') echo 'Pimpinan Cabang';
+                    else if ($notulen->tingkat == 'ranting') echo 'Pimpinan Ranting';
+                    else echo esc_html($notulen->tingkat);
+                    ?>
+                </div>
+            </div>
+        <?php } else { ?>
+            <div class="flex flex-col space-y-2 mb-4">
                 <div class="flex items-center gap-2">
                     <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-stack-pop">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -262,21 +285,17 @@ function notulenmu_add_page()
                     <label class="block font-semibold text-[15px]">Tingkat</label>
                 </div>
                 <select name="tingkat" id="tingkat" class="w-full p-2 border rounded-md" style="min-width: 100%;">
-                    <option class="w-full">Pilih Tingkat</option>
                     <option value="wilayah" <?php echo ($notulen && $notulen->tingkat == 'wilayah' ? 'selected' : ''); ?>>Pimpinan Wilayah</option>
                     <option value="daerah" <?php echo ($notulen && $notulen->tingkat == 'daerah' ? 'selected' : ''); ?>>Pimpinan Daerah</option>
                     <option value="cabang" <?php echo ($notulen && $notulen->tingkat == 'cabang' ? 'selected' : ''); ?>>Pimpinan Cabang</option>
                     <option value="ranting" <?php echo ($notulen && $notulen->tingkat == 'ranting' ? 'selected' : ''); ?>>Pimpinan Ranting</option>
                 </select>
             </div>
-            <div class="flex justify-end mt-9 gap-3">
-                <button type="button" id="next-step" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Next</button>
-            </div>
-        </div>
+        <?php } ?>
 
         <!-- Step 2: Form Lanjutan -->
-        <div id="step-2" style="display:none;">
-            <div class="grid gap-7 w-full">
+        <!-- Main Form -->
+        <div class="grid gap-7 w-full">
                 <!-- Peserta -->
                 <div class="flex flex-col space-y-2 ">
                     <div class="flex items-center gap-2">
