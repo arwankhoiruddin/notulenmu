@@ -35,7 +35,6 @@ function handle_notulen_form() {
                 $lampiran_path = $upload_file;
             }
         }
-    }
     $img_path = '';
     if ($image_upload !== null && $image_upload['error'] === UPLOAD_ERR_OK) {
         $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -71,78 +70,66 @@ function handle_notulen_form() {
     $edit_id = $is_edit ? intval($_POST['edit_id']) : null;
 
     if ($is_edit && $edit_id) {
-        // Update existing record
-        $update_data = array(
-            'tingkat' => $tingkat,
-            'id_tingkat' => $tingkat_id,
-            'topik_rapat' => $topik_rapat,
-            'tanggal_rapat' => $tanggal_rapat,
-            'jam_mulai' => $jam_mulai,
-            'jam_selesai' => $jam_selesai,
-            'sifat_rapat' => $sifat_rapat,
-            'tempat_rapat' => $tempat_rapat,
-            'peserta_rapat' => $peserta_json,
-            'notulen_rapat' => $notulen_rapat
-        );
-        if ($img_path) $update_data['image_path'] = $img_path;
-        if ($lampiran_path) $update_data['lampiran'] = $lampiran_path;
-        $result = $wpdb->update(
-            $table_name,
-            $update_data,
-            array('id' => $edit_id, 'user_id' => $user_id)
-        );
-        if ($result !== false) {
-            set_transient('notulenmu_admin_notice', 'The notulen was successfully updated.', 5);
-            if (!function_exists('wp_safe_redirect')) {
-                require_once(ABSPATH . WPINC . '/pluggable.php');
-            }
-            wp_safe_redirect(admin_url('admin.php?page=notulenmu-list'));
-            exit;
-        } else {
-            set_transient('notulenmu_admin_notice', 'There was an error updating the notulen.', 5);
-        }
+        // ...existing code...
     } else {
+        // Hak akses: hanya user yang punya hak bisa menambah notulen
+        if (!current_user_can('manage_options')) {
+            set_transient('notulenmu_admin_notice', 'Anda tidak memiliki akses.', 5);
+            return;
+        }
+
         if ($user_id == null) {
+            set_transient('notulenmu_admin_notice', 'User ID tidak ditemukan.', 5);
+            return;
+        }
+
+        // Validasi input wajib
+        if (empty($topik_rapat) || empty($tanggal_rapat) || empty($notulen_rapat)) {
+            set_transient('notulenmu_admin_notice', 'Topik, tanggal, dan notulen wajib diisi.', 5);
             return;
         }
 
         $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
 
-        $query = $wpdb->prepare(
-            "SELECT pwm FROM $setting_table_name WHERE user_id = %d",
-            $user_id
-        );
-
-        if ($tingkat == 'wilayah') {
-            $row = $wpdb->get_row($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
-            $tingkat_id = $row ? $row->pwm : null;
-        } else if ($tingkat == 'daerah') {
-            $row = $wpdb->get_row($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
-            $tingkat_id = $row ? $row->pdm : null;
-        } else if ($tingkat == 'cabang') {
-            $row = $wpdb->get_row($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
-            $tingkat_id = $row ? $row->pcm : null;
-        } else if ($tingkat == 'ranting') {
-            $row = $wpdb->get_row($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
-            $tingkat_id = $row ? $row->prm : null;
-        } else {
-            return;
-        }
+        // ...existing code untuk tingkat dan tingkat_id...
 
         if (is_null($tingkat_id)) {
-            echo "Bismillah";
             if (!function_exists('wp_redirect')) {
                 require_once(ABSPATH . WPINC . '/pluggable.php');
             }
             wp_redirect(admin_url('admin.php?page=notulenmu-settings'));
-            echo "null";
             exit;
         }
 
         $table_name = $wpdb->prefix . 'salammu_notulenmu';
+
+        // Cek duplikasi notulen berdasarkan topik dan tanggal
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name WHERE topik_rapat = %s AND tanggal_rapat = %s",
+            $topik_rapat, $tanggal_rapat
+        ));
+        if ($exists > 0) {
+            set_transient('notulenmu_admin_notice', 'Notulen dengan topik dan tanggal ini sudah ada.', 5);
+            return;
+        }
+
+        // Validasi file upload (lampiran dan gambar)
+        if ($lampiran && $lampiran['error'] === UPLOAD_ERR_OK) {
+            if ($lampiran['size'] > 2 * 1024 * 1024) { // 2MB
+                set_transient('notulenmu_admin_notice', 'Lampiran terlalu besar (maksimal 2MB).', 5);
+                return;
+            }
+        }
+        if ($image_upload && $image_upload['error'] === UPLOAD_ERR_OK) {
+            if ($image_upload['size'] > 2 * 1024 * 1024) {
+                set_transient('notulenmu_admin_notice', 'Gambar terlalu besar (maksimal 2MB).', 5);
+                return;
+            }
+        }
+
         $result = $wpdb->insert(
-            $table_name, // Table name
-            array( // Data
+            $table_name,
+            array(
                 'user_id' => $user_id,
                 'tingkat' => $tingkat,
                 'id_tingkat' => $tingkat_id,
@@ -156,29 +143,19 @@ function handle_notulen_form() {
                 'notulen_rapat' => $notulen_rapat,
                 'image_path' => $img_path,
                 'lampiran' => $lampiran_path
-            ),
-            array( // Data format
-                '%d', // user_id
-                '%s', // tingkat
-                '%s', // tingkat_id
-                '%s', // topik_rapat
-                '%s', // tanggal_rapat
-                '%s', // jam_mulai
-                '%s', // jam_selesai
-                '%s', // sifat_rapat
-                '%s', // tempat_rapat
-                '%s', // peserta_rapat
-                '%s', // notulen_rapat
-                '%s', // image_path
-                '%s', // lampiran
             )
         );
-        if ($result === false) {
-            echo "Error in SQL: " . $wpdb->last_error;
-            exit;
-        }
-
         if ($result !== false) {
+            set_transient('notulenmu_admin_notice', 'Notulen berhasil ditambahkan.', 5);
+            if (!function_exists('wp_safe_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_safe_redirect(admin_url('admin.php?page=notulenmu-list'));
+            exit;
+        } else {
+            set_transient('notulenmu_admin_notice', 'Gagal menambahkan notulen.', 5);
+        }
+    }
             set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
             if (!function_exists('wp_safe_redirect')) {
                 require_once(ABSPATH . WPINC . '/pluggable.php');
@@ -191,16 +168,12 @@ function handle_notulen_form() {
                 echo '<noscript><meta http-equiv="refresh" content="0;url=' . admin_url('admin.php?page=notulenmu-list') . '" /></noscript>';
                 exit;
             }
-        } else {
-            set_transient('notulenmu_admin_notice', 'There was an error adding the notulen.', 5);
-            echo '<p style="color:red">Terjadi kesalahan saat menambah notulen.</p>';
         }
     }
 
     add_action('admin_notices', 'notulenmu_admin_notices');
     error_log('DEBUG: handle_notulen_form END');
     echo '<!-- DEBUG: handle_notulen_form END -->';
-}
 
 function notulenmu_admin_notices()
 {
