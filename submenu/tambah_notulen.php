@@ -1,17 +1,9 @@
 <?php
-global $pagenow;
 
-// If we're on the login page, return early
-if ($pagenow === 'wp-login.php') {
-    return;
-}
-
-if (
-    $_SERVER['REQUEST_METHOD'] === 'POST' &&
-    isset($_POST['form_name']) && $_POST['form_name'] === 'notulenmu_add_form'
-) {
+function handle_notulen_form() {
+    error_log('DEBUG: handle_notulen_form START');
+    echo '<!-- DEBUG: handle_notulen_form START -->';
     global $wpdb;
-
     // Get the data from the form
     $user_id = isset($_POST['user_id']) ? $_POST['user_id'] : null;
     $tingkat = isset($_POST['tingkat']) ? $_POST['tingkat'] : null;
@@ -101,10 +93,10 @@ if (
         );
         if ($result !== false) {
             set_transient('notulenmu_admin_notice', 'The notulen was successfully updated.', 5);
-            if (!function_exists('wp_redirect')) {
+            if (!function_exists('wp_safe_redirect')) {
                 require_once(ABSPATH . WPINC . '/pluggable.php');
             }
-            wp_redirect(admin_url('admin.php?page=notulenmu-list'));
+            wp_safe_redirect(admin_url('admin.php?page=notulenmu-list'));
             exit;
         } else {
             set_transient('notulenmu_admin_notice', 'There was an error updating the notulen.', 5);
@@ -188,25 +180,38 @@ if (
 
         if ($result !== false) {
             set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
-            if (!function_exists('wp_redirect')) {
+            if (!function_exists('wp_safe_redirect')) {
                 require_once(ABSPATH . WPINC . '/pluggable.php');
             }
-            wp_redirect(admin_url('admin.php?page=notulenmu-list'));
-            exit;
+            if (!headers_sent()) {
+                wp_safe_redirect(admin_url('admin.php?page=notulenmu-list'));
+                exit;
+            } else {
+                echo '<script>window.location.href="' . admin_url('admin.php?page=notulenmu-list') . '";</script>';
+                echo '<noscript><meta http-equiv="refresh" content="0;url=' . admin_url('admin.php?page=notulenmu-list') . '" /></noscript>';
+                exit;
+            }
         } else {
             set_transient('notulenmu_admin_notice', 'There was an error adding the notulen.', 5);
+            echo '<p style="color:red">Terjadi kesalahan saat menambah notulen.</p>';
         }
     }
 
     add_action('admin_notices', 'notulenmu_admin_notices');
-    function notulenmu_admin_notices()
-    {
-        if ($message = get_transient('notulenmu_admin_notice')) {
-            echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
-            delete_transient('notulenmu_admin_notice');
-        }
+    error_log('DEBUG: handle_notulen_form END');
+    echo '<!-- DEBUG: handle_notulen_form END -->';
+}
+
+function notulenmu_admin_notices()
+{
+    if ($message = get_transient('notulenmu_admin_notice')) {
+        echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
+        delete_transient('notulenmu_admin_notice');
     }
 }
+
+add_action('admin_post_handle_notulen_form', 'handle_notulen_form');
+add_action('admin_post_nopriv_handle_notulen_form', 'handle_notulen_form');
 
 function notulenmu_add_page()
 {
@@ -915,4 +920,3 @@ function get_pengurus_by_tingkat()
 
 add_action('wp_ajax_get_pengurus_by_tingkat', 'get_pengurus_by_tingkat');
 add_action('wp_ajax_nopriv_get_pengurus_by_tingkat', 'get_pengurus_by_tingkat');
-?>
