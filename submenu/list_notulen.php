@@ -67,19 +67,22 @@ function notulenmu_list_page()
 ?>
     <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md mt-7">
         <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-semibold  text-gray-700">List Notulen</h1>
+            <h1 class="text-2xl font-semibold text-gray-700">List Notulen</h1>
+        </div>
+        <div class="mb-4 flex flex-col gap-3">
             <div>
-                <select id="filter" class="p-2 border rounded-md w-full" onchange="if (this.value !== null) window.location.href='?page=notulenmu-list&filter='+this.value">
-                    <option value="">Semua</option>
-                    <option value="ranting" <?php echo ($filter === 'ranting' ? 'selected' : ''); ?>>Ranting</option>
-                    <option value="cabang" <?php echo ($filter === 'cabang' ? 'selected' : ''); ?>>Cabang</option>
-                    <option value="daerah" <?php echo ($filter === 'daerah' ? 'selected' : ''); ?>>Daerah</option>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-add')); ?>" class="bg-gray-400 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded">+ Tambah Notulen</a>
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="filter" class="font-semibold text-gray-600">Filter Tingkat:</label>
+                <select id="filter" class="p-2 border rounded-md" onchange="window.location.href='?page=notulenmu-list'+(this.value ? '&filter='+this.value : '')">
+                    <option value="" <?php echo ($filter === '' ? 'selected' : ''); ?>>Semua Tingkat</option>
                     <option value="wilayah" <?php echo ($filter === 'wilayah' ? 'selected' : ''); ?>>Wilayah</option>
+                    <option value="daerah" <?php echo ($filter === 'daerah' ? 'selected' : ''); ?>>Daerah</option>
+                    <option value="cabang" <?php echo ($filter === 'cabang' ? 'selected' : ''); ?>>Cabang</option>
+                    <option value="ranting" <?php echo ($filter === 'ranting' ? 'selected' : ''); ?>>Ranting</option>
                 </select>
             </div>
-        </div>
-        <div class="mb-4">
-            <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-add')); ?>" class="inline-block bg-gray-400 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded">+ Tambah Notulen</a>
         </div>
 
 
