@@ -3,6 +3,29 @@
 function handle_notulen_form() {
     error_log('DEBUG: handle_notulen_form START');
     echo '<!-- DEBUG: handle_notulen_form START -->';
+    
+    // Enable error reporting for debugging
+    if (WP_DEBUG) {
+        ini_set('display_errors', 1);
+        error_reporting(E_ALL);
+    }
+    
+    // Debug: Check if this function is being called
+    if (isset($_POST['action']) && $_POST['action'] === 'handle_notulen_form') {
+        error_log('DEBUG: Form action confirmed, processing form...');
+    } else {
+        error_log('DEBUG: Function called but action not confirmed. Action: ' . (isset($_POST['action']) ? $_POST['action'] : 'NOT SET'));
+        return;
+    }
+    
+    // Verify nonce for security
+    if (!wp_verify_nonce($_POST['notulenmu_nonce'], 'notulenmu_add_nonce')) {
+        error_log('DEBUG: Nonce verification failed');
+        set_transient('notulenmu_admin_notice', 'Security check failed. Please try again.', 5);
+        wp_safe_redirect(admin_url('admin.php?page=notulenmu-add'));
+        exit;
+    }
+    
     global $wpdb;
     // Get the data from the form
     $user_id = isset($_POST['user_id']) ? $_POST['user_id'] : null;
@@ -18,6 +41,10 @@ function handle_notulen_form() {
     $image_upload = isset($_FILES['image_upload']) ? $_FILES['image_upload'] : null;
     $selected_peserta = isset($_POST['peserta_rapat']) ? $_POST['peserta_rapat'] : [];
     $peserta_tambahan = isset($_POST['peserta_tambahan']) ? $_POST['peserta_tambahan'] : null;
+    
+    // Debug log the received data
+    error_log('DEBUG: Received POST data - user_id: ' . $user_id . ', tingkat: ' . $tingkat . ', topik: ' . $topik_rapat);
+    
     if ($peserta_tambahan) {
         $selected_peserta[] = $peserta_tambahan;
     }
@@ -35,6 +62,8 @@ function handle_notulen_form() {
                 $lampiran_path = $upload_file;
             }
         }
+    }
+    
     $img_path = '';
     if ($image_upload !== null && $image_upload['error'] === UPLOAD_ERR_OK) {
         $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -70,7 +99,47 @@ function handle_notulen_form() {
     $edit_id = $is_edit ? intval($_POST['edit_id']) : null;
 
     if ($is_edit && $edit_id) {
-        // ...existing code...
+        // Handle edit functionality
+        if (!current_user_can('manage_options')) {
+            set_transient('notulenmu_admin_notice', 'Anda tidak memiliki akses.', 5);
+            return;
+        }
+
+        // Validasi input wajib
+        if (empty($topik_rapat) || empty($tanggal_rapat) || empty($notulen_rapat)) {
+            set_transient('notulenmu_admin_notice', 'Topik, tanggal, dan notulen wajib diisi.', 5);
+            return;
+        }
+
+        // Update the record
+        $table_name = $wpdb->prefix . 'salammu_notulenmu';
+        $result = $wpdb->update(
+            $table_name,
+            array(
+                'topik_rapat' => $topik_rapat,
+                'tanggal_rapat' => $tanggal_rapat,
+                'jam_mulai' => $jam_mulai,
+                'jam_selesai' => $jam_selesai,
+                'sifat_rapat' => $sifat_rapat,
+                'tempat_rapat' => $tempat_rapat,
+                'peserta_rapat' => $peserta_json,
+                'notulen_rapat' => $notulen_rapat,
+                'image_path' => $img_path ? $img_path : null,
+                'lampiran' => $lampiran_path ? $lampiran_path : null
+            ),
+            array('id' => $edit_id, 'user_id' => $user_id)
+        );
+
+        if ($result !== false) {
+            set_transient('notulenmu_admin_notice', 'Notulen berhasil diupdate.', 5);
+            if (!function_exists('wp_safe_redirect')) {
+                require_once(ABSPATH . WPINC . '/pluggable.php');
+            }
+            wp_safe_redirect(admin_url('admin.php?page=notulenmu-list'));
+            exit;
+        } else {
+            set_transient('notulenmu_admin_notice', 'Gagal mengupdate notulen.', 5);
+        }
     } else {
         // Hak akses: hanya user yang punya hak bisa menambah notulen
         if (!current_user_can('manage_options')) {
@@ -141,8 +210,8 @@ function handle_notulen_form() {
                 'tempat_rapat' => $tempat_rapat,
                 'peserta_rapat' => $peserta_json,
                 'notulen_rapat' => $notulen_rapat,
-                'image_path' => $img_path,
-                'lampiran' => $lampiran_path
+                'image_path' => $img_path ? $img_path : '',
+                'lampiran' => $lampiran_path ? $lampiran_path : ''
             )
         );
         if ($result !== false) {
@@ -153,27 +222,16 @@ function handle_notulen_form() {
             wp_safe_redirect(admin_url('admin.php?page=notulenmu-list'));
             exit;
         } else {
-            set_transient('notulenmu_admin_notice', 'Gagal menambahkan notulen.', 5);
-        }
-    }
-            set_transient('notulenmu_admin_notice', 'The notulen was successfully added.', 5);
-            if (!function_exists('wp_safe_redirect')) {
-                require_once(ABSPATH . WPINC . '/pluggable.php');
-            }
-            if (!headers_sent()) {
-                wp_safe_redirect(admin_url('admin.php?page=notulenmu-list'));
-                exit;
-            } else {
-                echo '<script>window.location.href="' . admin_url('admin.php?page=notulenmu-list') . '";</script>';
-                echo '<noscript><meta http-equiv="refresh" content="0;url=' . admin_url('admin.php?page=notulenmu-list') . '" /></noscript>';
-                exit;
-            }
+            // Log database error
+            error_log('DEBUG: Database insert failed. Error: ' . $wpdb->last_error);
+            set_transient('notulenmu_admin_notice', 'Gagal menambahkan notulen. Error: ' . $wpdb->last_error, 5);
         }
     }
 
     add_action('admin_notices', 'notulenmu_admin_notices');
     error_log('DEBUG: handle_notulen_form END');
     echo '<!-- DEBUG: handle_notulen_form END -->';
+}
 
 function notulenmu_admin_notices()
 {
@@ -197,6 +255,13 @@ function notulenmu_add_page()
 
 
     echo '<h1>' . ($editing ? 'Edit' : 'Tambah') . ' Notulen</h1>';
+    
+    // Display admin notices
+    if ($message = get_transient('notulenmu_admin_notice')) {
+        echo "<div class='notice notice-error is-dismissible'><p>$message</p></div>";
+        delete_transient('notulenmu_admin_notice');
+    }
+    
     echo '<div class="mb-4">
         <a href="' . esc_url(admin_url('admin.php?page=notulenmu-list')) . '" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>
     </div>';
@@ -253,6 +318,7 @@ function notulenmu_add_page()
                 <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
                 <input type="hidden" name="action" value="handle_notulen_form">
                 <input type="hidden" name="tingkat" id="tingkat-hidden" value="">
+                <?php wp_nonce_field('notulenmu_add_nonce', 'notulenmu_nonce'); ?>
                 <!-- Main Form -->
                 <div class="grid gap-7 w-full">
                     <!-- Peserta -->
@@ -444,12 +510,12 @@ function notulenmu_add_page()
                 </div>
                 <?php if (!$editing) { ?>
                     <div class="flex justify-end mt-9 gap-3">
-                        <input type="submit" value="Simpan Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                        <input type="submit" value="Simpan Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md" onclick="return validateForm()">
                         <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-list')); ?>" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Kembali</a>
                     </div>
                 <?php } else { ?>
                     <div class="flex justify-end mt-9 gap-3">
-                        <input type="submit" value="Update Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                        <input type="submit" value="Update Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md" onclick="return validateForm()">
                         <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-list')); ?>" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Kembali</a>
                     </div>
                 <?php } ?>
@@ -463,6 +529,7 @@ function notulenmu_add_page()
             <input type="hidden" name="action" value="handle_notulen_form">
             <input type="hidden" name="edit_id" value="<?php echo esc_attr($notulen->id); ?>">
             <input type="hidden" name="tingkat" value="<?php echo esc_attr($notulen->tingkat); ?>">
+            <?php wp_nonce_field('notulenmu_add_nonce', 'notulenmu_nonce'); ?>>
             <!-- Main Form -->
             <div class="grid gap-7 w-full">
                 <!-- Peserta -->
@@ -705,12 +772,12 @@ function notulenmu_add_page()
             </div>
             <?php if (!$editing) { ?>
                 <div class="flex justify-end mt-9 gap-3">
-                    <input type="submit" value="Simpan Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                    <input type="submit" value="Simpan Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md" onclick="return validateForm()">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-list')); ?>" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Kembali</a>
                 </div>
             <?php } else { ?>
                 <div class="flex justify-end mt-9 gap-3">
-                    <input type="submit" value="Update Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                    <input type="submit" value="Update Notulen" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md" onclick="return validateForm()">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-list')); ?>" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">Kembali</a>
                 </div>
             <?php } ?>
@@ -724,6 +791,9 @@ function notulenmu_add_page()
                 alert('Silakan pilih tingkat terlebih dahulu.');
                 return;
             }
+            // Set the hidden field value
+            document.getElementById('tingkat-hidden').value = tingkat;
+            
             document.getElementById('step-1').style.display = 'none';
             document.getElementById('step-2').style.display = 'block';
             // Load peserta list for selected tingkat
@@ -731,6 +801,26 @@ function notulenmu_add_page()
         });
 
         // ...existing code...
+        function validateForm() {
+            var topik = document.getElementById('topik_rapat').value;
+            var tanggal = document.getElementById('tanggal_rapat').value;
+            var notulen = document.getElementById('notulen_rapat').value;
+            
+            if (!topik || !tanggal || !notulen) {
+                alert('Mohon lengkapi field yang wajib diisi: Topik Rapat, Tanggal Rapat, dan Rangkuman Rapat');
+                return false;
+            }
+            
+            // Check if tingkat is set (for non-editing mode)
+            var tingkatHidden = document.getElementById('tingkat-hidden');
+            if (tingkatHidden && !tingkatHidden.value) {
+                alert('Mohon pilih tingkat terlebih dahulu');
+                return false;
+            }
+            
+            return true;
+        }
+        
         function previewImage(input, imgId, textId) {
             const file = input.files[0];
             if (!file) {
