@@ -194,10 +194,18 @@ function rekap_topik_page() {
     
     $tingkat_labels = ['Wilayah', 'Daerah', 'Cabang', 'Ranting'];
     ?>
-    <div class="pr-4">
-        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Rekap Topik Rapat yang Sering Dibahas di Wilayah Kerja Anda</h2>
-        <div id="wordcloud" class="flex items-center justify-center text-center bg-white w-auto h-auto rounded-lg shadow-md min-h-[200px]">
-            <div class="loading-spinner p-4 text-gray-500">Memuat wordcloud...</div>
+    <div class="flex flex-row gap-4 pr-4">
+        <div class="w-1/2">
+            <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Rekap Topik Rapat yang Sering Dibahas</h2>
+            <div id="wordcloud" class="flex items-center justify-center text-center bg-white w-auto h-auto rounded-lg shadow-md p-4" style="height: 300px;">
+                <div class="loading-spinner p-4 text-gray-500">Memuat wordcloud...</div>
+            </div>
+        </div>
+        <div class="w-1/2">
+            <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Tingkat</h2>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <canvas id="grafikNotulen" width="400" height="300"></canvas>
+            </div>
         </div>
     </div>
     
@@ -302,11 +310,6 @@ function rekap_topik_page() {
         }
     </script>
     
-    <div class="pr-4 mt-8">
-        <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Grafik Jumlah Notulen per Tingkat Dalam Wilayah Kerja Anda (sesuai setting NotulenMu)</h2>
-        <canvas id="grafikNotulen" width="250" height="120" style="max-width: 100%;"></canvas>
-    </div>
-    
     <!-- Optimasi: Lazy load Chart.js -->
     <script>
         let chartInstance = null; // Variabel untuk menyimpan instance chart
@@ -376,6 +379,7 @@ function rekap_topik_page() {
                         }]
                     },
                     options: {
+                        indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false, // Optimasi: Better responsive behavior
                         interaction: {
