@@ -22,6 +22,7 @@ function handle_notulen_form() {
     if (!wp_verify_nonce($_POST['notulenmu_nonce'], 'notulenmu_add_nonce')) {
         error_log('DEBUG: Nonce verification failed');
         set_transient('notulenmu_admin_notice', 'Security check failed. Please try again.', 5);
+        set_transient('notulenmu_notice_type', 'error', 5);
         wp_safe_redirect(admin_url('admin.php?page=notulenmu-add'));
         exit;
     }
@@ -34,7 +35,7 @@ function handle_notulen_form() {
     $tanggal_rapat = isset($_POST['tanggal_rapat']) ? $_POST['tanggal_rapat'] : null;
     $jam_mulai = isset($_POST['jam_mulai']) ? $_POST['jam_mulai'] : null;
     $jam_selesai = isset($_POST['jam_selesai']) ? $_POST['jam_selesai'] : null;
-    $sifat_rapat = isset($_POST['sifat_rapat']) ? json_encode($_POST['sifat_rapat']) : json_encode([]);
+    $sifat_rapat = isset($_POST['sifat_rapat']) ? json_encode([$_POST['sifat_rapat']]) : json_encode([]);
     $tempat_rapat = isset($_POST['tempat_rapat']) ? $_POST['tempat_rapat'] : null;
     $lampiran = isset($_FILES['lampiran']) ? $_FILES['lampiran'] : null;
     $notulen_rapat = isset($_POST['notulen_rapat']) ? $_POST['notulen_rapat'] : null;
@@ -102,12 +103,14 @@ function handle_notulen_form() {
         // Handle edit functionality
         if (!current_user_can('manage_options')) {
             set_transient('notulenmu_admin_notice', 'Anda tidak memiliki akses.', 5);
+            set_transient('notulenmu_notice_type', 'error', 5);
             return;
         }
 
         // Validasi input wajib
         if (empty($topik_rapat) || empty($tanggal_rapat) || empty($notulen_rapat)) {
             set_transient('notulenmu_admin_notice', 'Topik, tanggal, dan notulen wajib diisi.', 5);
+            set_transient('notulenmu_notice_type', 'error', 5);
             return;
         }
 
@@ -132,6 +135,7 @@ function handle_notulen_form() {
 
         if ($result !== false) {
             set_transient('notulenmu_admin_notice', 'Notulen berhasil diupdate.', 5);
+            set_transient('notulenmu_notice_type', 'success', 5);
             if (!function_exists('wp_safe_redirect')) {
                 require_once(ABSPATH . WPINC . '/pluggable.php');
             }
@@ -139,22 +143,26 @@ function handle_notulen_form() {
             exit;
         } else {
             set_transient('notulenmu_admin_notice', 'Gagal mengupdate notulen.', 5);
+            set_transient('notulenmu_notice_type', 'error', 5);
         }
     } else {
         // Hak akses: hanya user yang punya hak bisa menambah notulen
         if (!current_user_can('manage_options')) {
             set_transient('notulenmu_admin_notice', 'Anda tidak memiliki akses.', 5);
+            set_transient('notulenmu_notice_type', 'error', 5);
             return;
         }
 
         if ($user_id == null) {
             set_transient('notulenmu_admin_notice', 'User ID tidak ditemukan.', 5);
+            set_transient('notulenmu_notice_type', 'error', 5);
             return;
         }
 
         // Validasi input wajib
         if (empty($topik_rapat) || empty($tanggal_rapat) || empty($notulen_rapat)) {
             set_transient('notulenmu_admin_notice', 'Topik, tanggal, dan notulen wajib diisi.', 5);
+            set_transient('notulenmu_notice_type', 'error', 5);
             return;
         }
 
@@ -179,6 +187,7 @@ function handle_notulen_form() {
         ));
         if ($exists > 0) {
             set_transient('notulenmu_admin_notice', 'Notulen dengan topik dan tanggal ini sudah ada.', 5);
+            set_transient('notulenmu_notice_type', 'error', 5);
             return;
         }
 
@@ -186,12 +195,14 @@ function handle_notulen_form() {
         if ($lampiran && $lampiran['error'] === UPLOAD_ERR_OK) {
             if ($lampiran['size'] > 2 * 1024 * 1024) { // 2MB
                 set_transient('notulenmu_admin_notice', 'Lampiran terlalu besar (maksimal 2MB).', 5);
+                set_transient('notulenmu_notice_type', 'error', 5);
                 return;
             }
         }
         if ($image_upload && $image_upload['error'] === UPLOAD_ERR_OK) {
             if ($image_upload['size'] > 2 * 1024 * 1024) {
                 set_transient('notulenmu_admin_notice', 'Gambar terlalu besar (maksimal 2MB).', 5);
+                set_transient('notulenmu_notice_type', 'error', 5);
                 return;
             }
         }
@@ -216,6 +227,7 @@ function handle_notulen_form() {
         );
         if ($result !== false) {
             set_transient('notulenmu_admin_notice', 'Notulen berhasil ditambahkan.', 5);
+            set_transient('notulenmu_notice_type', 'success', 5);
             if (!function_exists('wp_safe_redirect')) {
                 require_once(ABSPATH . WPINC . '/pluggable.php');
             }
@@ -225,6 +237,7 @@ function handle_notulen_form() {
             // Log database error
             error_log('DEBUG: Database insert failed. Error: ' . $wpdb->last_error);
             set_transient('notulenmu_admin_notice', 'Gagal menambahkan notulen. Error: ' . $wpdb->last_error, 5);
+            set_transient('notulenmu_notice_type', 'error', 5);
         }
     }
 
@@ -236,8 +249,11 @@ function handle_notulen_form() {
 function notulenmu_admin_notices()
 {
     if ($message = get_transient('notulenmu_admin_notice')) {
-        echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
+        $notice_type = get_transient('notulenmu_notice_type') ?: 'success';
+        $notice_class = ($notice_type === 'success') ? 'notice-success' : 'notice-error';
+        echo "<div class='notice $notice_class is-dismissible'><p>$message</p></div>";
         delete_transient('notulenmu_admin_notice');
+        delete_transient('notulenmu_notice_type');
     }
 }
 
@@ -258,8 +274,11 @@ function notulenmu_add_page()
     
     // Display admin notices
     if ($message = get_transient('notulenmu_admin_notice')) {
-        echo "<div class='notice notice-error is-dismissible'><p>$message</p></div>";
+        $notice_type = get_transient('notulenmu_notice_type') ?: 'error';
+        $notice_class = ($notice_type === 'success') ? 'notice-success' : 'notice-error';
+        echo "<div class='notice $notice_class is-dismissible'><p>$message</p></div>";
         delete_transient('notulenmu_admin_notice');
+        delete_transient('notulenmu_notice_type');
     }
     
     echo '<div class="mb-4">
@@ -408,11 +427,12 @@ function notulenmu_add_page()
                             if (!is_array($saved_sifat_rapat)) {
                                 $saved_sifat_rapat = [];
                             }
+                            $selected_sifat = !empty($saved_sifat_rapat) ? $saved_sifat_rapat[0] : '';
                             foreach ($sifat_options as $option) {
-                                $checked = in_array($option, $saved_sifat_rapat) ? 'checked' : '';
+                                $checked = ($selected_sifat === $option) ? 'checked' : '';
                             ?>
                                 <label class="block mt-3">
-                                    <input type="checkbox" name="sifat_rapat[]" value="<?php echo esc_attr($option); ?>" class="mr-2" <?php echo $checked; ?>> <?php echo esc_html($option); ?>
+                                    <input type="radio" name="sifat_rapat" value="<?php echo esc_attr($option); ?>" class="mr-2" <?php echo $checked; ?>> <?php echo esc_html($option); ?>
                                 </label>
                             <?php } ?>
                         </div>
@@ -670,11 +690,12 @@ function notulenmu_add_page()
                         if (!is_array($saved_sifat_rapat)) {
                             $saved_sifat_rapat = [];
                         }
+                        $selected_sifat = !empty($saved_sifat_rapat) ? $saved_sifat_rapat[0] : '';
                         foreach ($sifat_options as $option) {
-                            $checked = in_array($option, $saved_sifat_rapat) ? 'checked' : '';
+                            $checked = ($selected_sifat === $option) ? 'checked' : '';
                         ?>
                             <label class="block mt-3">
-                                <input type="checkbox" name="sifat_rapat[]" value="<?php echo esc_attr($option); ?>" class="mr-2" <?php echo $checked; ?>> <?php echo esc_html($option); ?>
+                                <input type="radio" name="sifat_rapat" value="<?php echo esc_attr($option); ?>" class="mr-2" <?php echo $checked; ?>> <?php echo esc_html($option); ?>
                             </label>
                         <?php } ?>
                     </div>
@@ -808,6 +829,13 @@ function notulenmu_add_page()
             
             if (!topik || !tanggal || !notulen) {
                 alert('Mohon lengkapi field yang wajib diisi: Topik Rapat, Tanggal Rapat, dan Rangkuman Rapat');
+                return false;
+            }
+            
+            // Check if sifat rapat is selected
+            var sifatRapat = document.querySelector('input[name="sifat_rapat"]:checked');
+            if (!sifatRapat) {
+                alert('Mohon pilih sifat rapat');
                 return false;
             }
             
