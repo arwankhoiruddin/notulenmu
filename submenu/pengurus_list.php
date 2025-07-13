@@ -101,12 +101,12 @@ function pengurus_list_page() {
                         <td class="border border-gray-300 px-4 py-2 text-center"><?php echo esc_html($p->tingkat); ?></td>
                         <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
                             <a href="<?php echo esc_url(admin_url('admin.php?page=pengurus-add&edit=1&id=' . $p->id)); ?>"
-                                class="px-3 border border-blue-500 text-blue-500 rounded-md hover:text-white transition">
+                                class="text-green-500 hover:text-green-700 mr-2">
                                 Edit
                             </a>
                             <a href="<?php echo esc_url(admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat_pengurus=' . $p->tingkat)); ?>"
-                                class="px-3 border border-red-500 text-red-500 rounded-md  hover:text-white transition"
-                                onclick="return confirm('Are you sure you want to delete this item?');">
+                                class="text-red-500 hover:text-red-700"
+                                onclick="return confirm('Yakin ingin menghapus pengurus ini?');">
                                 Delete
                             </a>
                         </td>

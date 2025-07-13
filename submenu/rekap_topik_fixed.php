@@ -232,11 +232,13 @@ function rekap_topik_page() {
             });
         }
         
-        loadWordcloudScripts().then(() => {
-            renderWordcloud();
-        }).catch(error => {
-            console.error('Error loading wordcloud scripts:', error);
-            document.getElementById('wordcloud').innerHTML = '<p class="p-4 text-red-500">Error memuat library wordcloud</p>';
+        document.addEventListener("DOMContentLoaded", function() {
+            loadWordcloudScripts().then(() => {
+                renderWordcloud();
+            }).catch(error => {
+                console.error('Error loading wordcloud scripts:', error);
+                document.getElementById('wordcloud').innerHTML = '<p class="p-4 text-red-500">Error memuat library wordcloud</p>';
+            });
         });
         
         function renderWordcloud() {
@@ -309,8 +311,6 @@ function rekap_topik_page() {
     
     <!-- Optimasi: Lazy load Chart.js -->
     <script>
-        let chartInstance = null; // Variabel untuk menyimpan instance chart
-
         function loadChartScript() {
             return new Promise((resolve, reject) => {
                 if (window.Chart) {
@@ -327,14 +327,16 @@ function rekap_topik_page() {
         }
         
         // Load and render chart when page loads
-        loadChartScript().then(() => {
-            renderChart();
-        }).catch(error => {
-            console.error('Error loading Chart.js:', error);
-            var canvas = document.getElementById('grafikNotulen');
-            if (canvas) {
-                canvas.style.display = 'none';
-            }
+        document.addEventListener("DOMContentLoaded", function() {
+            loadChartScript().then(() => {
+                renderChart();
+            }).catch(error => {
+                console.error('Error loading Chart.js:', error);
+                var canvas = document.getElementById('grafikNotulen');
+                if (canvas) {
+                    canvas.style.display = 'none';
+                }
+            });
         });
         
         function renderChart() {
@@ -345,12 +347,6 @@ function rekap_topik_page() {
                     return;
                 }
                 
-                // Hancurkan instance chart sebelumnya jika ada
-                const existingChart = Chart.getChart("grafikNotulen");
-                if (existingChart) {
-                    existingChart.destroy();
-                }
-
                 var tingkatLabels = window.tingkatLabels;
                 var jumlahData = window.jumlahData;
                 
@@ -361,7 +357,7 @@ function rekap_topik_page() {
                     return;
                 }
                 
-                chartInstance = new Chart(ctx, {
+                var chart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: tingkatLabels,
