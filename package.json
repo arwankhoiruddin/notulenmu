@@ -1,0 +1,15 @@
+{
+  "name": "notulenmu",
+  "version": "1.0.0",
+  "description": "NotulenMu WordPress Plugin",
+  "scripts": {
+    "build": "postcss assets/css/src/styles.css -o assets/css/dist/styles.css",
+    "watch": "postcss assets/css/src/styles.css -o assets/css/dist/styles.css --watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.15",
+    "postcss": "^8.4.28",
+    "postcss-cli": "^10.1.0",
+    "tailwindcss": "^3.3.3"
+  }
+}
