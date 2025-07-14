@@ -29,6 +29,7 @@ function pengurus_list_page() {
     }
 
     // Mapping tingkat dan id_tingkat dari setting user
+
     $pengurus_table = $wpdb->prefix . 'salammu_data_pengurus';
     $tingkat_options = array();
     if ($settings['pwm']) $tingkat_options[] = (object)[ 'tingkat' => 'Wilayah', 'id_tingkat' => $settings['pwm'] ];
@@ -38,15 +39,30 @@ function pengurus_list_page() {
 
     // Default: tampilkan pengurus wilayah (PWM)
     $default_tingkat = $settings['pwm'];
+    $default_label = 'Wilayah';
+    if ($tingkat_options) {
+        foreach ($tingkat_options as $t) {
+            if ($t->id_tingkat == $tingkat_pengurus) {
+                $selected_label = $t->tingkat;
+                break;
+            }
+        }
+    }
+    if (!isset($selected_label)) {
+        $selected_label = $default_label;
+    }
+
     if ($tingkat_pengurus !== '') {
         $query = $wpdb->prepare(
-            "SELECT id, nama_lengkap_gelar, jabatan, tingkat FROM $pengurus_table WHERE id_tingkat = %d",
-            $tingkat_pengurus
+            "SELECT id, nama_lengkap_gelar, jabatan, tingkat FROM $pengurus_table WHERE id_tingkat = %d AND tingkat = %s",
+            $tingkat_pengurus,
+            $selected_label
         );
     } else {
         $query = $wpdb->prepare(
-            "SELECT id, nama_lengkap_gelar, jabatan, tingkat FROM $pengurus_table WHERE id_tingkat = %d",
-            $default_tingkat
+            "SELECT id, nama_lengkap_gelar, jabatan, tingkat FROM $pengurus_table WHERE id_tingkat = %d AND tingkat = %s",
+            $default_tingkat,
+            $default_label
         );
         $tingkat_pengurus = $default_tingkat;
     }
