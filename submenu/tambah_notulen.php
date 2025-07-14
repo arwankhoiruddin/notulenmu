@@ -18,6 +18,10 @@ function handle_notulen_form() {
     if (!isset($_POST['notulenmu_nonce']) || !wp_verify_nonce($_POST['notulenmu_nonce'], 'notulenmu_add_nonce')) {
         wp_die('Nonce verification failed.');
     }
+    // Debug: log POST data for troubleshooting
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('handle_notulen_form POST: ' . print_r($_POST, true));
+    }
     global $wpdb;
     $user_id = get_current_user_id();
     $tingkat = sanitize_text_field($_POST['tingkat'] ?? '');
@@ -27,8 +31,21 @@ function handle_notulen_form() {
     $jam_selesai = sanitize_text_field($_POST['jam_selesai'] ?? '');
     $sifat_rapat = isset($_POST['sifat_rapat']) ? json_encode([sanitize_text_field($_POST['sifat_rapat'])]) : json_encode([]);
     $tempat_rapat = sanitize_text_field($_POST['tempat_rapat'] ?? '');
-    $peserta_rapat = isset($_POST['peserta_rapat']) ? json_encode($_POST['peserta_rapat']) : json_encode([]);
+    // Gabungkan peserta_rapat[] dan peserta_tambahan
+    $peserta_rapat_arr = isset($_POST['peserta_rapat']) ? (array)$_POST['peserta_rapat'] : [];
     $peserta_tambahan = sanitize_text_field($_POST['peserta_tambahan'] ?? '');
+    if (!empty($peserta_tambahan)) {
+        // Pisahkan dengan koma, hapus spasi ekstra
+        $tambahan_arr = array_map('trim', explode(',', $peserta_tambahan));
+        foreach ($tambahan_arr as $t) {
+            if ($t !== '') {
+                $peserta_rapat_arr[] = $t;
+            }
+        }
+    }
+    // Pastikan tidak ada duplikat
+    $peserta_rapat_arr = array_unique($peserta_rapat_arr);
+    $peserta_rapat = json_encode(array_values($peserta_rapat_arr));
     $notulen_rapat = sanitize_textarea_field($_POST['notulen_rapat'] ?? '');
     $image_path = '';
     $lampiran_path = '';
@@ -60,17 +77,22 @@ function handle_notulen_form() {
         'sifat_rapat' => $sifat_rapat,
         'tempat_rapat' => $tempat_rapat,
         'peserta_rapat' => $peserta_rapat,
-        'peserta_tambahan' => $peserta_tambahan,
         'notulen_rapat' => $notulen_rapat,
         'image_path' => $image_path,
         'lampiran' => $lampiran_path
     ];
 
     if (isset($_POST['edit_id']) && $_POST['edit_id']) {
-        $wpdb->update($table, $data, ['id' => intval($_POST['edit_id'])]);
+        $result = $wpdb->update($table, $data, ['id' => intval($_POST['edit_id'])]);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('handle_notulen_form UPDATE result: ' . print_r($result, true));
+        }
         $redirect_url = admin_url('admin.php?page=notulenmu-list&updated=1');
     } else {
-        $wpdb->insert($table, $data);
+        $result = $wpdb->insert($table, $data);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('handle_notulen_form INSERT result: ' . print_r($result, true));
+        }
         $redirect_url = admin_url('admin.php?page=notulenmu-list&added=1');
     }
     wp_redirect($redirect_url);

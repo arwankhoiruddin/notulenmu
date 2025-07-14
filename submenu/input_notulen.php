@@ -59,7 +59,7 @@ function notulenmu_input_form_page() {
     ?>
     <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg" id="notulenmu-form">
         <?php if ($is_edit_mode) : ?>
-            <input type="hidden" name="notulen_id" value="<?php echo esc_attr($notulen_id); ?>">
+            <input type="hidden" name="edit_id" value="<?php echo esc_attr($notulen_id); ?>">
         <?php endif; ?>
         <input type="hidden" name="form_name" value="notulenmu_add_form">
         <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
