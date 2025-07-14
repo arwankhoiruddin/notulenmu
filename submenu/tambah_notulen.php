@@ -67,8 +67,22 @@ function handle_notulen_form() {
     }
 
     $table = $wpdb->prefix . 'salammu_notulenmu';
+    // Ambil id_tingkat dari setting user sesuai tingkat yang dipilih
+    $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
+    $settings = $wpdb->get_row($wpdb->prepare(
+        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+        $user_id
+    ), ARRAY_A);
+    $id_tingkat = 0;
+    if ($settings) {
+        if ($tingkat === 'wilayah') $id_tingkat = intval($settings['pwm']);
+        elseif ($tingkat === 'daerah') $id_tingkat = intval($settings['pdm']);
+        elseif ($tingkat === 'cabang') $id_tingkat = intval($settings['pcm']);
+        elseif ($tingkat === 'ranting') $id_tingkat = intval($settings['prm']);
+    }
     $data = [
         'user_id' => $user_id,
+        'id_tingkat' => $id_tingkat,
         'tingkat' => $tingkat,
         'topik_rapat' => $topik_rapat,
         'tanggal_rapat' => $tanggal_rapat,
