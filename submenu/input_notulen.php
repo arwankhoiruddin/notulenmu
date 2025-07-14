@@ -1,28 +1,66 @@
 <?php
+function notulenmu_handle_input_form_redirect() {
+    // We only want to check this on the 'notulenmu-input' page.
+    if (isset($_GET['page']) && $_GET['page'] === 'notulenmu-input') {
+        // Verify if we came from the first step, if not, redirect.
+        if (!isset($_POST['tingkat']) || !isset($_POST['notulenmu_tingkat_nonce']) ||
+            !wp_verify_nonce($_POST['notulenmu_tingkat_nonce'], 'notulenmu_tingkat_nonce')) {
+            if (!headers_sent()) {
+                wp_safe_redirect(admin_url('admin.php?page=notulenmu-add'));
+                exit;
+            }
+        }
+    }
+}
+add_action('admin_init', 'notulenmu_handle_input_form_redirect');
+
 function notulenmu_input_form_page() {
     if (!current_user_can('edit_posts')) {
         wp_die(('You do not have sufficient permissions to access this page.'));
     }
 
-    // Verify if we came from the first step
-    if (!isset($_POST['tingkat']) || !isset($_POST['notulenmu_tingkat_nonce']) || 
-        !wp_verify_nonce($_POST['notulenmu_tingkat_nonce'], 'notulenmu_tingkat_nonce')) {
-        wp_safe_redirect(admin_url('admin.php?page=notulenmu-add'));
-        exit;
+    global $wpdb;
+    $notulen_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $is_edit_mode = $notulen_id > 0;
+    $notulen_data = null;
+
+    if ($is_edit_mode) {
+        $table_name = $wpdb->prefix . 'salammu_notulenmu';
+        $notulen_data = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $notulen_id), ARRAY_A);
     }
 
-    $tingkat = sanitize_text_field($_POST['tingkat']);
+    // Check if 'tingkat' is set before accessing it.
+    if (!isset($_POST['tingkat']) && !$is_edit_mode) {
+        // This should ideally not be reached if the redirect logic in admin_init works correctly.
+        // We can show an error or just stop execution for this page.
+        echo "<div class='error'><p>Tingkat tidak valid atau sesi telah berakhir. Silakan kembali dan coba lagi.</p></div>";
+        return;
+    }
+
+    $tingkat = isset($_POST['tingkat']) ? sanitize_text_field($_POST['tingkat']) : ($notulen_data ? $notulen_data['tingkat'] : '');
     $logged_user = get_current_user_id();
 
-    echo '<h1>Input Notulen</h1>';
+    echo '<h1>' . ($is_edit_mode ? 'Edit Notulen' : 'Input Notulen') . '</h1>';
     
     echo '<div class="mb-4">
-        <a href="' . esc_url(admin_url('admin.php?page=notulenmu-add')) . '" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>
+        <a href="' . esc_url(admin_url('admin.php?page=notulenmu-list')) . '" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>
     </div>';
 
     $selected_peserta = [];
+    if ($is_edit_mode && $notulen_data && !empty($notulen_data['peserta_rapat'])) {
+        $decoded = json_decode($notulen_data['peserta_rapat'], true);
+        if (is_array($decoded)) {
+            // Pastikan array numerik agar tidak ada warning undefined array key
+            $selected_peserta = array_values($decoded);
+        } else {
+            $selected_peserta = [];
+        }
+    }
     ?>
     <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg" id="notulenmu-form">
+        <?php if ($is_edit_mode) : ?>
+            <input type="hidden" name="notulen_id" value="<?php echo esc_attr($notulen_id); ?>">
+        <?php endif; ?>
         <input type="hidden" name="form_name" value="notulenmu_add_form">
         <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
         <input type="hidden" name="action" value="handle_notulen_form">
@@ -69,13 +107,17 @@ function notulenmu_input_form_page() {
                             $no = 1;
                             foreach ($pengurus as $p) {
                                 if (!isset($p->nama_lengkap_gelar)) continue;
+                                $checked = '';
+                                if (is_array($selected_peserta) && isset($p->nama_lengkap_gelar)) {
+                                    $checked = in_array($p->nama_lengkap_gelar, $selected_peserta) ? 'checked' : '';
+                                }
                                 echo '<tr>';
                                 echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">' . esc_html($no) . '</td>';
                                 echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->nama_lengkap_gelar) . '</td>';
                                 echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->tingkat) . '</td>';
                                 echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->jabatan) . '</td>';
                                 echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">';
-                                echo '<input type="checkbox" name="peserta_rapat[]" value="' . esc_attr($p->nama_lengkap_gelar) . '">';
+                                echo '<input type="checkbox" name="peserta_rapat[]" value="' . esc_attr($p->nama_lengkap_gelar) . '" ' . $checked . '>';
                                 echo '</td>';
                                 echo '</tr>';
                                 $no++;
@@ -89,7 +131,31 @@ function notulenmu_input_form_page() {
                     }
                     ?>
                 </div>
-                <input type="text" name="peserta_tambahan" placeholder="Tambah peserta (opsional)" class="w-full p-2 border rounded-md">
+                <!-- Peserta tambahan: diisi dari peserta_rapat yang tidak masuk ke daftar pengurus -->
+                <?php
+                // Ambil daftar nama pengurus untuk membandingkan
+                $pengurus_nama = [];
+                if (!empty($pengurus)) {
+                    foreach ($pengurus as $p) {
+                        if (isset($p->nama_lengkap_gelar)) {
+                            $pengurus_nama[] = $p->nama_lengkap_gelar;
+                        }
+                    }
+                }
+                // Cari peserta tambahan
+                $peserta_tambahan = [];
+                if (is_array($selected_peserta)) {
+                    foreach ($selected_peserta as $peserta) {
+                        if (!in_array($peserta, $pengurus_nama)) {
+                            $peserta_tambahan[] = $peserta;
+                        }
+                    }
+                }
+                ?>
+                <div class="flex flex-col space-y-2 mt-4">
+                    <label class="block font-semibold text-[15px]">Peserta Tambahan (jika ada, pisahkan dengan koma)</label>
+                    <input type="text" name="peserta_tambahan" class="w-full p-2 border rounded-md" value="<?php echo esc_attr(implode(', ', $peserta_tambahan)); ?>" placeholder="Nama peserta tambahan" />
+                </div>
             </div>
 
             <!-- Topik Rapat -->
@@ -104,7 +170,7 @@ function notulenmu_input_form_page() {
                     </svg>
                     <label class="block font-semibold text-[15px]">Topik Rapat</label>
                 </div>
-                <input name="topik_rapat" id="topik_rapat" type="text" required class="w-full p-2 border rounded-md" />
+                <input name="topik_rapat" id="topik_rapat" type="text" required class="w-full p-2 border rounded-md" value="<?php echo $is_edit_mode && $notulen_data ? esc_attr($notulen_data['topik_rapat']) : ''; ?>" />
             </div>
 
             <!-- Tanggal Rapat -->
@@ -120,7 +186,7 @@ function notulenmu_input_form_page() {
                     </svg>
                     <label class="block font-semibold text-[15px]">Tanggal Rapat</label>
                 </div>
-                <input name="tanggal_rapat" id="tanggal_rapat" type="date" required class="w-full p-2 border rounded-md" />
+                <input name="tanggal_rapat" id="tanggal_rapat" type="date" required class="w-full p-2 border rounded-md" value="<?php echo $is_edit_mode && $notulen_data ? esc_attr($notulen_data['tanggal_rapat']) : ''; ?>" />
             </div>
 
             <!-- Jam Mulai -->
@@ -134,7 +200,7 @@ function notulenmu_input_form_page() {
                     </svg>
                     <label class="block font-semibold text-[15px]">Jam Mulai</label>
                 </div>
-                <input name="jam_mulai" type="time" class="w-full p-2 border rounded-md" />
+                <input name="jam_mulai" type="time" class="w-full p-2 border rounded-md" value="<?php echo $is_edit_mode && $notulen_data ? esc_attr($notulen_data['jam_mulai']) : ''; ?>" />
             </div>
 
             <!-- Jam Berakhir -->
@@ -148,7 +214,7 @@ function notulenmu_input_form_page() {
                     </svg>
                     <label class="block font-semibold text-[15px]">Jam Berakhir</label>
                 </div>
-                <input name="jam_selesai" type="time" class="w-full p-2 border rounded-md" />
+                <input name="jam_selesai" type="time" class="w-full p-2 border rounded-md" value="<?php echo $is_edit_mode && $notulen_data ? esc_attr($notulen_data['jam_selesai']) : ''; ?>" />
             </div>
 
             <!-- Sifat Rapat -->
@@ -164,10 +230,11 @@ function notulenmu_input_form_page() {
                 <div class="flex flex-wrap gap-4">
                     <?php
                     $sifat_options = ['Daring', 'Luring', 'Blended', 'Di luar kantor'];
+                    $selected_sifat = $is_edit_mode && $notulen_data ? $notulen_data['sifat_rapat'] : '';
                     foreach ($sifat_options as $option) {
                         ?>
                         <label class="block mt-3">
-                            <input type="radio" name="sifat_rapat" value="<?php echo esc_attr($option); ?>" class="mr-2"> <?php echo esc_html($option); ?>
+                            <input type="radio" name="sifat_rapat" value="<?php echo esc_attr($option); ?>" class="mr-2" <?php checked($selected_sifat, $option); ?>> <?php echo esc_html($option); ?>
                         </label>
                     <?php } ?>
                 </div>
@@ -184,7 +251,7 @@ function notulenmu_input_form_page() {
                     </svg>
                     <label class="block font-semibold text-[15px]">Tempat Rapat</label>
                 </div>
-                <input name="tempat_rapat" id="tempat_rapat" type="text" class="w-full p-2 border rounded-md" />
+                <input name="tempat_rapat" id="tempat_rapat" type="text" class="w-full p-2 border rounded-md" value="<?php echo $is_edit_mode && $notulen_data ? esc_attr($notulen_data['tempat_rapat']) : ''; ?>" />
             </div>
 
             <!-- Foto Kegiatan -->
@@ -209,7 +276,7 @@ function notulenmu_input_form_page() {
                     <span id="image-upload-text" class="mt-2 text-gray-600">Upload File</span>
                     <input name="image_upload" id="image_upload" type="file" accept="image/*" class="hidden" onchange="previewImage(this, 'image-preview', 'image-upload-text')" />
                 </label>
-                <img id="image-preview" src="" class="mt-2 w-40 hidden">
+                <img id="image-preview" src="<?php echo $is_edit_mode && !empty($notulen_data['foto_kegiatan']) ? esc_url($notulen_data['foto_kegiatan']) : ''; ?>" class="mt-2 w-40 <?php echo $is_edit_mode && !empty($notulen_data['foto_kegiatan']) ? '' : 'hidden'; ?>">
             </div>
 
             <!-- Lampiran PDF -->
@@ -233,7 +300,15 @@ function notulenmu_input_form_page() {
                         <path d="M7 9l5 -5l5 5" />
                         <path d="M12 4l0 12" />
                     </svg>
-                    <span id="pdf-upload-text" class="mt-2 text-gray-600">Upload File</span>
+                    <span id="pdf-upload-text" class="mt-2 text-gray-600">
+                        <?php 
+                        if ($is_edit_mode && !empty($notulen_data['lampiran'])) {
+                            echo esc_html(basename($notulen_data['lampiran']));
+                        } else {
+                            echo 'Upload File';
+                        }
+                        ?>
+                    </span>
                     <input name="lampiran" id="lampiran" type="file" accept=".pdf" class="hidden" onchange="updateFileLabel(this, 'pdf-upload-text')" />
                 </label>
             </div>
@@ -251,12 +326,12 @@ function notulenmu_input_form_page() {
                     </svg>
                     <label class="block font-semibold text-[15px]">Notulen Rapat</label>
                 </div>
-                <textarea name="notulen_rapat" id="notulen_rapat" required class="w-full p-2 border rounded-md h-48"></textarea>
+                <textarea name="notulen_rapat" id="notulen_rapat" required class="w-full p-2 border rounded-md h-48"><?php echo $is_edit_mode && $notulen_data ? esc_textarea($notulen_data['notulen_rapat']) : ''; ?></textarea>
             </div>
         </div>
 
         <div class="flex justify-end mt-6">
-            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Simpan Notulen</button>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"><?php echo $is_edit_mode ? 'Update Notulen' : 'Simpan Notulen'; ?></button>
         </div>
     </form>
 

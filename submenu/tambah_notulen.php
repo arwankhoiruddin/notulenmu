@@ -1,5 +1,3 @@
-
-
 <?php
 require_once plugin_dir_path(__FILE__) . 'pilih_tingkat.php';
 require_once plugin_dir_path(__FILE__) . 'input_notulen.php';
