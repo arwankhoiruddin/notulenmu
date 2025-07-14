@@ -167,7 +167,7 @@ function notulenmu_install()
         $sql = "CREATE TABLE $table_pengurus (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             user_id mediumint(9) NOT NULL,
-            tingkat int NOT NULL,
+            tingkat varchar(20) NOT NULL,
             id_tingkat int NOT NULL,
             nama_lengkap_gelar VARCHAR(40) NOT NULL,
             jabatan VARCHAR(30) NOT NULL,
@@ -227,7 +227,7 @@ function notulenmu_install()
     ));
     add_missing_columns($table_pengurus, array(
         'user_id' => 'mediumint(9) NOT NULL',
-        'tingkat' => 'int NOT NULL',
+        'tingkat' => 'VARCHAR(20) NOT NULL',
         'id_tingkat' => 'int NOT NULL',
         'nama_lengkap_gelar' => 'VARCHAR(40) NOT NULL',
         'jabatan' => 'VARCHAR(30) NOT NULL',
