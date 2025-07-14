@@ -71,7 +71,7 @@ function notulenmu_list_page()
         </div>
         <div class="mb-4 flex flex-col gap-3">
             <div>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-add')); ?>" class="bg-gray-400 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded">+ Tambah Notulen</a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-add')); ?>" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded" style="color:#fff !important;">+ Tambah Notulen</a>
             </div>
             <div class="flex items-center gap-2">
                 <label for="filter" class="font-semibold text-gray-600">Filter Tingkat:</label>

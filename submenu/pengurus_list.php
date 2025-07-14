@@ -68,20 +68,20 @@ function pengurus_list_page() {
     }
     $pengurus = $wpdb->get_results($query);
 
-    echo '<h1 class="px-6">Daftar Pengurus</h1>';
-    // Tombol tambah pengurus
-    echo '<div class="px-6 mb-4">';
+    echo '<div class="bg-white rounded-lg shadow-md p-6 mb-6">';
+    echo '<div class="mb-4">';
+    echo '<h1 class="text-3xl font-bold mb-2">Daftar Pengurus</h1>';
     $tingkat_pengurus_url = isset($_GET['tingkat_pengurus']) ? '&tingkat_pengurus=' . urlencode($_GET['tingkat_pengurus']) : '';
-    echo '<a href="' . esc_url(admin_url('admin.php?page=pengurus-add' . $tingkat_pengurus_url)) . '" class="inline-block bg-gray-400 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded mb-2">+ Tambah Pengurus</a>';
+    echo '<a href="' . esc_url(admin_url('admin.php?page=pengurus-add' . $tingkat_pengurus_url)) . '" class="inline-block bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded shadow mb-2 text-white" style="color:#fff !important;">+ Tambah Pengurus</a>';
     echo '</div>';
-    // Dropdown filter tingkat tanpa "Semua Tingkat"
-    echo '<form method="get" class="mb-4 px-6">';
+    // Dropdown filter tingkat
+    echo '<form method="get" class="mb-4">';
     foreach ($_GET as $key => $val) {
         if ($key !== 'tingkat_pengurus') {
             echo '<input type="hidden" name="' . esc_attr($key) . '" value="' . esc_attr($val) . '">';
         }
     }
-    echo '<label for="tingkat_pengurus" class="mr-2">Filter Tingkat:</label>';
+    echo '<label for="tingkat_pengurus" class="mr-2 font-semibold">Filter Tingkat:</label>';
     echo '<select name="tingkat_pengurus" id="tingkat_pengurus" class="border rounded px-2 py-1" onchange="this.form.submit()">';
     if ($tingkat_options) {
         foreach ($tingkat_options as $t) {
@@ -91,52 +91,40 @@ function pengurus_list_page() {
     }
     echo '</select>';
     echo '</form>';
+    echo '</div>';
     if (!empty($pengurus)) :
-?>
-    <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md">
-        <table class="min-w-full border border-gray-200">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="border border-gray-300 px-4 py-2 text-center">No</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Nama</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Jabatan</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Tingkat</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                <?php
-                $no = 1;
-                foreach ($pengurus as $p) :
-                    if (!isset($p->nama_lengkap_gelar)) continue;
-                ?>
-                    <tr class="hover:bg-gray-50">
-                        <td class="border border-gray-300 px-4 py-2 text-center"><?php echo esc_html($no); ?></td>
-                        <td class="border border-gray-300 px-4 py-2"><?php echo esc_html($p->nama_lengkap_gelar); ?></td>
-                        <td class="border border-gray-300 px-4 py-2"><?php echo esc_html($p->jabatan); ?></td>
-                        <td class="border border-gray-300 px-4 py-2 text-center"><?php echo esc_html($p->tingkat); ?></td>
-                        <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=pengurus-add&edit=1&id=' . $p->id)); ?>"
-                                class="text-green-500 hover:text-green-700 mr-2">
-                                Edit
-                            </a>
-                            <a href="<?php echo esc_url(admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat_pengurus=' . $p->tingkat)); ?>"
-                                class="text-red-500 hover:text-red-700"
-                                onclick="return confirm('Yakin ingin menghapus pengurus ini?');">
-                                Delete
-                            </a>
-                        </td>
-                    </tr>
-                <?php
-                    $no++;
-                endforeach;
-                ?>
-            </tbody>
-        </table>
-    </div>
-<?php
+        echo '<div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md">';
+        echo '<table class="min-w-full border border-gray-200">';
+        echo '<thead class="bg-gray-100">';
+        echo '<tr>';
+        echo '<th class="border border-gray-300 px-4 py-2 text-center">No</th>';
+        echo '<th class="border border-gray-300 px-4 py-2 text-center">Nama</th>';
+        echo '<th class="border border-gray-300 px-4 py-2 text-center">Jabatan</th>';
+        echo '<th class="border border-gray-300 px-4 py-2 text-center">Tingkat</th>';
+        echo '<th class="border border-gray-300 px-4 py-2 text-center">Aksi</th>';
+        echo '</tr>';
+        echo '</thead>';
+        echo '<tbody class="divide-y divide-gray-200">';
+        $no = 1;
+        foreach ($pengurus as $p) :
+            if (!isset($p->nama_lengkap_gelar)) continue;
+            echo '<tr class="hover:bg-gray-50">';
+            echo '<td class="border border-gray-300 px-4 py-2 text-center">' . esc_html($no) . '</td>';
+            echo '<td class="border border-gray-300 px-4 py-2">' . esc_html($p->nama_lengkap_gelar) . '</td>';
+            echo '<td class="border border-gray-300 px-4 py-2">' . esc_html($p->jabatan) . '</td>';
+            echo '<td class="border border-gray-300 px-4 py-2 text-center">' . esc_html($p->tingkat) . '</td>';
+            echo '<td class="border border-gray-300 px-4 py-2 text-center space-x-2">';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=pengurus-add&edit=1&id=' . $p->id)) . '" class="text-green-600 hover:text-green-800 font-semibold mr-4">Edit</a>';
+            echo '<a href="' . esc_url(admin_url('admin-post.php?action=delete_pengurus&id=' . $p->id . '&tingkat_pengurus=' . $p->tingkat)) . '" class="text-red-600 hover:text-red-800 font-semibold" onclick="return confirm(\'Yakin ingin menghapus pengurus ini?\');">Delete</a>';
+            echo '</td>';
+            echo '</tr>';
+            $no++;
+        endforeach;
+        echo '</tbody>';
+        echo '</table>';
+        echo '</div>';
     else :
-        echo "<p class='text-red-500'>Tidak ada pengurus pada tingkat ini.</p>";
+        echo "<div class='bg-white rounded-lg shadow-md p-6'><p class='text-red-500'>Tidak ada pengurus pada tingkat ini.</p></div>";
     endif;
 }
 
