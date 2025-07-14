@@ -230,7 +230,13 @@ function notulenmu_input_form_page() {
                 <div class="flex flex-wrap gap-4">
                     <?php
                     $sifat_options = ['Daring', 'Luring', 'Blended', 'Di luar kantor'];
-                    $selected_sifat = $is_edit_mode && $notulen_data ? $notulen_data['sifat_rapat'] : '';
+                    if ($is_edit_mode && $notulen_data) {
+                        // sifat_rapat di DB disimpan json, ambil stringnya
+                        $decoded = json_decode($notulen_data['sifat_rapat'], true);
+                        $selected_sifat = is_array($decoded) && count($decoded) ? $decoded[0] : '';
+                    } else {
+                        $selected_sifat = isset($_POST['sifat_rapat']) ? sanitize_text_field($_POST['sifat_rapat']) : '';
+                    }
                     foreach ($sifat_options as $option) {
                         ?>
                         <label class="block mt-3">
@@ -274,9 +280,14 @@ function notulenmu_input_form_page() {
                         <path d="M12 4l0 12" />
                     </svg>
                     <span id="image-upload-text" class="mt-2 text-gray-600">Upload File</span>
-                    <input name="image_upload" id="image_upload" type="file" accept="image/*" class="hidden" onchange="previewImage(this, 'image-preview', 'image-upload-text')" />
+                    <input name="image_upload" id="image_upload" type="file" accept="image/*" class="hidden" onchange="previewImage(this, 'image-preview-foto', 'image-upload-text')" />
                 </label>
-                <img id="image-preview" src="<?php echo $is_edit_mode && !empty($notulen_data['foto_kegiatan']) ? esc_url($notulen_data['foto_kegiatan']) : ''; ?>" class="mt-2 w-40 <?php echo $is_edit_mode && !empty($notulen_data['foto_kegiatan']) ? '' : 'hidden'; ?>">
+                <?php $foto_url = ($is_edit_mode && !empty($notulen_data['foto_kegiatan'])) ? esc_url($notulen_data['foto_kegiatan']) : ''; ?>
+                <?php 
+                // Gunakan kolom image_path dari DB untuk preview gambar
+                $foto_url = ($is_edit_mode && !empty($notulen_data['image_path'])) ? esc_url($notulen_data['image_path']) : '';
+                ?>
+                <img id="image-preview-foto" src="<?php echo $foto_url; ?>" class="mt-2 w-40<?php echo $foto_url ? '' : ' hidden'; ?>" style="max-width:200px;max-height:200px;object-fit:contain;" />
             </div>
 
             <!-- Lampiran PDF -->

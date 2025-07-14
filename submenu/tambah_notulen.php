@@ -49,7 +49,16 @@ function handle_notulen_form() {
     $notulen_rapat = sanitize_textarea_field($_POST['notulen_rapat'] ?? '');
     $image_path = '';
     $lampiran_path = '';
-
+    $table = $wpdb->prefix . 'salammu_notulenmu';
+    // If edit mode, get previous image_path and lampiran
+    $is_edit = isset($_POST['edit_id']) && $_POST['edit_id'];
+    if ($is_edit) {
+        $old = $wpdb->get_row($wpdb->prepare("SELECT image_path, lampiran FROM $table WHERE id = %d", intval($_POST['edit_id'])), ARRAY_A);
+        if ($old) {
+            $image_path = $old['image_path'];
+            $lampiran_path = $old['lampiran'];
+        }
+    }
     // Handle image upload
     if (!empty($_FILES['image_upload']['name'])) {
         $uploaded = media_handle_upload('image_upload', 0);
@@ -57,7 +66,6 @@ function handle_notulen_form() {
             $image_path = wp_get_attachment_url($uploaded);
         }
     }
-
     // Handle PDF upload
     if (!empty($_FILES['lampiran']['name'])) {
         $uploaded_pdf = media_handle_upload('lampiran', 0);
