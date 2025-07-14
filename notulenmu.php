@@ -179,13 +179,37 @@ function notulenmu_install()
         dbDelta($sql);
     }
 
-    // Helper function to add missing columns
+    // Helper function to add or modify columns if type is different
     function add_missing_columns($table, $expected_columns) {
         global $wpdb;
-        $existing_columns = $wpdb->get_col("DESC $table", 0);
+        $columns_info = $wpdb->get_results("DESC $table");
+        $existing_columns = array();
+        $existing_types = array();
+        foreach ($columns_info as $colinfo) {
+            $existing_columns[] = $colinfo->Field;
+            $existing_types[$colinfo->Field] = strtolower($colinfo->Type);
+        }
         foreach ($expected_columns as $col => $type) {
+            $type_clean = strtolower(preg_replace('/\s+NOT NULL|\s+DEFAULT.+/', '', $type));
             if (!in_array($col, $existing_columns)) {
                 $wpdb->query("ALTER TABLE $table ADD $col $type");
+            } else {
+                // Check if type is different
+                if (strpos($type_clean, 'varchar') !== false) {
+                    $expected_type = preg_replace('/\s+NOT NULL|\s+DEFAULT.+/', '', $type_clean);
+                } else {
+                    $expected_type = $type_clean;
+                }
+                $db_type = $existing_types[$col];
+                // Normalize varchar type for comparison
+                if (strpos($db_type, 'varchar') !== false && strpos($expected_type, 'varchar') !== false) {
+                    $db_type = preg_replace('/varchar\((\d+)\)/', 'varchar($1)', $db_type);
+                    $expected_type = preg_replace('/varchar\((\d+)\)/', 'varchar($1)', $expected_type);
+                }
+                if ($db_type !== $expected_type) {
+                    // Modify column type
+                    $wpdb->query("ALTER TABLE $table MODIFY $col $type");
+                }
             }
         }
     }
