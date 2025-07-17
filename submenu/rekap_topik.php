@@ -426,3 +426,174 @@ function rekap_topik_page() {
 
 // Panggil optimasi database jika diperlukan (uncomment jika ingin mengaktifkan)
 // optimize_rekap_topik_database();
+
+// Halaman Rekap Isu (Wordcloud Notulen & Kegiatan)
+function rekap_isu_page() {
+    global $wpdb;
+    $user_id = get_current_user_id();
+    if (!$user_id || $user_id <= 0) {
+        wp_die('Akses tidak valid. Silakan login terlebih dahulu.');
+    }
+
+    $table_notulen = $wpdb->prefix . 'salammu_notulenmu';
+    $table_kegiatan = $wpdb->prefix . 'salammu_kegiatanmu'; // Asumsi nama tabel, sesuaikan jika berbeda
+
+
+    // Wordcloud Notulen (dari notulen_rapat)
+    $notulen_results = $wpdb->get_results("SELECT notulen_rapat FROM $table_notulen WHERE notulen_rapat IS NOT NULL AND notulen_rapat != '' ORDER BY id DESC LIMIT 2000", ARRAY_A);
+    $notulen_texts = array();
+    foreach ($notulen_results as $row) {
+        $clean = sanitize_text_field($row['notulen_rapat']);
+        if (strlen($clean) > 3) $notulen_texts[] = $clean;
+    }
+    $notulen_text = strtolower(strip_tags(implode(' ', $notulen_texts)));
+    if (empty(trim($notulen_text))) {
+        $wordcloud_notulen = [];
+    } else {
+        preg_match_all('/\b\w{3,}\b/u', $notulen_text, $matches);
+        $words = $matches[0];
+        $stopwords = array_flip([
+            'dan','atau','yang','ini','itu','ada','pada','untuk','dari','dengan','akan','sudah','telah','bisa','dapat','harus','sangat','lebih','juga','satu','dua','tiga','adalah','menjadi','memiliki','dalam','tentang','sebagai','karena','oleh','kepada','tahun','bulan','hari','waktu'
+        ]);
+        $words = array_filter($words, function($word) use ($stopwords) {
+            return !isset($stopwords[$word]) && strlen($word) > 2;
+        });
+        $word_counts = array_count_values($words);
+        arsort($word_counts);
+        $word_counts = array_slice($word_counts, 0, 30, true);
+        $min_size = 16; $max_size = 60;
+        $min_count = $word_counts ? min($word_counts) : 1;
+        $max_count = $word_counts ? max($word_counts) : 1;
+        $wordcloud_notulen = [];
+        foreach ($word_counts as $word => $count) {
+            $size = ($max_count > $min_count) ? $min_size + ($count - $min_count) * ($max_size - $min_size) / ($max_count - $min_count) : ($min_size + $max_size) / 2;
+            $wordcloud_notulen[] = [ 'text' => esc_html($word), 'size' => round($size) ];
+        }
+    }
+
+    // Wordcloud Kegiatan (dari detail_kegiatan)
+    $kegiatan_results = $wpdb->get_results("SELECT detail_kegiatan FROM $table_kegiatan WHERE detail_kegiatan IS NOT NULL AND detail_kegiatan != '' ORDER BY id DESC LIMIT 2000", ARRAY_A);
+    $kegiatan_texts = array();
+    foreach ($kegiatan_results as $row) {
+        $clean = sanitize_text_field($row['detail_kegiatan']);
+        if (strlen($clean) > 3) $kegiatan_texts[] = $clean;
+    }
+    $kegiatan_text = strtolower(strip_tags(implode(' ', $kegiatan_texts)));
+    if (empty(trim($kegiatan_text))) {
+        $wordcloud_kegiatan = [];
+    } else {
+        preg_match_all('/\b\w{3,}\b/u', $kegiatan_text, $matches);
+        $words = $matches[0];
+        $words = array_filter($words, function($word) use ($stopwords) {
+            return !isset($stopwords[$word]) && strlen($word) > 2;
+        });
+        $word_counts = array_count_values($words);
+        arsort($word_counts);
+        $word_counts = array_slice($word_counts, 0, 30, true);
+        $min_size = 16; $max_size = 60;
+        $min_count = $word_counts ? min($word_counts) : 1;
+        $max_count = $word_counts ? max($word_counts) : 1;
+        $wordcloud_kegiatan = [];
+        foreach ($word_counts as $word => $count) {
+            $size = ($max_count > $min_count) ? $min_size + ($count - $min_count) * ($max_size - $min_size) / ($max_count - $min_count) : ($min_size + $max_size) / 2;
+            $wordcloud_kegiatan[] = [ 'text' => esc_html($word), 'size' => round($size) ];
+        }
+    }
+
+    ?>
+    <div class="flex flex-col md:flex-row gap-4 pr-4">
+        <div class="w-full md:w-1/2">
+            <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Wordcloud Isu Notulen</h2>
+            <div id="wordcloud-notulen" class="flex items-center justify-center text-center bg-white w-auto h-auto rounded-lg shadow-md p-4" style="height: 300px;">
+                <div class="loading-spinner p-4 text-gray-500">Memuat wordcloud...</div>
+            </div>
+        </div>
+        <div class="w-full md:w-1/2">
+            <h2 class="mt-4 text-xl font-semibold text-white relative z-10">Wordcloud Isu Kegiatan</h2>
+            <div id="wordcloud-kegiatan" class="flex items-center justify-center text-center bg-white w-auto h-auto rounded-lg shadow-md p-4" style="height: 300px;">
+                <div class="loading-spinner p-4 text-gray-500">Memuat wordcloud...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.wordcloudNotulen = <?php echo wp_json_encode($wordcloud_notulen, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        window.wordcloudKegiatan = <?php echo wp_json_encode($wordcloud_kegiatan, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+    </script>
+    <script>
+        function loadWordcloudScripts() {
+            return new Promise((resolve, reject) => {
+                if (window.d3 && window.d3.layout && window.d3.layout.cloud) {
+                    resolve();
+                    return;
+                }
+                const d3Script = document.createElement('script');
+                d3Script.src = 'https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js';
+                d3Script.onload = () => {
+                    const cloudScript = document.createElement('script');
+                    cloudScript.src = 'https://cdn.jsdelivr.net/npm/d3-cloud/build/d3.layout.cloud.min.js';
+                    cloudScript.onload = resolve;
+                    cloudScript.onerror = reject;
+                    document.head.appendChild(cloudScript);
+                };
+                d3Script.onerror = reject;
+                document.head.appendChild(d3Script);
+            });
+        }
+        loadWordcloudScripts().then(() => {
+            renderWordcloud('wordcloud-notulen', window.wordcloudNotulen);
+            renderWordcloud('wordcloud-kegiatan', window.wordcloudKegiatan);
+        }).catch(error => {
+            document.getElementById('wordcloud-notulen').innerHTML = '<p class="p-4 text-red-500">Error memuat library wordcloud</p>';
+            document.getElementById('wordcloud-kegiatan').innerHTML = '<p class="p-4 text-red-500">Error memuat library wordcloud</p>';
+        });
+        function renderWordcloud(containerId, words) {
+            try {
+                var wordcloudContainer = document.getElementById(containerId);
+                if (!words || words.length === 0) {
+                    wordcloudContainer.innerHTML = '<p class="p-4 text-gray-500">Tidak ada data isu untuk ditampilkan</p>';
+                    return;
+                }
+                wordcloudContainer.innerHTML = '';
+                var containerWidth = wordcloudContainer.offsetWidth || 400;
+                var width = Math.min(containerWidth - 20, 400);
+                var height = Math.min(width * 0.75, 300);
+                var svg = d3.select('#' + containerId).append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .append('g')
+                    .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
+                var layout = d3.layout.cloud()
+                    .size([width, height])
+                    .words(words)
+                    .padding(3)
+                    .rotate(function() { return (Math.random() - 0.5) * 60; })
+                    .fontSize(function(d) { return d.size; })
+                    .spiral('archimedean')
+                    .on('end', draw);
+                layout.start();
+                function draw(words) {
+                    var text = svg.selectAll('text')
+                        .data(words)
+                        .enter().append('text')
+                        .style('font-size', function(d) { return d.size + 'px'; })
+                        .style('fill', '#2d3476')
+                        .style('font-family', 'Arial, sans-serif')
+                        .attr('text-anchor', 'middle')
+                        .attr('transform', function(d) {
+                            return 'translate(' + [d.x, d.y] + ')rotate(' + d.rotate + ')';
+                        })
+                        .text(function(d) { return d.text; });
+                    text.on('mouseover', function() {
+                        d3.select(this).style('fill', '#1a237e');
+                    }).on('mouseout', function() {
+                        d3.select(this).style('fill', '#2d3476');
+                    });
+                }
+            } catch (error) {
+                wordcloudContainer.innerHTML = '<p class="p-4 text-red-500">Error memuat wordcloud</p>';
+            }
+        }
+    </script>
+    <?php
+}
