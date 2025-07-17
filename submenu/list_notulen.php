@@ -49,19 +49,24 @@ function notulenmu_list_page()
     }
 
     $filter = isset($_GET['filter']) ? sanitize_text_field($_GET['filter']) : '';
+    $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
     $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%d'));
 
     $query = "SELECT * FROM $table_name WHERE user_id = %d AND id_tingkat IN ($placeholders)";
-
+    $params = array_merge([$user_id], $id_tingkat_list);
     if (!empty($filter)) {
         $query .= " AND tingkat = %s";
-        $sql = $wpdb->prepare($query, array_merge([$user_id], $id_tingkat_list, [$filter]));
-    } else {
-        $sql = $wpdb->prepare($query, array_merge([$user_id], $id_tingkat_list));
+        $params[] = $filter;
     }
-
+    if (!empty($search)) {
+        $query .= " AND (topik_rapat LIKE %s OR tempat_rapat LIKE %s)";
+        $search_term = '%' . $wpdb->esc_like($search) . '%';
+        $params[] = $search_term;
+        $params[] = $search_term;
+    }
+    $sql = $wpdb->prepare($query, $params);
     $rows = $wpdb->get_results($sql);
 
 ?>
@@ -73,18 +78,27 @@ function notulenmu_list_page()
             <div>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-add')); ?>" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded" style="color:#fff !important;">+ Tambah Notulen</a>
             </div>
-            <div class="flex items-center gap-2">
-                <label for="filter" class="font-semibold text-gray-600">Filter Tingkat:</label>
-                <select id="filter" class="p-2 border rounded-md" onchange="window.location.href='?page=notulenmu-list'+(this.value ? '&filter='+this.value : '')">
-                    <option value="" <?php echo ($filter === '' ? 'selected' : ''); ?>>Semua Tingkat</option>
-                    <option value="wilayah" <?php echo ($filter === 'wilayah' ? 'selected' : ''); ?>>Wilayah</option>
-                    <option value="daerah" <?php echo ($filter === 'daerah' ? 'selected' : ''); ?>>Daerah</option>
-                    <option value="cabang" <?php echo ($filter === 'cabang' ? 'selected' : ''); ?>>Cabang</option>
-                    <option value="ranting" <?php echo ($filter === 'ranting' ? 'selected' : ''); ?>>Ranting</option>
-                </select>
+            <div class="flex flex-col md:flex-row md:items-center gap-2">
+                <div class="flex items-center gap-2">
+                    <label for="filter" class="font-semibold text-gray-600">Filter Tingkat:</label>
+                    <select id="filter" class="p-2 border rounded-md" onchange="window.location.href='?page=notulenmu-list'+(this.value ? '&filter='+this.value<?php echo $search !== '' ? "+'&search=".urlencode($search)."'" : '' ?>)<?php echo $filter !== '' ? "+'&filter=".urlencode($filter)."'" : '' ?>">
+                        <option value="" <?php echo ($filter === '' ? 'selected' : ''); ?>>Semua Tingkat</option>
+                        <option value="wilayah" <?php echo ($filter === 'wilayah' ? 'selected' : ''); ?>>Wilayah</option>
+                        <option value="daerah" <?php echo ($filter === 'daerah' ? 'selected' : ''); ?>>Daerah</option>
+                        <option value="cabang" <?php echo ($filter === 'cabang' ? 'selected' : ''); ?>>Cabang</option>
+                        <option value="ranting" <?php echo ($filter === 'ranting' ? 'selected' : ''); ?>>Ranting</option>
+                    </select>
+                </div>
+                <form method="get" class="flex items-center gap-2" action="">
+                    <input type="hidden" name="page" value="notulenmu-list">
+                    <?php if ($filter !== '') { ?>
+                        <input type="hidden" name="filter" value="<?php echo esc_attr($filter); ?>">
+                    <?php } ?>
+                    <input type="text" name="search" id="search" class="p-2 border rounded-md" placeholder="Cari topik/tempat rapat..." value="<?php echo esc_attr($search); ?>">
+                    <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded">Cari</button>
+                </form>
             </div>
         </div>
-
 
         <!-- Tabel -->
         <table class="min-w-full border border-gray-300">
