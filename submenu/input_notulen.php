@@ -337,7 +337,15 @@ function notulenmu_input_form_page() {
                     </svg>
                     <label class="block font-semibold text-[15px]">Notulen Rapat</label>
                 </div>
-                <textarea name="notulen_rapat" id="notulen_rapat" required class="w-full p-2 border rounded-md h-48"><?php echo $is_edit_mode && $notulen_data ? esc_textarea($notulen_data['notulen_rapat']) : ''; ?></textarea>
+                <?php
+                $notulen_rapat_val = $is_edit_mode && $notulen_data ? $notulen_data['notulen_rapat'] : '';
+                wp_editor($notulen_rapat_val, 'notulen_rapat', [
+                    'textarea_name' => 'notulen_rapat',
+                    'media_buttons' => true,
+                    'textarea_rows' => 10,
+                    'editor_class' => 'w-full',
+                ]);
+                ?>
             </div>
         </div>
 

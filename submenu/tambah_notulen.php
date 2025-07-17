@@ -46,7 +46,7 @@ function handle_notulen_form() {
     // Pastikan tidak ada duplikat
     $peserta_rapat_arr = array_unique($peserta_rapat_arr);
     $peserta_rapat = json_encode(array_values($peserta_rapat_arr));
-    $notulen_rapat = sanitize_textarea_field($_POST['notulen_rapat'] ?? '');
+    $notulen_rapat = wp_kses_post($_POST['notulen_rapat'] ?? '');
     $image_path = '';
     $lampiran_path = '';
     $table = $wpdb->prefix . 'salammu_notulenmu';
