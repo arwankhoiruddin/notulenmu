@@ -53,7 +53,7 @@ function notulenmu_view_page() {
         </div>
         <div>
             <span class="font-semibold">Rangkuman Rapat:</span><br>
-            <div class="border p-3 rounded bg-gray-50 mt-1"><?php echo nl2br(esc_html($notulen->notulen_rapat)); ?></div>
+            <div class="border p-3 rounded bg-gray-50 mt-1"><?php echo wp_kses_post($notulen->notulen_rapat); ?></div>
         </div>
         <?php if (!empty($image_path)) { ?>
         <div>

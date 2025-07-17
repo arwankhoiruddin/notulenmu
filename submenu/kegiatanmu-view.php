@@ -37,7 +37,7 @@ function kegiatanmu_view_page() {
         </div>
         <div>
             <span class="font-semibold">Detail Kegiatan:</span><br>
-            <div class="border p-3 rounded bg-gray-50 mt-1"><?php echo nl2br(esc_html($kegiatan->detail_kegiatan)); ?></div>
+            <div class="border p-3 rounded bg-gray-50 mt-1"><?php echo wp_kses_post($kegiatan->detail_kegiatan); ?></div>
         </div>
         <?php if (!empty($image_path)) { ?>
         <div>
