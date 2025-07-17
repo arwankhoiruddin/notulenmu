@@ -227,7 +227,7 @@ function notulenmu_install()
         'tempat_rapat' => 'text NOT NULL',
         'peserta_rapat' => 'text NOT NULL',
         'peserta_hadir' => 'text NOT NULL',
-        'notulen_rapat' => 'text NOT NULL',
+        'notulen_rapat' => 'longtext NOT NULL',
         'image_path' => 'text NOT NULL',
         'lampiran' => 'text NOT NULL',
     ));
@@ -239,7 +239,7 @@ function notulenmu_install()
         'tanggal_kegiatan' => "date DEFAULT '0000-00-00' NOT NULL",
         'tempat_kegiatan' => 'text NOT NULL',
         'peserta_kegiatan' => 'text NOT NULL',
-        'detail_kegiatan' => 'text NOT NULL',
+        'detail_kegiatan' => 'longtext NOT NULL',
         'image_path' => 'text NOT NULL',
     ));
     add_missing_columns($table_name_setting, array(
