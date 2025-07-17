@@ -339,228 +339,276 @@ function notulenmu_rekap_nasional_page() {
                 return colors;
             }
             
-            // Notulen Charts
+            // Notulen Charts - Bar Chart
             <?php if (!empty($wilayah_data)): ?>
             new Chart(document.getElementById('pieWilayah').getContext('2d'), {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($wilayah_labels); ?>,
                     datasets: [{
+                        label: 'Jumlah Notulen',
                         data: <?php echo json_encode($wilayah_data); ?>,
                         backgroundColor: generateColors(<?php echo count($wilayah_data); ?>, '#2d3476'),
                         borderWidth: 1,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { 
+                options: {
+                    indexAxis: 'x',
                     responsive: true,
-                    plugins: { 
-                        legend: {position: 'bottom'},
+                    plugins: {
+                        legend: {display: false},
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' notulen';
+                                    return context.label + ': ' + context.parsed.y + ' notulen';
                                 }
                             }
                         }
-                    } 
+                    },
+                    scales: {
+                        x: {title: {display: true, text: 'Wilayah'}},
+                        y: {title: {display: true, text: 'Jumlah Notulen'}, beginAtZero: true}
+                    }
                 }
             });
             <?php endif; ?>
-            
+
             <?php if (!empty($daerah_data)): ?>
             new Chart(document.getElementById('pieDaerah').getContext('2d'), {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($daerah_labels); ?>,
                     datasets: [{
+                        label: 'Jumlah Notulen',
                         data: <?php echo json_encode($daerah_data); ?>,
                         backgroundColor: generateColors(<?php echo count($daerah_data); ?>, '#4e5ba6'),
                         borderWidth: 1,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { 
+                options: {
+                    indexAxis: 'x',
                     responsive: true,
-                    plugins: { 
-                        legend: {position: 'bottom'},
+                    plugins: {
+                        legend: {display: false},
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' notulen';
+                                    return context.label + ': ' + context.parsed.y + ' notulen';
                                 }
                             }
                         }
-                    } 
+                    },
+                    scales: {
+                        x: {title: {display: true, text: 'Daerah'}},
+                        y: {title: {display: true, text: 'Jumlah Notulen'}, beginAtZero: true}
+                    }
                 }
             });
             <?php endif; ?>
-            
+
             <?php if (!empty($cabang_data)): ?>
             new Chart(document.getElementById('pieCabang').getContext('2d'), {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($cabang_labels); ?>,
                     datasets: [{
+                        label: 'Jumlah Notulen',
                         data: <?php echo json_encode($cabang_data); ?>,
                         backgroundColor: generateColors(<?php echo count($cabang_data); ?>, '#6c7fd1'),
                         borderWidth: 1,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { 
+                options: {
+                    indexAxis: 'x',
                     responsive: true,
-                    plugins: { 
-                        legend: {position: 'bottom'},
+                    plugins: {
+                        legend: {display: false},
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' notulen';
+                                    return context.label + ': ' + context.parsed.y + ' notulen';
                                 }
                             }
                         }
-                    } 
+                    },
+                    scales: {
+                        x: {title: {display: true, text: 'Cabang'}},
+                        y: {title: {display: true, text: 'Jumlah Notulen'}, beginAtZero: true}
+                    }
                 }
             });
             <?php endif; ?>
-            
+
             <?php if (!empty($ranting_data)): ?>
             new Chart(document.getElementById('pieRanting').getContext('2d'), {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($ranting_labels); ?>,
                     datasets: [{
+                        label: 'Jumlah Notulen',
                         data: <?php echo json_encode($ranting_data); ?>,
                         backgroundColor: generateColors(<?php echo count($ranting_data); ?>, '#a3b0e0'),
                         borderWidth: 1,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { 
+                options: {
+                    indexAxis: 'x',
                     responsive: true,
-                    plugins: { 
-                        legend: {position: 'bottom'},
+                    plugins: {
+                        legend: {display: false},
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' notulen';
+                                    return context.label + ': ' + context.parsed.y + ' notulen';
                                 }
                             }
                         }
-                    } 
+                    },
+                    scales: {
+                        x: {title: {display: true, text: 'Ranting'}},
+                        y: {title: {display: true, text: 'Jumlah Notulen'}, beginAtZero: true}
+                    }
                 }
             });
             <?php endif; ?>
-            
-            // Kegiatan Charts
+
+            // Kegiatan Charts - Bar Chart
             <?php if (!empty($kegiatan_wilayah_data)): ?>
             new Chart(document.getElementById('pieKegiatanWilayah').getContext('2d'), {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($kegiatan_wilayah_labels); ?>,
                     datasets: [{
+                        label: 'Jumlah Kegiatan',
                         data: <?php echo json_encode($kegiatan_wilayah_data); ?>,
                         backgroundColor: generateColors(<?php echo count($kegiatan_wilayah_data); ?>, '#f59e42'),
                         borderWidth: 1,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { 
+                options: {
+                    indexAxis: 'x',
                     responsive: true,
-                    plugins: { 
-                        legend: {position: 'bottom'},
+                    plugins: {
+                        legend: {display: false},
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' kegiatan';
+                                    return context.label + ': ' + context.parsed.y + ' kegiatan';
                                 }
                             }
                         }
-                    } 
+                    },
+                    scales: {
+                        x: {title: {display: true, text: 'Wilayah'}},
+                        y: {title: {display: true, text: 'Jumlah Kegiatan'}, beginAtZero: true}
+                    }
                 }
             });
             <?php endif; ?>
-            
+
             <?php if (!empty($kegiatan_daerah_data)): ?>
             new Chart(document.getElementById('pieKegiatanDaerah').getContext('2d'), {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($kegiatan_daerah_labels); ?>,
                     datasets: [{
+                        label: 'Jumlah Kegiatan',
                         data: <?php echo json_encode($kegiatan_daerah_data); ?>,
                         backgroundColor: generateColors(<?php echo count($kegiatan_daerah_data); ?>, '#f7c873'),
                         borderWidth: 1,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { 
+                options: {
+                    indexAxis: 'x',
                     responsive: true,
-                    plugins: { 
-                        legend: {position: 'bottom'},
+                    plugins: {
+                        legend: {display: false},
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' kegiatan';
+                                    return context.label + ': ' + context.parsed.y + ' kegiatan';
                                 }
                             }
                         }
-                    } 
+                    },
+                    scales: {
+                        x: {title: {display: true, text: 'Daerah'}},
+                        y: {title: {display: true, text: 'Jumlah Kegiatan'}, beginAtZero: true}
+                    }
                 }
             });
             <?php endif; ?>
-            
+
             <?php if (!empty($kegiatan_cabang_data)): ?>
             new Chart(document.getElementById('pieKegiatanCabang').getContext('2d'), {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($kegiatan_cabang_labels); ?>,
                     datasets: [{
+                        label: 'Jumlah Kegiatan',
                         data: <?php echo json_encode($kegiatan_cabang_data); ?>,
                         backgroundColor: generateColors(<?php echo count($kegiatan_cabang_data); ?>, '#e8aa3b'),
                         borderWidth: 1,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { 
+                options: {
+                    indexAxis: 'x',
                     responsive: true,
-                    plugins: { 
-                        legend: {position: 'bottom'},
+                    plugins: {
+                        legend: {display: false},
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' kegiatan';
+                                    return context.label + ': ' + context.parsed.y + ' kegiatan';
                                 }
                             }
                         }
-                    } 
+                    },
+                    scales: {
+                        x: {title: {display: true, text: 'Cabang'}},
+                        y: {title: {display: true, text: 'Jumlah Kegiatan'}, beginAtZero: true}
+                    }
                 }
             });
             <?php endif; ?>
-            
+
             <?php if (!empty($kegiatan_ranting_data)): ?>
             new Chart(document.getElementById('pieKegiatanRanting').getContext('2d'), {
-                type: 'pie',
+                type: 'bar',
                 data: {
                     labels: <?php echo json_encode($kegiatan_ranting_labels); ?>,
                     datasets: [{
+                        label: 'Jumlah Kegiatan',
                         data: <?php echo json_encode($kegiatan_ranting_data); ?>,
                         backgroundColor: generateColors(<?php echo count($kegiatan_ranting_data); ?>, '#d4934a'),
                         borderWidth: 1,
                         borderColor: '#ffffff'
                     }]
                 },
-                options: { 
+                options: {
+                    indexAxis: 'x',
                     responsive: true,
-                    plugins: { 
-                        legend: {position: 'bottom'},
+                    plugins: {
+                        legend: {display: false},
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + context.parsed + ' kegiatan';
+                                    return context.label + ': ' + context.parsed.y + ' kegiatan';
                                 }
                             }
                         }
-                    } 
+                    },
+                    scales: {
+                        x: {title: {display: true, text: 'Ranting'}},
+                        y: {title: {display: true, text: 'Jumlah Kegiatan'}, beginAtZero: true}
+                    }
                 }
             });
             <?php endif; ?>
