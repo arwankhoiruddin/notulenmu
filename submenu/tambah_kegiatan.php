@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     $tanggal_kegiatan = isset($_POST['tanggal_kegiatan']) ? $_POST['tanggal_kegiatan'] : null;
     $tempat_kegiatan = isset($_POST['tempat_kegiatan']) ? $_POST['tempat_kegiatan'] : null;
     $peserta_kegiatan = isset($_POST['peserta_kegiatan']) ? $_POST['peserta_kegiatan'] : null;
-    $detail_kegiatan = isset($_POST['detail_kegiatan']) ? $_POST['detail_kegiatan'] : null;
+    $detail_kegiatan = isset($_POST['detail_kegiatan']) ? wp_kses_post($_POST['detail_kegiatan']) : null;
     $image_upload = isset($_FILES['image_upload']) ? $_FILES['image_upload'] : null;
 
     $img_path = '';
@@ -243,7 +243,15 @@ function tambah_kegiatan_page()
                     <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" /><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /></svg>
                     <label class="block font-semibold text-[15px]">Detail Kegiatan</label>
                 </div>
-                <textarea name="detail_kegiatan" id="detail_kegiatan" rows="5" class="w-full p-2 border rounded-md"><?php echo ($kegiatan ? esc_textarea($kegiatan->detail_kegiatan) : ''); ?></textarea>
+                <?php
+                $detail_kegiatan_val = $kegiatan ? $kegiatan->detail_kegiatan : '';
+                wp_editor($detail_kegiatan_val, 'detail_kegiatan', [
+                    'textarea_name' => 'detail_kegiatan',
+                    'media_buttons' => true,
+                    'textarea_rows' => 8,
+                    'editor_class' => 'w-full',
+                ]);
+                ?>
             </div>
         </div>
 
