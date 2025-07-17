@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NotulenMu
  * Description: NotulenMu Lembaga Pengembangan Cabang Ranting dan Pembinaan Masjid 
- * Version:     1.1
+ * Version:     2.0
  * Author:      Arwan LPCR
  * Author URI:  http://mandatech.co.id/
  * License:     GPL2
