@@ -83,7 +83,7 @@ function notulenmu_input_form_page() {
                     <?php
                     global $wpdb;
                     $user_id = get_current_user_id();
-                    $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
+                    $setting_table = $wpdb->prefix . 'sicara_settings';
                     $settings = $wpdb->get_row($wpdb->prepare(
                         "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
                         $user_id

@@ -11,7 +11,7 @@ function pengurus_list_page() {
     $tingkat_pengurus = isset($_GET['tingkat_pengurus']) ? $_GET['tingkat_pengurus'] : '';
 
     // Ambil pengaturan wilayah user
-    $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
+    $setting_table = $wpdb->prefix . 'sicara_settings';
     $settings = $wpdb->get_row($wpdb->prepare(
         "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
         $user_id

@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     if (!in_array($tingkat_pengurus, $valid_tingkat, true)) {
         // Coba ambil tingkat dari database setting user
         global $wpdb;
-        $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+        $setting_table_name = $wpdb->prefix . 'sicara_settings';
         $row = $wpdb->get_row($wpdb->prepare("SELECT pwm, pdm, pcm, prm FROM $setting_table_name WHERE user_id = %d", $user_id));
         if ($row) {
             if ($row->pwm) $tingkat_pengurus = 'wilayah';
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     // Ambil id_tingkat dari POST, bukan dari setting user
     if (!$id_tingkat_pengurus) {
         // fallback lama jika id_tingkat tidak dikirim
-        $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+        $setting_table_name = $wpdb->prefix . 'sicara_settings';
         if ($tingkat_pengurus == 'wilayah') {
             $row = $wpdb->get_row($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
             $id_tingkat_pengurus = $row ? $row->pwm : null;
@@ -157,7 +157,7 @@ function pengurus_add_page()
         $id_tingkat_pengurus = $_GET['tingkat_pengurus'];
         // Mapping id_tingkat ke nama tingkat
         global $wpdb;
-        $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+        $setting_table_name = $wpdb->prefix . 'sicara_settings';
         $row = $wpdb->get_row($wpdb->prepare("SELECT pwm, pdm, pcm, prm FROM $setting_table_name WHERE user_id = %d", get_current_user_id()));
         if ($row) {
             if ($row->pwm && $row->pwm == $id_tingkat_pengurus) $tingkat_pengurus = 'wilayah';
@@ -259,7 +259,7 @@ function get_data_pengurus()
     }
 
     // Ambil pengaturan wilayah user
-    $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
+    $setting_table = $wpdb->prefix . 'sicara_settings';
     $settings = $wpdb->get_row($wpdb->prepare(
         "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
         $user_id

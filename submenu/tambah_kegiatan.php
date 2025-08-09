@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
         return;
     }
 
-    $setting_table_name = $wpdb->prefix . 'salammu_notulenmu_setting';
+    $setting_table_name = $wpdb->prefix . 'sicara_settings';
 
     if ($tingkat == 'wilayah') {
         $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));

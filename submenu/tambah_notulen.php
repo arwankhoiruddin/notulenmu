@@ -76,7 +76,7 @@ function handle_notulen_form() {
 
     $table = $wpdb->prefix . 'salammu_notulenmu';
     // Ambil id_tingkat dari setting user sesuai tingkat yang dipilih
-    $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
+    $setting_table = $wpdb->prefix . 'sicara_settings';
     $settings = $wpdb->get_row($wpdb->prepare(
         "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
         $user_id
@@ -143,7 +143,7 @@ function get_pengurus_by_tingkat() {
         echo "<p>Pilih tingkat terlebih dahulu.</p>";
         wp_die();
     }
-    $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
+    $setting_table = $wpdb->prefix . 'sicara_settings';
     $settings = $wpdb->get_row($wpdb->prepare(
         "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
         $user_id
