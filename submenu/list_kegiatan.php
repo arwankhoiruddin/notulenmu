@@ -37,16 +37,12 @@ function kegiatanmu_list_page()
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
 
-    $filter = isset($_GET['filter']) ? sanitize_text_field($_GET['filter']) : '';
     $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 
     $sql = $wpdb->prepare("SELECT * FROM $table_name WHERE user_id = %d", $user_id);
-    if ($filter !== '') {
-        $sql .= $wpdb->prepare(" AND tingkat = %s", $filter);
-    }
     if ($search !== '') {
         $like = '%' . $wpdb->esc_like($search) . '%';
-        $sql .= $wpdb->prepare(" AND (nama_kegiatan LIKE %s OR tempat_kegiatan LIKE %s)", $like, $like);
+        $sql .= $wpdb->prepare(" AND (nama_kegiatan LIKE %s OR tempat_kegiatan LIKE %s OR tingkat LIKE %s)", $like, $like, $like);
     }
     $sql .= " ORDER BY tingkat";
     $rows = $wpdb->get_results($sql);
@@ -65,19 +61,16 @@ function kegiatanmu_list_page()
             <a href="<?php echo esc_url(admin_url('admin.php?page=kegiatanmu-add')); ?>" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded" style="color:#fff !important;">+ Tambah Kegiatan</a>
         </div>
         <div class="mb-4 flex flex-col md:flex-row md:items-center gap-2">
-            <select id="filter" class="p-2 border rounded-md w-full md:w-auto" onchange="window.location.href='?page=kegiatanmu-list'+(this.value ? '&filter='+this.value : '')<?php echo $search !== '' ? "+'&search=".urlencode($search)."'" : '' ?>">
-                <option value="">Semua</option>
-                <option value="ranting" <?php echo ($filter === 'ranting' ? 'selected' : ''); ?>>Ranting</option>
-                <option value="cabang" <?php echo ($filter === 'cabang' ? 'selected' : ''); ?>>Cabang</option>
-                <option value="daerah" <?php echo ($filter === 'daerah' ? 'selected' : ''); ?>>Daerah</option>
-                <option value="wilayah" <?php echo ($filter === 'wilayah' ? 'selected' : ''); ?>>Wilayah</option>
-            </select>
             <form method="get" class="flex items-center gap-2 w-full md:w-auto" action="">
                 <input type="hidden" name="page" value="kegiatanmu-list">
-                <?php if ($filter !== '') { ?>
-                    <input type="hidden" name="filter" value="<?php echo esc_attr($filter); ?>">
-                <?php } ?>
-                <input type="text" name="search" id="search" class="p-2 border rounded-md w-full md:w-auto" placeholder="Cari nama/tempat kegiatan..." value="<?php echo esc_attr($search); ?>">
+                <input
+                    type="text"
+                    name="search"
+                    id="search"
+                    class="p-2 border rounded-md w-full md:w-auto min-w-[320px]"
+                    placeholder="Cari nama/tempat/tingkat kegiatan..."
+                    value="<?php echo esc_attr($search); ?>"
+                >
                 <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded">Cari</button>
             </form>
         </div>

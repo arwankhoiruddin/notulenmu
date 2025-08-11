@@ -147,6 +147,11 @@ function tambah_kegiatan_page()
 
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();
+    $is_pdm = false;
+    $user_info = get_userdata($logged_user);
+    if ($user_info && strpos($user_info->user_login, 'pdm.') === 0) {
+        $is_pdm = true;
+    }
 
     echo '<h1>' . ($editing ? 'Edit' : 'Tambah') . ' Kegiatan</h1>';
     echo '<div class="mb-4">'
@@ -182,7 +187,9 @@ function tambah_kegiatan_page()
                 </div>
                 <select name="tingkat" id="tingkat" class="w-full p-2 border rounded-md" style="min-width: 100%;">
                     <option class="w-full">Pilih Tingkat</option>
-                    <option value="wilayah" <?php echo ($kegiatan && $kegiatan->tingkat == 'wilayah' ? 'selected' : ''); ?>>Pimpinan Wilayah</option>
+                    <?php if (!$is_pdm) { ?>
+                        <option value="wilayah" <?php echo ($kegiatan && $kegiatan->tingkat == 'wilayah' ? 'selected' : ''); ?>>Pimpinan Wilayah</option>
+                    <?php } ?>
                     <option value="daerah" <?php echo ($kegiatan && $kegiatan->tingkat == 'daerah' ? 'selected' : ''); ?>>Pimpinan Daerah</option>
                     <option value="cabang" <?php echo ($kegiatan && $kegiatan->tingkat == 'cabang' ? 'selected' : ''); ?>>Pimpinan Cabang</option>
                     <option value="ranting" <?php echo ($kegiatan && $kegiatan->tingkat == 'ranting' ? 'selected' : ''); ?>>Pimpinan Ranting</option>
