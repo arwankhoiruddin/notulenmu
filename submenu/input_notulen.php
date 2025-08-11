@@ -90,9 +90,9 @@ function notulenmu_input_form_page() {
                     ), ARRAY_A);
                     $id_tingkat_list = $settings ? array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]) : [];
                     if (!empty($id_tingkat_list)) {
-                        $pengurus_table = $wpdb->prefix . 'salammu_data_pengurus';
+                        $pengurus_table = $wpdb->prefix . 'sicara_pengurus';
                         $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%d'));
-                        $query = "SELECT id, nama_lengkap_gelar, tingkat, jabatan FROM $pengurus_table WHERE tingkat = %s AND id_tingkat IN ($placeholders)";
+                        $query = "SELECT id, nama, tingkat, jabatan FROM $pengurus_table WHERE tingkat = %s AND id_tingkat IN ($placeholders)";
                         $query = $wpdb->prepare($query, array_merge([$tingkat], $id_tingkat_list));
                         $pengurus = $wpdb->get_results($query);
                         if (!empty($pengurus)) {
@@ -106,18 +106,18 @@ function notulenmu_input_form_page() {
                             echo '</tr>';
                             $no = 1;
                             foreach ($pengurus as $p) {
-                                if (!isset($p->nama_lengkap_gelar)) continue;
+                                if (!isset($p->nama)) continue;
                                 $checked = '';
-                                if (is_array($selected_peserta) && isset($p->nama_lengkap_gelar)) {
-                                    $checked = in_array($p->nama_lengkap_gelar, $selected_peserta) ? 'checked' : '';
+                                if (is_array($selected_peserta) && isset($p->nama)) {
+                                    $checked = in_array($p->nama, $selected_peserta) ? 'checked' : '';
                                 }
                                 echo '<tr>';
                                 echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">' . esc_html($no) . '</td>';
-                                echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->nama_lengkap_gelar) . '</td>';
+                                echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->nama) . '</td>';
                                 echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->tingkat) . '</td>';
                                 echo '<td style="border: 1px solid black; padding: 8px;">' . esc_html($p->jabatan) . '</td>';
                                 echo '<td style="border: 1px solid black; padding: 8px; text-align: center;">';
-                                echo '<input type="checkbox" name="peserta_rapat[]" value="' . esc_attr($p->nama_lengkap_gelar) . '" ' . $checked . '>';
+                                echo '<input type="checkbox" name="peserta_rapat[]" value="' . esc_attr($p->nama) . '" ' . $checked . '>';
                                 echo '</td>';
                                 echo '</tr>';
                                 $no++;
@@ -137,8 +137,8 @@ function notulenmu_input_form_page() {
                 $pengurus_nama = [];
                 if (!empty($pengurus)) {
                     foreach ($pengurus as $p) {
-                        if (isset($p->nama_lengkap_gelar)) {
-                            $pengurus_nama[] = $p->nama_lengkap_gelar;
+                        if (isset($p->nama)) {
+                            $pengurus_nama[] = $p->nama;
                         }
                     }
                 }
