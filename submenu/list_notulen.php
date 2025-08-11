@@ -60,18 +60,11 @@ function notulenmu_list_page()
 
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
 
-    // Hapus dropdown filter, hanya gunakan pencarian
-    $query = "SELECT * FROM $table_name WHERE user_id = %d";
-    $params = [$user_id];
-
-    if (!empty($id_tingkat_list)) {
-        $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%d'));
-        $query .= " AND id_tingkat IN ($placeholders)";
-        $params = array_merge($params, $id_tingkat_list);
-    }
+    $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
+    $query = "SELECT * FROM $table_name WHERE id_tingkat IN ($placeholders)";
+    $params = $id_tingkat_list;
 
     if (!empty($search)) {
-        // Cari pada tingkat, topik_rapat, atau tempat_rapat
         $query .= " AND (tingkat LIKE %s OR topik_rapat LIKE %s OR tempat_rapat LIKE %s)";
         $search_term = '%' . $wpdb->esc_like($search) . '%';
         $params[] = $search_term;

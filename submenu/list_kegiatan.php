@@ -37,14 +37,40 @@ function kegiatanmu_list_page()
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
 
+    // Ambil id tingkat dari settings user
+    $setting_table = $wpdb->prefix . 'sicara_settings';
+    $settings = $wpdb->get_row($wpdb->prepare(
+        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+        $user_id
+    ), ARRAY_A);
+
+    if (!$settings) {
+        echo "<p>Data tidak ditemukan.</p>";
+        return;
+    }
+
+    $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+
+    if (empty($id_tingkat_list)) {
+        echo "<p>You do not have sufficient permissions to access this page.</p>";
+        return;
+    }
+
     $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 
-    $sql = $wpdb->prepare("SELECT * FROM $table_name WHERE user_id = %d", $user_id);
-    if ($search !== '') {
-        $like = '%' . $wpdb->esc_like($search) . '%';
-        $sql .= $wpdb->prepare(" AND (nama_kegiatan LIKE %s OR tempat_kegiatan LIKE %s OR tingkat LIKE %s)", $like, $like, $like);
+    $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
+    $query = "SELECT * FROM $table_name WHERE id_tingkat IN ($placeholders)";
+    $params = $id_tingkat_list;
+
+    if (!empty($search)) {
+        $query .= " AND (tingkat LIKE %s OR nama_kegiatan LIKE %s OR tempat_kegiatan LIKE %s)";
+        $search_term = '%' . $wpdb->esc_like($search) . '%';
+        $params[] = $search_term;
+        $params[] = $search_term;
+        $params[] = $search_term;
     }
-    $sql .= " ORDER BY tingkat";
+
+    $sql = $wpdb->prepare($query, $params);
     $rows = $wpdb->get_results($sql);
 
     // Notifikasi
