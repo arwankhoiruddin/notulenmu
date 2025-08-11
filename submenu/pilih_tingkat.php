@@ -5,6 +5,16 @@ function notulenmu_pilih_tingkat_page() {
     }
 
     $logged_user = get_current_user_id();
+    $user_info = get_userdata($logged_user);
+    $is_pwm = false;
+    $is_pdm = false;
+    if ($user_info && isset($user_info->user_login)) {
+        if (strpos($user_info->user_login, 'pwm.') === 0) {
+            $is_pwm = true;
+        } elseif (strpos($user_info->user_login, 'pdm.') === 0) {
+            $is_pdm = true;
+        }
+    }
 
     echo '<h1>Tambah Notulen</h1>';
     
@@ -38,10 +48,16 @@ function notulenmu_pilih_tingkat_page() {
                 </div>
                 <select name="tingkat" id="tingkat" class="w-full p-2 border rounded-md" style="min-width: 100%;" required>
                     <option value="">-- Pilih Tingkat --</option>
-                    <option value="wilayah">Pimpinan Wilayah</option>
-                    <option value="daerah">Pimpinan Daerah</option>
-                    <option value="cabang">Pimpinan Cabang</option>
-                    <option value="ranting">Pimpinan Ranting</option>
+                    <?php if ($is_pdm): ?>
+                        <option value="daerah">Pimpinan Daerah</option>
+                        <option value="cabang">Pimpinan Cabang</option>
+                        <option value="ranting">Pimpinan Ranting</option>
+                    <?php else: ?>
+                        <option value="wilayah">Pimpinan Wilayah</option>
+                        <option value="daerah">Pimpinan Daerah</option>
+                        <option value="cabang">Pimpinan Cabang</option>
+                        <option value="ranting">Pimpinan Ranting</option>
+                    <?php endif; ?>
                 </select>
             </div>
             <div class="flex justify-end mt-4">
