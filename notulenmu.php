@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NotulenMu
  * Description: NotulenMu Lembaga Pengembangan Cabang Ranting dan Pembinaan Masjid 
- * Version:     2.0
+ * Version:     2.1
  * Author:      Arwan LPCR
  * Author URI:  http://mandatech.co.id/
  * License:     GPL2
@@ -52,13 +52,15 @@ function notulenmu_menu()
     $is_prm = false;
 
     $user = wp_get_current_user();
-    if (strpos($user->user_login, 'pwm') === 0) {
+    if (strpos($user->user_login, 'arwan') === 0) {
+        $is_pp = true;
+    } else if (strpos($user->user_login, 'pwm.') === 0) {
         $is_pwm = true;
-    } else if (strpos($user->user_login, 'pdm') === 0) {
+    } else if (strpos($user->user_login, 'pdm.') === 0) {
         $is_pdm = true;
-    } else if (strpos($user->user_login, 'pcm') === 0) {
+    } else if (strpos($user->user_login, 'pcm.') === 0) {
         $is_pcm = true;
-    } else if (strpos($user->user_login, 'prm') === 0) {
+    } else if (strpos($user->user_login, 'prm.') === 0) {
         $is_prm = true;
     } else {
         // menghilangkan menu NotulenMu dari pengguna yang tidak berwenang
