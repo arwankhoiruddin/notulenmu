@@ -61,6 +61,7 @@ function notulenmu_menu()
     } else if (strpos($user->user_login, 'prm') === 0) {
         $is_prm = true;
     } else {
+        // menghilangkan menu NotulenMu dari pengguna yang tidak berwenang
         return;
     }
 
