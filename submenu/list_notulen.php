@@ -7,13 +7,6 @@ function notulenmu_list_page()
     global $wpdb;
     $user_id = get_current_user_id();
 
-    // Tentukan $is_pdm di sini, setelah WordPress siap
-    $is_pdm = false;
-    $current_user = wp_get_current_user();
-    if (strpos($current_user->user_login, 'pdm.') === 0) {
-        $is_pdm = true;
-    }
-
     // Handle delete action only after WordPress is fully loaded
     add_action('admin_init', function() {
         if (isset($_GET['delete_notulen']) && !empty($_GET['delete_notulen'])) {
@@ -49,7 +42,26 @@ function notulenmu_list_page()
         return;
     }
 
-    $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+    // Tentukan $is_pdm di sini, setelah WordPress siap
+    $is_pwm = false;
+    $is_pdm = false;
+    $is_pcm = false;
+    $is_prm = false;
+
+    $current_user = wp_get_current_user();
+    if (strpos($current_user->user_login, 'pwm.') === 0) {
+        $is_pwm = true;
+        $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'pdm.') === 0) {
+        $is_pdm = true;
+        $id_tingkat_list = array_filter([$settings['pdm'], $settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'pcm.') === 0) {
+        $is_pcm = true;
+        $id_tingkat_list = array_filter([$settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'prm.') === 0) {
+        $is_prm = true;
+        $id_tingkat_list = array_filter([$settings['prm']]);
+    }
 
     if (empty($id_tingkat_list)) {
         echo "<p>You do not have sufficient permissions to access this page.</p>";
@@ -67,8 +79,6 @@ function notulenmu_list_page()
     if (!empty($search)) {
         $query .= " AND (tingkat LIKE %s OR topik_rapat LIKE %s OR tempat_rapat LIKE %s)";
         $search_term = '%' . $wpdb->esc_like($search) . '%';
-        $params[] = $search_term;
-        $params[] = $search_term;
         $params[] = $search_term;
     }
 
