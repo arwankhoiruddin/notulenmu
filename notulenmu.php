@@ -45,6 +45,25 @@ function notulenmu_menu()
         return;
     }
 
+    $is_pp = false;
+    $is_pwm = false;
+    $is_pdm = false;
+    $is_pcm = false;
+    $is_prm = false;
+
+    $user = wp_get_current_user();
+    if (strpos($user->user_login, 'pwm') === 0) {
+        $is_pwm = true;
+    } else if (strpos($user->user_login, 'pdm') === 0) {
+        $is_pdm = true;
+    } else if (strpos($user->user_login, 'pcm') === 0) {
+        $is_pcm = true;
+    } else if (strpos($user->user_login, 'prm') === 0) {
+        $is_prm = true;
+    } else {
+        return;
+    }
+
     // Add NotulenMu menu for contributors and administrators
     if (current_user_can('read') || current_user_can('manage_options')) {
         add_menu_page('NotulenMu', 'NotulenMu', 'read', 'notulenmu', 'notulenmu_page', 'dashicons-admin-page');
