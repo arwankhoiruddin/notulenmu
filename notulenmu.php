@@ -27,14 +27,16 @@ include plugin_dir_path(__FILE__) . 'submenu/rekap_nasional.php';
 include plugin_dir_path(__FILE__) . 'submenu/pengurus_list.php';
 
 
+if (!function_exists('add_cors_headers')) {
+    function add_cors_headers()
+    {
+        header("Access-Control-Allow-Origin: *");
+    }
+}
+
 add_action('send_headers', 'add_cors_headers');
 add_filter('admin_footer_text', '__return_empty_string');
 add_filter('update_footer', '__return_empty_string', 9999);
-
-function add_cors_headers()
-{
-    header("Access-Control-Allow-Origin: *");
-}
 
 function notulenmu_menu()
 {
