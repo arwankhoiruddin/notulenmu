@@ -57,6 +57,7 @@ function notulenmu_input_form_page() {
         }
     }
     ?>
+<div class="notulenmu-container">
     <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg" id="notulenmu-form">
         <?php if ($is_edit_mode) : ?>
             <input type="hidden" name="edit_id" value="<?php echo esc_attr($notulen_id); ?>">
@@ -353,6 +354,7 @@ function notulenmu_input_form_page() {
             <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"><?php echo $is_edit_mode ? 'Update Notulen' : 'Simpan Notulen'; ?></button>
         </div>
     </form>
+</div>
 
     <script>
     function previewImage(input, previewId, textId) {

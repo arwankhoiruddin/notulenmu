@@ -86,6 +86,7 @@ function notulenmu_list_page()
     $rows = $wpdb->get_results($sql);
 
 ?>
+<div class="notulenmu-container">
     <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md mt-7">
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-semibold text-gray-700">List Notulen</h1>
@@ -136,5 +137,6 @@ function notulenmu_list_page()
             </table>
         </div>
     </div>
+</div>
 
 <?php } ?>

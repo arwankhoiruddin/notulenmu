@@ -11,6 +11,7 @@ function notulenmu_page()
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
 ?>
+<div class="notulenmu-container">
     <div class="relative p-6 bg-[#2d3476] shadow-lg rounded-lg m-4 ml-0 text-white overflow-hidden">
         <img src="<?php echo plugin_dir_url(__FILE__) . '../assets/img/image.png'; ?>"
             alt="Notulenmu"
@@ -26,6 +27,7 @@ function notulenmu_page()
         </p>
         <p class="mt-2 relative z-10">Persembahan dari LPCRPM Pimpinan Pusat Muhammadiyah.</p>
     </div>
+</div>
     <!-- Grafik nasional dipindah ke halaman rekap_nasional -->
 <?php
 }
