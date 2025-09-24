@@ -79,6 +79,7 @@ function kegiatanmu_list_page()
         delete_transient('kegiatanmu_admin_notice');
     }
 ?>
+<div class="notulenmu-container">
     <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md mt-7">
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-semibold  text-gray-700">List Kegiatan</h1>
@@ -132,4 +133,5 @@ function kegiatanmu_list_page()
             </table>
         </div>
     </div>
+</div>
 <?php } ?>

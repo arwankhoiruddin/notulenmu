@@ -10,8 +10,6 @@ module.exports = {
     extend: {},
   },
   plugins: [],
-  // Important: Prevent Tailwind from purging styles when used as a WordPress plugin
-  important: true,
-  // Prefix Tailwind classes to avoid conflicts with other plugins
-  prefix: 'nmu-'
+  // Scope to plugin containers to avoid conflicts
+  important: '.notulenmu-container'
 }

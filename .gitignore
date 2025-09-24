@@ -1,9 +1,6 @@
 # Dependencies
 /node_modules
 
-# Production build
-/assets/css/dist
-
 # Logs
 *.log
 npm-debug.log*
