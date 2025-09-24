@@ -171,6 +171,7 @@ function tambah_kegiatan_page()
         $image_path = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $kegiatan->image_path);
     }
 ?>
+<div class="notulenmu-container">
     <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg">
         <input type="hidden" name="form_name" value="kegiatanmu_add_form">
         <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
@@ -272,6 +273,7 @@ function tambah_kegiatan_page()
             </div>
         <?php } ?>
     </form>
+</div>
 
     <script>
         function previewImage(input, imgId, textId) {
