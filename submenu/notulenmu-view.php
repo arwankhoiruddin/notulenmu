@@ -6,8 +6,45 @@ function notulenmu_view_page() {
     global $wpdb;
     $user_id = get_current_user_id();
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    // Get user settings to determine accessible id_tingkat values
+    $setting_table = $wpdb->prefix . 'sicara_settings';
+    $settings = $wpdb->get_row($wpdb->prepare(
+        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+        $user_id
+    ), ARRAY_A);
+
+    if (!$settings) {
+        echo '<div class="p-6 bg-white rounded shadow text-center">Data tidak ditemukan.</div>';
+        return;
+    }
+
+    // Determine accessible id_tingkat based on user login prefix (same logic as list_notulen.php)
+    $current_user = wp_get_current_user();
+    $id_tingkat_list = [];
+    
+    if (strpos($current_user->user_login, 'pwm.') === 0) {
+        $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'pdm.') === 0) {
+        $id_tingkat_list = array_filter([$settings['pdm'], $settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'pcm.') === 0) {
+        $id_tingkat_list = array_filter([$settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'prm.') === 0) {
+        $id_tingkat_list = array_filter([$settings['prm']]);
+    }
+
+    if (empty($id_tingkat_list)) {
+        echo '<div class="p-6 bg-white rounded shadow text-center">You do not have sufficient permissions to access this page.</div>';
+        return;
+    }
+
+    // Query notulen with same permission logic as list page
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
-    $notulen = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d AND user_id = %d", $id, $user_id));
+    $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
+    $query = "SELECT * FROM $table_name WHERE id = %d AND id_tingkat IN ($placeholders)";
+    $params = array_merge([$id], $id_tingkat_list);
+    
+    $notulen = $wpdb->get_row($wpdb->prepare($query, $params));
     if (!$notulen) {
         echo '<div class="p-6 bg-white rounded shadow text-center">Data tidak ditemukan.</div>';
         return;
