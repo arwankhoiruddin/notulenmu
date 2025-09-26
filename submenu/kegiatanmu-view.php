@@ -6,8 +6,33 @@ function kegiatanmu_view_page() {
     global $wpdb;
     $user_id = get_current_user_id();
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    // Get user settings to determine accessible id_tingkat values (same logic as list_kegiatan.php)
+    $setting_table = $wpdb->prefix . 'sicara_settings';
+    $settings = $wpdb->get_row($wpdb->prepare(
+        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+        $user_id
+    ), ARRAY_A);
+
+    if (!$settings) {
+        echo '<div class="p-6 bg-white rounded shadow text-center">Data tidak ditemukan.</div>';
+        return;
+    }
+
+    $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+
+    if (empty($id_tingkat_list)) {
+        echo '<div class="p-6 bg-white rounded shadow text-center">You do not have sufficient permissions to access this page.</div>';
+        return;
+    }
+
+    // Query kegiatan with same permission logic as list page
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
-    $kegiatan = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d AND user_id = %d", $id, $user_id));
+    $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
+    $query = "SELECT * FROM $table_name WHERE id = %d AND id_tingkat IN ($placeholders)";
+    $params = array_merge([$id], $id_tingkat_list);
+    
+    $kegiatan = $wpdb->get_row($wpdb->prepare($query, $params));
     if (!$kegiatan) {
         echo '<div class="p-6 bg-white rounded shadow text-center">Data tidak ditemukan.</div>';
         return;
