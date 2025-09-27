@@ -80,7 +80,6 @@ function kegiatanmu_list_page()
 
     $sql = $wpdb->prepare($query, $params);
     $rows = $wpdb->get_results($sql);
-    echo $sql;
 
     // Notifikasi
     if ($message = get_transient('kegiatanmu_admin_notice')) {
