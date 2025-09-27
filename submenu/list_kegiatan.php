@@ -48,8 +48,16 @@ function kegiatanmu_list_page()
         echo "<p>Data tidak ditemukan.</p>";
         return;
     }
-
-    $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+    $current_user = wp_get_current_user();
+    if (strpos($current_user->user_login, 'pwm.') === 0) {
+        $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'pdm.') === 0) {
+        $id_tingkat_list = array_filter([$settings['pdm'], $settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'pcm.') === 0) {
+        $id_tingkat_list = array_filter([$settings['pcm'], $settings['prm']]);
+    } else if (strpos($current_user->user_login, 'prm.') === 0) {
+        $id_tingkat_list = array_filter([$settings['prm']]);
+    }
 
     if (empty($id_tingkat_list)) {
         echo "<p>You do not have sufficient permissions to access this page.</p>";
@@ -72,6 +80,7 @@ function kegiatanmu_list_page()
 
     $sql = $wpdb->prepare($query, $params);
     $rows = $wpdb->get_results($sql);
+    echo $sql;
 
     // Notifikasi
     if ($message = get_transient('kegiatanmu_admin_notice')) {
