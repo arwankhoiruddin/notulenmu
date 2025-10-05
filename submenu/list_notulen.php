@@ -81,6 +81,21 @@ function notulenmu_list_page()
     $sql = $wpdb->prepare($query, $params);
     $rows = $wpdb->get_results($sql);
 
+    // Group notulen by entity (tingkat + id_tingkat)
+    $grouped_notulen = array();
+    foreach ($rows as $row) {
+        $entity_key = $row->tingkat . '_' . $row->id_tingkat;
+        if (!isset($grouped_notulen[$entity_key])) {
+            $grouped_notulen[$entity_key] = array(
+                'tingkat' => $row->tingkat,
+                'id_tingkat' => $row->id_tingkat,
+                'entity_name' => notulenmu_get_entity_name($row->tingkat, $row->id_tingkat),
+                'notulen' => array()
+            );
+        }
+        $grouped_notulen[$entity_key]['notulen'][] = $row;
+    }
+
 ?>
 <div class="notulenmu-container">
     <div class="overflow-x-auto bg-white p-6 rounded-lg shadow-md mt-7">
@@ -101,37 +116,49 @@ function notulenmu_list_page()
             </div>
         </div>
 
-        <!-- Tabel -->
-        <table class="min-w-full border border-gray-300">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="py-2 px-4 border border-gray-300">Tingkat</th>
-                        <th class="py-2 px-4 border border-gray-300">Topik Rapat</th>
-                        <th class="py-2 px-4 border border-gray-300">Tanggal Rapat</th>
-                        <th class="py-2 px-4 border border-gray-300">Tempat Rapat</th>
-                        <th class="py-2 px-4 border border-gray-300">Detail</th>
-                        <th class="py-2 px-4 border border-gray-300">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <?php foreach ($rows as $row) { ?>
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tingkat); ?></td>
-                            <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->topik_rapat); ?></td>
-                            <td class="py-2 px-4 border border-gray-300"><?php echo date('Y-m-d', strtotime($row->tanggal_rapat)); ?></td>
-                            <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tempat_rapat); ?></td>
-                            <td class="py-2 px-4 border border-gray-300 text-center">
-                                <a href="<?php echo admin_url('admin.php?page=notulenmu-view&id=' . $row->id); ?>" class="text-blue-500 hover:text-blue-700">View Details</a>
-                            </td>
-                            <td class="py-2 px-4 border border-gray-300 text-center">
-                                <a href="<?php echo admin_url('admin.php?page=notulenmu-add&edit=true&id=' . $row->id); ?>" class="text-green-500 hover:text-green-700 mr-2">Edit</a>
-                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=notulenmu-list&delete_notulen=' . $row->id), 'delete_notulen_' . $row->id); ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus notulen ini?');">Delete</a>
-                            </td>
+        <?php if (empty($grouped_notulen)) { ?>
+            <p class="text-gray-600 text-center py-4">Tidak ada data notulen yang ditemukan.</p>
+        <?php } else { ?>
+            <?php foreach ($grouped_notulen as $entity_key => $entity_data) { ?>
+                <!-- Entity Header -->
+                <div class="mt-6 mb-3">
+                    <h2 class="text-xl font-semibold text-gray-800 border-b-2 border-gray-300 pb-2">
+                        <?php echo esc_html($entity_data['entity_name']); ?>
+                    </h2>
+                </div>
+
+                <!-- Tabel for this entity -->
+                <table class="min-w-full border border-gray-300 mb-6">
+                    <thead class="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th class="py-2 px-4 border border-gray-300">Tingkat</th>
+                            <th class="py-2 px-4 border border-gray-300">Topik Rapat</th>
+                            <th class="py-2 px-4 border border-gray-300">Tanggal Rapat</th>
+                            <th class="py-2 px-4 border border-gray-300">Tempat Rapat</th>
+                            <th class="py-2 px-4 border border-gray-300">Detail</th>
+                            <th class="py-2 px-4 border border-gray-300">Aksi</th>
                         </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <?php foreach ($entity_data['notulen'] as $row) { ?>
+                            <tr class="hover:bg-gray-100">
+                                <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tingkat); ?></td>
+                                <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->topik_rapat); ?></td>
+                                <td class="py-2 px-4 border border-gray-300"><?php echo date('Y-m-d', strtotime($row->tanggal_rapat)); ?></td>
+                                <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tempat_rapat); ?></td>
+                                <td class="py-2 px-4 border border-gray-300 text-center">
+                                    <a href="<?php echo admin_url('admin.php?page=notulenmu-view&id=' . $row->id); ?>" class="text-blue-500 hover:text-blue-700">View Details</a>
+                                </td>
+                                <td class="py-2 px-4 border border-gray-300 text-center">
+                                    <a href="<?php echo admin_url('admin.php?page=notulenmu-add&edit=true&id=' . $row->id); ?>" class="text-green-500 hover:text-green-700 mr-2">Edit</a>
+                                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=notulenmu-list&delete_notulen=' . $row->id), 'delete_notulen_' . $row->id); ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus notulen ini?');">Delete</a>
+                                </td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            <?php } ?>
+        <?php } ?>
     </div>
 </div>
 
