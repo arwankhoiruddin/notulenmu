@@ -12,6 +12,7 @@
  * Domain Path: /languages
  */
 
+include plugin_dir_path(__FILE__) . 'includes/hierarchy-helper.php';
 include plugin_dir_path(__FILE__) . 'submenu/list_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_pengurus.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_notulen.php';

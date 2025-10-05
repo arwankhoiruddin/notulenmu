@@ -37,27 +37,8 @@ function kegiatanmu_list_page()
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
 
-    // Ambil id tingkat dari settings user
-    $setting_table = $wpdb->prefix . 'sicara_settings';
-    $settings = $wpdb->get_row($wpdb->prepare(
-        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
-        $user_id
-    ), ARRAY_A);
-
-    if (!$settings) {
-        echo "<p>Data tidak ditemukan.</p>";
-        return;
-    }
-    $current_user = wp_get_current_user();
-    if (strpos($current_user->user_login, 'pwm.') === 0) {
-        $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
-    } else if (strpos($current_user->user_login, 'pdm.') === 0) {
-        $id_tingkat_list = array_filter([$settings['pdm'], $settings['pcm'], $settings['prm']]);
-    } else if (strpos($current_user->user_login, 'pcm.') === 0) {
-        $id_tingkat_list = array_filter([$settings['pcm'], $settings['prm']]);
-    } else if (strpos($current_user->user_login, 'prm.') === 0) {
-        $id_tingkat_list = array_filter([$settings['prm']]);
-    }
+    // Get accessible organization IDs with hierarchical access
+    $id_tingkat_list = notulenmu_get_accessible_org_ids($user_id);
 
     if (empty($id_tingkat_list)) {
         echo "<p>You do not have sufficient permissions to access this page.</p>";

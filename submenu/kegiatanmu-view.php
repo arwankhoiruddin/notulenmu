@@ -7,19 +7,8 @@ function kegiatanmu_view_page() {
     $user_id = get_current_user_id();
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     
-    // Get user settings to determine accessible id_tingkat values (same logic as list_kegiatan.php)
-    $setting_table = $wpdb->prefix . 'sicara_settings';
-    $settings = $wpdb->get_row($wpdb->prepare(
-        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
-        $user_id
-    ), ARRAY_A);
-
-    if (!$settings) {
-        echo '<div class="p-6 bg-white rounded shadow text-center">Data tidak ditemukan.</div>';
-        return;
-    }
-
-    $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+    // Get accessible organization IDs with hierarchical access
+    $id_tingkat_list = notulenmu_get_accessible_org_ids($user_id);
 
     if (empty($id_tingkat_list)) {
         echo '<div class="p-6 bg-white rounded shadow text-center">You do not have sufficient permissions to access this page.</div>';
