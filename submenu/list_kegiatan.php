@@ -88,6 +88,21 @@ function kegiatanmu_list_page()
     $sql = $wpdb->prepare($query, $params);
     $rows = $wpdb->get_results($sql);
 
+    // Group kegiatan by entity (tingkat + id_tingkat)
+    $grouped_kegiatan = array();
+    foreach ($rows as $row) {
+        $entity_key = $row->tingkat . '_' . $row->id_tingkat;
+        if (!isset($grouped_kegiatan[$entity_key])) {
+            $grouped_kegiatan[$entity_key] = array(
+                'tingkat' => $row->tingkat,
+                'id_tingkat' => $row->id_tingkat,
+                'entity_name' => notulenmu_get_entity_name($row->tingkat, $row->id_tingkat),
+                'kegiatan' => array()
+            );
+        }
+        $grouped_kegiatan[$entity_key]['kegiatan'][] = $row;
+    }
+
     // Notifikasi
     if ($message = get_transient('kegiatanmu_admin_notice')) {
         echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
@@ -116,36 +131,50 @@ function kegiatanmu_list_page()
                 <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded">Cari</button>
             </form>
         </div>
-        <!-- Tabel -->
-        <table class="min-w-full border border-gray-300">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="py-2 px-4 border border-gray-300">Tingkat</th>
-                        <th class="py-2 px-4 border border-gray-300">Nama Kegiatan</th>
-                        <th class="py-2 px-4 border border-gray-300">Tanggal Kegiatan</th>
-                        <th class="py-2 px-4 border border-gray-300">Tempat Kegiatan</th>
-                        <th class="py-2 px-4 border border-gray-300">Detail</th>
-                        <th class="py-2 px-4 border border-gray-300">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <?php foreach ($rows as $row) { ?>
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tingkat); ?></td>
-                            <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->nama_kegiatan); ?></td>
-                            <td class="py-2 px-4 border border-gray-300"><?php echo date('Y-m-d', strtotime($row->tanggal_kegiatan)); ?></td>
-                            <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tempat_kegiatan); ?></td>
-                            <td class="py-2 px-4 border border-gray-300 text-center">
-                                <a href="<?php echo admin_url('admin.php?page=kegiatanmu-view&id=' . $row->id); ?>" class="text-blue-500 hover:text-blue-700">View Details</a>
-                            </td>
-                            <td class="py-2 px-4 border border-gray-300 text-center">
-                                <a href="<?php echo admin_url('admin.php?page=kegiatanmu-add&edit=true&id=' . $row->id); ?>" class="text-green-500 hover:text-green-700 mr-2">Edit</a>
-                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=kegiatanmu-list&delete_kegiatan=' . $row->id), 'delete_kegiatan_' . $row->id); ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus kegiatan ini?');">Delete</a>
-                            </td>
+
+        <?php if (empty($grouped_kegiatan)) { ?>
+            <p class="text-gray-600 text-center py-4">Tidak ada data kegiatan yang ditemukan.</p>
+        <?php } else { ?>
+            <?php foreach ($grouped_kegiatan as $entity_key => $entity_data) { ?>
+                <!-- Entity Header -->
+                <div class="mt-6 mb-3">
+                    <h2 class="text-xl font-semibold text-gray-800 border-b-2 border-gray-300 pb-2">
+                        <?php echo esc_html($entity_data['entity_name']); ?>
+                    </h2>
+                </div>
+
+                <!-- Tabel for this entity -->
+                <table class="min-w-full border border-gray-300 mb-6">
+                    <thead class="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th class="py-2 px-4 border border-gray-300">Tingkat</th>
+                            <th class="py-2 px-4 border border-gray-300">Nama Kegiatan</th>
+                            <th class="py-2 px-4 border border-gray-300">Tanggal Kegiatan</th>
+                            <th class="py-2 px-4 border border-gray-300">Tempat Kegiatan</th>
+                            <th class="py-2 px-4 border border-gray-300">Detail</th>
+                            <th class="py-2 px-4 border border-gray-300">Aksi</th>
                         </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <?php foreach ($entity_data['kegiatan'] as $row) { ?>
+                            <tr class="hover:bg-gray-100">
+                                <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tingkat); ?></td>
+                                <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->nama_kegiatan); ?></td>
+                                <td class="py-2 px-4 border border-gray-300"><?php echo date('Y-m-d', strtotime($row->tanggal_kegiatan)); ?></td>
+                                <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tempat_kegiatan); ?></td>
+                                <td class="py-2 px-4 border border-gray-300 text-center">
+                                    <a href="<?php echo admin_url('admin.php?page=kegiatanmu-view&id=' . $row->id); ?>" class="text-blue-500 hover:text-blue-700">View Details</a>
+                                </td>
+                                <td class="py-2 px-4 border border-gray-300 text-center">
+                                    <a href="<?php echo admin_url('admin.php?page=kegiatanmu-add&edit=true&id=' . $row->id); ?>" class="text-green-500 hover:text-green-700 mr-2">Edit</a>
+                                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=kegiatanmu-list&delete_kegiatan=' . $row->id), 'delete_kegiatan_' . $row->id); ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus kegiatan ini?');">Delete</a>
+                                </td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            <?php } ?>
+        <?php } ?>
         </div>
     </div>
 </div>
