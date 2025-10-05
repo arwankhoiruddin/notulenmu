@@ -42,26 +42,22 @@ function notulenmu_list_page()
         return;
     }
 
-    // Tentukan $is_pdm di sini, setelah WordPress siap
-    $is_pwm = false;
-    $is_pdm = false;
-    $is_pcm = false;
-    $is_prm = false;
-
+    // Determine user organizational level
     $current_user = wp_get_current_user();
+    $user_level = '';
+    
     if (strpos($current_user->user_login, 'pwm.') === 0) {
-        $is_pwm = true;
-        $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+        $user_level = 'pwm';
     } else if (strpos($current_user->user_login, 'pdm.') === 0) {
-        $is_pdm = true;
-        $id_tingkat_list = array_filter([$settings['pdm'], $settings['pcm'], $settings['prm']]);
+        $user_level = 'pdm';
     } else if (strpos($current_user->user_login, 'pcm.') === 0) {
-        $is_pcm = true;
-        $id_tingkat_list = array_filter([$settings['pcm'], $settings['prm']]);
+        $user_level = 'pcm';
     } else if (strpos($current_user->user_login, 'prm.') === 0) {
-        $is_prm = true;
-        $id_tingkat_list = array_filter([$settings['prm']]);
+        $user_level = 'prm';
     }
+    
+    // Get all accessible id_tingkat based on organizational hierarchy
+    $id_tingkat_list = notulenmu_get_accessible_id_tingkat($settings, $user_level);
 
     if (empty($id_tingkat_list)) {
         echo "<p>You do not have sufficient permissions to access this page.</p>";

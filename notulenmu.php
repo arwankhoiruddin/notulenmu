@@ -103,6 +103,115 @@ function ignore_on_login()
 add_action('admin_menu', 'notulenmu_menu');
 add_action('wp_loaded', 'ignore_on_login');
 
+/**
+ * Get all accessible id_tingkat values based on organizational hierarchy
+ * 
+ * @param array $settings User's organizational settings (pwm, pdm, pcm, prm)
+ * @param string $user_level User's organizational level (pwm, pdm, pcm, prm)
+ * @return array List of all accessible id_tingkat values
+ */
+function notulenmu_get_accessible_id_tingkat($settings, $user_level) {
+    global $wpdb;
+    $id_tingkat_list = [];
+    
+    if ($user_level === 'pwm') {
+        // PWM can see: their PWM + all PDM under PWM + all PCM under those PDM + all PRM under those PCM
+        $pwm_id = intval($settings['pwm']);
+        if ($pwm_id > 0) {
+            $id_tingkat_list[] = $pwm_id;
+            
+            // Get all PDM under this PWM
+            $pdm_table = $wpdb->prefix . 'sicara_pdm';
+            $pdm_ids = $wpdb->get_col($wpdb->prepare(
+                "SELECT id_pdm FROM $pdm_table WHERE id_pwm = %d",
+                $pwm_id
+            ));
+            
+            if (!empty($pdm_ids)) {
+                $id_tingkat_list = array_merge($id_tingkat_list, $pdm_ids);
+                
+                // Get all PCM under these PDMs
+                $pcm_table = $wpdb->prefix . 'sicara_pcm';
+                $pdm_placeholders = implode(',', array_fill(0, count($pdm_ids), '%d'));
+                $pcm_ids = $wpdb->get_col($wpdb->prepare(
+                    "SELECT id_pcm FROM $pcm_table WHERE id_pdm IN ($pdm_placeholders)",
+                    $pdm_ids
+                ));
+                
+                if (!empty($pcm_ids)) {
+                    $id_tingkat_list = array_merge($id_tingkat_list, $pcm_ids);
+                    
+                    // Get all PRM under these PCMs
+                    $prm_table = $wpdb->prefix . 'sicara_prm';
+                    $pcm_placeholders = implode(',', array_fill(0, count($pcm_ids), '%d'));
+                    $prm_ids = $wpdb->get_col($wpdb->prepare(
+                        "SELECT id_prm FROM $prm_table WHERE id_pcm IN ($pcm_placeholders)",
+                        $pcm_ids
+                    ));
+                    
+                    if (!empty($prm_ids)) {
+                        $id_tingkat_list = array_merge($id_tingkat_list, $prm_ids);
+                    }
+                }
+            }
+        }
+    } else if ($user_level === 'pdm') {
+        // PDM can see: their PDM + all PCM under PDM + all PRM under those PCM
+        $pdm_id = intval($settings['pdm']);
+        if ($pdm_id > 0) {
+            $id_tingkat_list[] = $pdm_id;
+            
+            // Get all PCM under this PDM
+            $pcm_table = $wpdb->prefix . 'sicara_pcm';
+            $pcm_ids = $wpdb->get_col($wpdb->prepare(
+                "SELECT id_pcm FROM $pcm_table WHERE id_pdm = %d",
+                $pdm_id
+            ));
+            
+            if (!empty($pcm_ids)) {
+                $id_tingkat_list = array_merge($id_tingkat_list, $pcm_ids);
+                
+                // Get all PRM under these PCMs
+                $prm_table = $wpdb->prefix . 'sicara_prm';
+                $pcm_placeholders = implode(',', array_fill(0, count($pcm_ids), '%d'));
+                $prm_ids = $wpdb->get_col($wpdb->prepare(
+                    "SELECT id_prm FROM $prm_table WHERE id_pcm IN ($pcm_placeholders)",
+                    $pcm_ids
+                ));
+                
+                if (!empty($prm_ids)) {
+                    $id_tingkat_list = array_merge($id_tingkat_list, $prm_ids);
+                }
+            }
+        }
+    } else if ($user_level === 'pcm') {
+        // PCM can see: their PCM + all PRM under PCM
+        $pcm_id = intval($settings['pcm']);
+        if ($pcm_id > 0) {
+            $id_tingkat_list[] = $pcm_id;
+            
+            // Get all PRM under this PCM
+            $prm_table = $wpdb->prefix . 'sicara_prm';
+            $prm_ids = $wpdb->get_col($wpdb->prepare(
+                "SELECT id_prm FROM $prm_table WHERE id_pcm = %d",
+                $pcm_id
+            ));
+            
+            if (!empty($prm_ids)) {
+                $id_tingkat_list = array_merge($id_tingkat_list, $prm_ids);
+            }
+        }
+    } else if ($user_level === 'prm') {
+        // PRM can only see their own PRM
+        $prm_id = intval($settings['prm']);
+        if ($prm_id > 0) {
+            $id_tingkat_list[] = $prm_id;
+        }
+    }
+    
+    return array_filter(array_unique($id_tingkat_list));
+}
+
 function notulenmu_install()
 {
     global $wpdb;
