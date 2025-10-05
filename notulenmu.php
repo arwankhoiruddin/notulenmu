@@ -212,6 +212,56 @@ function notulenmu_get_accessible_id_tingkat($settings, $user_level) {
     return array_filter(array_unique($id_tingkat_list));
 }
 
+/**
+ * Get entity name from Sicara tables based on tingkat and id_tingkat
+ * 
+ * @param string $tingkat The organizational level (wilayah, daerah, cabang, ranting)
+ * @param int $id_tingkat The ID of the entity
+ * @return string Entity name with full context (e.g., "Pimpinan Wilayah Muhammadiyah D.I. YOGYAKARTA")
+ */
+function notulenmu_get_entity_name($tingkat, $id_tingkat) {
+    global $wpdb;
+    
+    $tingkat = strtolower(trim($tingkat));
+    $id_tingkat = intval($id_tingkat);
+    
+    if ($id_tingkat <= 0) {
+        return '';
+    }
+    
+    if ($tingkat === 'wilayah') {
+        $table = $wpdb->prefix . 'sicara_pwm';
+        $result = $wpdb->get_var($wpdb->prepare(
+            "SELECT wilayah FROM $table WHERE id_pwm = %d",
+            $id_tingkat
+        ));
+        return $result ? "Pimpinan Wilayah Muhammadiyah " . $result : '';
+    } else if ($tingkat === 'daerah') {
+        $table = $wpdb->prefix . 'sicara_pdm';
+        $result = $wpdb->get_var($wpdb->prepare(
+            "SELECT daerah FROM $table WHERE id_pdm = %d",
+            $id_tingkat
+        ));
+        return $result ? "Pimpinan Daerah Muhammadiyah " . $result : '';
+    } else if ($tingkat === 'cabang') {
+        $table = $wpdb->prefix . 'sicara_pcm';
+        $result = $wpdb->get_var($wpdb->prepare(
+            "SELECT cabang FROM $table WHERE id_pcm = %d",
+            $id_tingkat
+        ));
+        return $result ? "Pimpinan Cabang Muhammadiyah " . $result : '';
+    } else if ($tingkat === 'ranting') {
+        $table = $wpdb->prefix . 'sicara_prm';
+        $result = $wpdb->get_var($wpdb->prepare(
+            "SELECT ranting FROM $table WHERE id_prm = %d",
+            $id_tingkat
+        ));
+        return $result ? "Pimpinan Ranting Muhammadiyah " . $result : '';
+    }
+    
+    return '';
+}
+
 function notulenmu_install()
 {
     global $wpdb;
