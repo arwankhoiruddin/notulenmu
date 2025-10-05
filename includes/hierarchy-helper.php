@@ -3,12 +3,14 @@
 defined('ABSPATH') || exit;
 
 /**
- * Fetch all descendant organization IDs recursively from the API
+ * Fetch all descendant organization IDs recursively from database
  * 
  * @param array $parent_ids Array of parent organization IDs to fetch children for
  * @return array Array of all organization IDs including parents and all descendants
  */
 function notulenmu_get_all_descendant_org_ids($parent_ids) {
+    global $wpdb;
+    
     if (empty($parent_ids)) {
         return [];
     }
@@ -23,16 +25,17 @@ function notulenmu_get_all_descendant_org_ids($parent_ids) {
     $ids_to_process = $parent_ids;
     $processed_ids = [];
     
-    $url_base = 'https://old.sicara.id/api/v0/organisation/';
-    $args = array(
-        'headers' => array(
-            'origin' => get_site_url(),
-            'x-requested-with' => 'XMLHttpRequest'
-        ),
-        'timeout' => 10
-    );
+    // Check if sicara_organisasi table exists
+    $org_table = $wpdb->prefix . 'sicara_organisasi';
+    $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $org_table)) === $org_table;
     
-    // Recursively fetch children
+    if (!$table_exists) {
+        // Fallback: if table doesn't exist, log error and return original IDs
+        error_log('NotulenMu: sicara_organisasi table not found. Returning only parent IDs.');
+        return $all_ids;
+    }
+    
+    // Recursively fetch children from database
     while (!empty($ids_to_process)) {
         $current_id = array_shift($ids_to_process);
         
@@ -43,24 +46,20 @@ function notulenmu_get_all_descendant_org_ids($parent_ids) {
         
         $processed_ids[] = $current_id;
         
-        // Fetch children for this organization
-        $response = wp_remote_get($url_base . $current_id . '/children', $args);
+        // Query children from database
+        // Assuming the table has columns: id, parent_id (or induk_id)
+        // Try both common column names
+        $children = $wpdb->get_results($wpdb->prepare(
+            "SELECT id FROM $org_table WHERE parent_id = %d OR induk_id = %d",
+            $current_id,
+            $current_id
+        ));
         
-        if (is_wp_error($response)) {
-            // If API call fails, log error and continue
-            error_log('NotulenMu: Failed to fetch children for org ID ' . $current_id . ': ' . $response->get_error_message());
-            continue;
-        }
-        
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body, true);
-        
-        // Check if we have valid data
-        if (isset($data['data']) && is_array($data['data'])) {
-            foreach ($data['data'] as $child) {
-                if (isset($child['id']) && !in_array($child['id'], $all_ids)) {
-                    $all_ids[] = $child['id'];
-                    $ids_to_process[] = $child['id'];
+        if (!empty($children)) {
+            foreach ($children as $child) {
+                if (isset($child->id) && !in_array($child->id, $all_ids)) {
+                    $all_ids[] = $child->id;
+                    $ids_to_process[] = $child->id;
                 }
             }
         }
