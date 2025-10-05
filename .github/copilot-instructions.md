@@ -115,11 +115,266 @@ notulenmu/
 - `sanitize_text_field()` - Input sanitization
 
 ### Database Tables Created
-The plugin creates several custom tables with prefix `wp_`:
+
+#### NotulenMu Plugin Tables
+The NotulenMu plugin creates several custom tables with prefix `wp_`:
 - `wp_salammu_notulenmu` - Meeting minutes storage
-- `wp_sicara_settings` - User organization settings
+- `wp_salammu_notulenmu_setting` - User organization settings (deprecated, see SICARA below)
 - `wp_salammu_data_pengurus` - Organization member data
 - `wp_salammu_data_kegiatan` - Activities data
+
+#### SICARA Plugin Tables
+**IMPORTANT**: NotulenMu depends on tables from the SICARA plugin for organization hierarchy and settings. The SICARA plugin must be installed and activated alongside NotulenMu.
+
+NotulenMu frequently accesses these SICARA tables:
+- `wp_sicara_settings` - User organization settings (PWM, PDM, PCM, PRM assignments)
+- `wp_sicara_pengurus` - Organization member/officer data
+- `wp_sicara_pwm` - Provincial organization level (Pimpinan Wilayah Muhammadiyah)
+- `wp_sicara_pdm` - Regional organization level (Pimpinan Daerah Muhammadiyah)
+- `wp_sicara_pcm` - Branch organization level (Pimpinan Cabang Muhammadiyah)
+- `wp_sicara_prm` - Sub-branch organization level (Pimpinan Ranting Muhammadiyah)
+
+Complete SICARA database schema:
+
+**Organization Hierarchy Tables:**
+
+```sql
+-- Provincial Level (Wilayah)
+wp_sicara_pwm:
+  - id_pwm (int, AUTO_INCREMENT, PRIMARY KEY)
+  - wilayah (varchar(255), NOT NULL)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+  - latitude (float, NOT NULL)
+  - longitude (float, NOT NULL)
+  - kodepos (varchar(10), NOT NULL)
+
+-- Regional Level (Daerah)
+wp_sicara_pdm:
+  - id_pdm (int, AUTO_INCREMENT, PRIMARY KEY)
+  - id_pwm (int, NOT NULL, FOREIGN KEY -> wp_sicara_pwm.id_pwm)
+  - daerah (varchar(255), NOT NULL)
+  - latitude (float, NOT NULL)
+  - longitude (float, NOT NULL)
+  - kodepos (varchar(10), NOT NULL)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+
+-- Branch Level (Cabang)
+wp_sicara_pcm:
+  - id_pcm (int, AUTO_INCREMENT, PRIMARY KEY)
+  - id_pdm (int, NOT NULL, FOREIGN KEY -> wp_sicara_pdm.id_pdm)
+  - cabang (varchar(255), NOT NULL)
+  - latitude (float, NOT NULL)
+  - longitude (float, NOT NULL)
+  - kodepos (varchar(10), NOT NULL)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+
+-- Sub-branch Level (Ranting)
+wp_sicara_prm:
+  - id_prm (int, AUTO_INCREMENT, PRIMARY KEY)
+  - id_pcm (int, NOT NULL, FOREIGN KEY -> wp_sicara_pcm.id_pcm)
+  - ranting (varchar(255), NOT NULL)
+  - latitude (float, NOT NULL)
+  - longitude (float, NOT NULL)
+  - kodepos (varchar(10), NOT NULL)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+```
+
+**Settings and Member Tables:**
+
+```sql
+-- User Organization Settings (HEAVILY USED BY NOTULENMU)
+wp_sicara_settings:
+  - id_setting (int, AUTO_INCREMENT, PRIMARY KEY)
+  - user_id (int, NOT NULL)
+  - pwm (int, NOT NULL) -- ID reference to wp_sicara_pwm
+  - pdm (int, NOT NULL) -- ID reference to wp_sicara_pdm
+  - pcm (int, NOT NULL) -- ID reference to wp_sicara_pcm
+  - prm (int, NOT NULL) -- ID reference to wp_sicara_prm
+  - latitude (float, NOT NULL)
+  - longitude (float, NOT NULL)
+
+-- Organization Members/Officers (USED BY NOTULENMU FOR MEETING PARTICIPANTS)
+wp_sicara_pengurus:
+  - id (int, AUTO_INCREMENT, PRIMARY KEY)
+  - tingkat (ENUM: 'wilayah', 'daerah', 'cabang', 'ranting', NOT NULL)
+  - id_tingkat (int, NOT NULL) -- References id_pwm, id_pdm, id_pcm, or id_prm
+  - nama (varchar(255), NOT NULL)
+  - jabatan (varchar(255), NOT NULL)
+  - no_hp (varchar(20), NOT NULL)
+  - tanggal_lahir (date, NOT NULL)
+  - pendidikan_terakhir (ENUM: 'SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'S1', 'S2', 'S3', NOT NULL)
+  - pekerjaan (ENUM: 'PNS', 'SWASTA', 'WIRAUSAHA', 'LAINNYA', NOT NULL)
+  - tempat_kerja (varchar(255), NOT NULL)
+  - alamat (varchar(255), NOT NULL)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+```
+
+**Organization Detail Tables:**
+
+```sql
+-- Organization General Details (PWM/PDM level)
+wp_sicara_organisasi:
+  - id_organisasi (int, PRIMARY KEY) -- References PWM or PDM id
+  - tahun_berdiri (int, NOT NULL)
+  - nomor_sk (varchar(50), NOT NULL)
+  - periode_muktamar (enum: '46', '47', '48', NOT NULL)
+  - alamat (varchar(255), NOT NULL)
+  - kodepos (varchar(10), NOT NULL)
+  - website (varchar(255), NOT NULL)
+  - email (varchar(255), NOT NULL)
+  - social_media (varchar(255), NOT NULL)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+
+-- Branch Level Organization Details
+wp_sicara_organisasi_cabang:
+  - id_pdm (int, PRIMARY KEY, FOREIGN KEY -> wp_sicara_pdm.id_pdm ON DELETE CASCADE)
+  - id_pcm (int, PRIMARY KEY, FOREIGN KEY -> wp_sicara_pcm.id_pcm ON DELETE CASCADE)
+  - tahun_berdiri (int, NOT NULL)
+  - nomor_sk (varchar(50), NOT NULL)
+  - periode_muktamar (enum: '46', '47', '48', NOT NULL)
+  - kecamatan (varchar(255), NOT NULL)
+  - alamat (varchar(255), NOT NULL)
+  - kodepos (varchar(10), NOT NULL)
+  - website (varchar(255), NOT NULL)
+  - email (varchar(255), NOT NULL)
+  - social_media (varchar(255), NOT NULL)
+
+-- Sub-branch Level Organization Details
+wp_sicara_organisasi_ranting:
+  - id_pcm (int, PRIMARY KEY, FOREIGN KEY -> wp_sicara_pcm.id_pcm ON DELETE CASCADE)
+  - id_prm (int, PRIMARY KEY, FOREIGN KEY -> wp_sicara_prm.id_prm ON DELETE CASCADE)
+  - tahun_berdiri (int, NOT NULL)
+  - nomor_sk (varchar(50), NOT NULL)
+  - periode_muktamar (enum: '46', '47', '48', NOT NULL)
+  - kecamatan (varchar(255), NOT NULL)
+  - desa_kelurahan (varchar(255), NOT NULL)
+  - alamat (varchar(255), NOT NULL)
+  - kodepos (varchar(10), NOT NULL)
+  - website (varchar(255), NOT NULL)
+  - email (varchar(255), NOT NULL)
+  - social_media (varchar(255), NOT NULL)
+```
+
+**Assessment and Scoring Tables:**
+
+```sql
+-- Assessment Questions
+wp_sicara_questions:
+  - id_question (int, AUTO_INCREMENT, PRIMARY KEY)
+  - pcm_prm (enum: 'PCM', 'PRM', NOT NULL)
+  - question_text (text, NOT NULL)
+  - question_type (enum: 'yes_no', 'multiple_choice', 'multiple_selection', 'short_text', NOT NULL)
+  - bukti (BOOLEAN, DEFAULT FALSE)
+  - syarat_pokok (BOOLEAN, DEFAULT FALSE)
+  - batas_unggul (INT)
+  - batas_hijau (INT)
+  - batas_kuning (INT)
+  - batas_merah (INT)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+
+-- Question Options
+wp_sicara_options:
+  - id_option (INT, AUTO_INCREMENT, PRIMARY KEY)
+  - question_id (INT, NOT NULL, FOREIGN KEY -> wp_sicara_questions.id_question ON DELETE CASCADE)
+  - option_label (VARCHAR(255), NOT NULL)
+  - option_value (VARCHAR(10), NOT NULL)
+  - weight (INT, NOT NULL)
+
+-- Branch Level Responses
+wp_sicara_responses_cabang:
+  - id_response (INT, AUTO_INCREMENT, PRIMARY KEY)
+  - id_pcm (INT, NOT NULL, FOREIGN KEY -> wp_sicara_pcm.id_pcm)
+  - question_id (INT, NOT NULL, FOREIGN KEY -> wp_sicara_questions.id_question)
+  - answer_value (TEXT)
+  - weight (FLOAT)
+  - bukti (TEXT)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+
+-- Sub-branch Level Responses
+wp_sicara_responses_ranting:
+  - id_response (INT, AUTO_INCREMENT, PRIMARY KEY)
+  - id_prm (INT, NOT NULL, FOREIGN KEY -> wp_sicara_prm.id_prm)
+  - question_id (INT, NOT NULL, FOREIGN KEY -> wp_sicara_questions.id_question)
+  - answer_value (TEXT)
+  - weight (FLOAT)
+  - bukti (TEXT)
+  - date_created (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - last_modified (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+
+-- Branch Status
+wp_sicara_status_cabang:
+  - id_status (INT, AUTO_INCREMENT, PRIMARY KEY)
+  - id_pcm (INT, NOT NULL, FOREIGN KEY -> wp_sicara_pcm.id_pcm ON DELETE CASCADE)
+  - nilai (INT, NOT NULL)
+  - status (VARCHAR(50), NOT NULL)
+
+-- Sub-branch Status
+wp_sicara_status_ranting:
+  - id_status (INT, AUTO_INCREMENT, PRIMARY KEY)
+  - id_prm (INT, NOT NULL, FOREIGN KEY -> wp_sicara_prm.id_prm ON DELETE CASCADE)
+  - nilai (INT, NOT NULL)
+  - status (VARCHAR(50), NOT NULL)
+```
+
+**Competition/Award Tables:**
+
+```sql
+-- Nominees for Awards
+wp_sicara_nominees:
+  - id_nominee (INT, AUTO_INCREMENT, PRIMARY KEY)
+  - type (ENUM: 'cabang', 'ranting', NOT NULL)
+  - id_organization (INT, NOT NULL)
+  - is_active (BOOLEAN, DEFAULT TRUE)
+  - created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - UNIQUE KEY: (type, id_organization)
+
+-- Jury Scores
+wp_sicara_jury_scores:
+  - id_score (INT, AUTO_INCREMENT, PRIMARY KEY)
+  - id_nominee (INT, NOT NULL, FOREIGN KEY -> wp_sicara_nominees.id_nominee ON DELETE CASCADE)
+  - question_id (INT, NOT NULL, FOREIGN KEY -> wp_sicara_questions.id_question ON DELETE CASCADE)
+  - jury_username (VARCHAR(100), NOT NULL)
+  - score (FLOAT, NOT NULL)
+  - notes (TEXT)
+  - created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - updated_at (DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE)
+  - UNIQUE KEY: (id_nominee, question_id, jury_username)
+```
+
+**Activity Logging:**
+
+```sql
+-- Activity Logs for Audit Trail
+wp_sicara_activity_logs:
+  - id_log (INT, AUTO_INCREMENT, PRIMARY KEY)
+  - table_name (VARCHAR(100), NOT NULL)
+  - record_id (VARCHAR(50), NOT NULL)
+  - action_type (ENUM: 'INSERT', 'UPDATE', 'DELETE', NOT NULL)
+  - old_values (TEXT)
+  - new_values (TEXT)
+  - user_id (INT, NOT NULL)
+  - user_login (VARCHAR(100), NOT NULL)
+  - ip_address (VARCHAR(45))
+  - user_agent (TEXT)
+  - created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+  - INDEX: (table_name, record_id)
+  - INDEX: (user_id)
+  - INDEX: (created_at)
+```
+
+**How NotulenMu Uses SICARA Tables:**
+1. **Organization Context**: Reads `wp_sicara_settings` to determine user's organizational level (PWM/PDM/PCM/PRM)
+2. **Meeting Participants**: Queries `wp_sicara_pengurus` to populate meeting attendee lists based on organizational level
+3. **Hierarchy Navigation**: Uses PWM/PDM/PCM/PRM tables to display organizational structure
+4. **Filtering**: Filters notulen (meeting minutes) based on user's assigned organizational level from `wp_sicara_settings`
 
 ### TailwindCSS Configuration
 - Content paths include: `submenu/**/*.php`, `templates/**/*.php`, `includes/**/*.php`, `./*.php`
