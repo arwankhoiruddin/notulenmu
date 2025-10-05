@@ -19,19 +19,22 @@ function notulenmu_view_page() {
         return;
     }
 
-    // Determine accessible id_tingkat based on user login prefix (same logic as list_notulen.php)
+    // Determine accessible id_tingkat based on user login prefix
     $current_user = wp_get_current_user();
-    $id_tingkat_list = [];
+    $user_level = '';
     
     if (strpos($current_user->user_login, 'pwm.') === 0) {
-        $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+        $user_level = 'pwm';
     } else if (strpos($current_user->user_login, 'pdm.') === 0) {
-        $id_tingkat_list = array_filter([$settings['pdm'], $settings['pcm'], $settings['prm']]);
+        $user_level = 'pdm';
     } else if (strpos($current_user->user_login, 'pcm.') === 0) {
-        $id_tingkat_list = array_filter([$settings['pcm'], $settings['prm']]);
+        $user_level = 'pcm';
     } else if (strpos($current_user->user_login, 'prm.') === 0) {
-        $id_tingkat_list = array_filter([$settings['prm']]);
+        $user_level = 'prm';
     }
+    
+    // Get all accessible id_tingkat based on organizational hierarchy
+    $id_tingkat_list = notulenmu_get_accessible_id_tingkat($settings, $user_level);
 
     if (empty($id_tingkat_list)) {
         echo '<div class="notulenmu-container"><div class="p-6 bg-white rounded shadow text-center">You do not have sufficient permissions to access this page.</div></div>';

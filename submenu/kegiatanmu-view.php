@@ -19,7 +19,22 @@ function kegiatanmu_view_page() {
         return;
     }
 
-    $id_tingkat_list = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+    // Determine user organizational level
+    $current_user = wp_get_current_user();
+    $user_level = '';
+    
+    if (strpos($current_user->user_login, 'pwm.') === 0) {
+        $user_level = 'pwm';
+    } else if (strpos($current_user->user_login, 'pdm.') === 0) {
+        $user_level = 'pdm';
+    } else if (strpos($current_user->user_login, 'pcm.') === 0) {
+        $user_level = 'pcm';
+    } else if (strpos($current_user->user_login, 'prm.') === 0) {
+        $user_level = 'prm';
+    }
+    
+    // Get all accessible id_tingkat based on organizational hierarchy
+    $id_tingkat_list = notulenmu_get_accessible_id_tingkat($settings, $user_level);
 
     if (empty($id_tingkat_list)) {
         echo '<div class="p-6 bg-white rounded shadow text-center">You do not have sufficient permissions to access this page.</div>';
