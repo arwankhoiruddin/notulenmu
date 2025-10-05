@@ -119,12 +119,14 @@ notulenmu/
 #### NotulenMu Plugin Tables
 The NotulenMu plugin creates several custom tables with prefix `wp_`:
 - `wp_salammu_notulenmu` - Meeting minutes storage
-- `wp_salammu_notulenmu_setting` - User organization settings (deprecated, see SICARA below)
-- `wp_salammu_data_pengurus` - Organization member data
+- `wp_salammu_notulenmu_setting` - User organization settings (**DEPRECATED** - use `wp_sicara_settings` instead)
+- `wp_salammu_data_pengurus` - Organization member data (**DEPRECATED** - use `wp_sicara_pengurus` instead)
 - `wp_salammu_data_kegiatan` - Activities data
 
 #### SICARA Plugin Tables
 **IMPORTANT**: NotulenMu depends on tables from the SICARA plugin for organization hierarchy and settings. The SICARA plugin must be installed and activated alongside NotulenMu.
+
+**CRITICAL**: When similar tables exist in both NotulenMu and SICARA (e.g., `pengurus` or `settings`), **ALWAYS use the SICARA version**. The NotulenMu versions are deprecated and maintained only for backward compatibility.
 
 NotulenMu frequently accesses these SICARA tables:
 - `wp_sicara_settings` - User organization settings (PWM, PDM, PCM, PRM assignments)
