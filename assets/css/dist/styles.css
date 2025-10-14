@@ -741,6 +741,9 @@ video {
 .notulenmu-container .border-b {
   border-bottom-width: 1px;
 }
+.notulenmu-container .border-b-2 {
+  border-bottom-width: 2px;
+}
 .notulenmu-container .border-t {
   border-top-width: 1px;
 }
