@@ -9,21 +9,16 @@ function notulenmu_view_page() {
     
     // Get user settings to determine accessible id_tingkat values
     $setting_table = $wpdb->prefix . 'sicara_settings';
-    $settings = $wpdb->get_row($wpdb->prepare(
-        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
-        $user_id
-    ), ARRAY_A);
-
-    if (!$settings) {
-        echo '<div class="notulenmu-container"><div class="p-6 bg-white rounded shadow text-center">Data tidak ditemukan.</div></div>';
-        return;
-    }
-
+    
     // Determine accessible id_tingkat based on user login prefix
     $current_user = wp_get_current_user();
     $user_level = '';
+    $is_arwan = false;
     
-    if (strpos($current_user->user_login, 'pwm.') === 0) {
+    // Check if user is arwan (PP - Pimpinan Pusat)
+    if (strpos($current_user->user_login, 'arwan') === 0) {
+        $is_arwan = true;
+    } else if (strpos($current_user->user_login, 'pwm.') === 0) {
         $user_level = 'pwm';
     } else if (strpos($current_user->user_login, 'pdm.') === 0) {
         $user_level = 'pdm';
@@ -33,19 +28,44 @@ function notulenmu_view_page() {
         $user_level = 'prm';
     }
     
-    // Get all accessible id_tingkat based on organizational hierarchy
-    $id_tingkat_list = notulenmu_get_accessible_id_tingkat($settings, $user_level);
+    // Initialize id_tingkat_list
+    $id_tingkat_list = array();
+    
+    // For user arwan, allow access to all notulen (no filtering)
+    if (!$is_arwan) {
+        // For other users, get settings and filter by organizational hierarchy
+        $settings = $wpdb->get_row($wpdb->prepare(
+            "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+            $user_id
+        ), ARRAY_A);
 
-    if (empty($id_tingkat_list)) {
-        echo '<div class="notulenmu-container"><div class="p-6 bg-white rounded shadow text-center">You do not have sufficient permissions to access this page.</div></div>';
-        return;
+        if (!$settings) {
+            echo '<div class="notulenmu-container"><div class="p-6 bg-white rounded shadow text-center">Data tidak ditemukan.</div></div>';
+            return;
+        }
+        
+        // Get all accessible id_tingkat based on organizational hierarchy
+        $id_tingkat_list = notulenmu_get_accessible_id_tingkat($settings, $user_level);
+
+        if (empty($id_tingkat_list)) {
+            echo '<div class="notulenmu-container"><div class="p-6 bg-white rounded shadow text-center">You do not have sufficient permissions to access this page.</div></div>';
+            return;
+        }
     }
 
     // Query notulen with same permission logic as list page
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
-    $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
-    $query = "SELECT * FROM $table_name WHERE id = %d AND id_tingkat IN ($placeholders)";
-    $params = array_merge([$id], $id_tingkat_list);
+    
+    if ($is_arwan) {
+        // User arwan can see all notulen
+        $query = "SELECT * FROM $table_name WHERE id = %d";
+        $params = array($id);
+    } else {
+        // Other users see only notulen from their organizational hierarchy
+        $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
+        $query = "SELECT * FROM $table_name WHERE id = %d AND id_tingkat IN ($placeholders)";
+        $params = array_merge([$id], $id_tingkat_list);
+    }
     
     $notulen = $wpdb->get_row($wpdb->prepare($query, $params));
     if (!$notulen) {
