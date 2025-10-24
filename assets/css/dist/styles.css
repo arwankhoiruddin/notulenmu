@@ -726,6 +726,9 @@ video {
 .notulenmu-container .overflow-x-auto {
   overflow-x: auto;
 }
+.notulenmu-container .whitespace-nowrap {
+  white-space: nowrap;
+}
 .notulenmu-container .rounded {
   border-radius: 0.25rem;
 }
@@ -807,6 +810,10 @@ video {
 .notulenmu-container .bg-gray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
+}
+.notulenmu-container .bg-gray-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(107 114 128 / var(--tw-bg-opacity, 1));
 }
 .notulenmu-container .bg-gray-600 {
   --tw-bg-opacity: 1;

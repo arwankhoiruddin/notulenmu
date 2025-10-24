@@ -27,11 +27,12 @@ function notulenmu_pilih_tingkat_page() {
         delete_transient('notulenmu_notice_type');
     }
     
-    echo '<div class="mb-4">
-        <a href="' . esc_url(admin_url('admin.php?page=notulenmu-list')) . '" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>
-    </div>';
-
     ?>
+<div class="notulenmu-container">
+    <div class="mb-4">
+        <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-list')); ?>" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>
+    </div>
+    
     <!-- Step 1: Pilih Tingkat -->
     <div id="step-1" class="mb-6">
         <form id="form-step-1" action="<?php echo esc_url(admin_url('admin.php?page=notulenmu-add-step2')); ?>" method="post" class="p-6 bg-white shadow-md rounded-lg">
@@ -66,6 +67,7 @@ function notulenmu_pilih_tingkat_page() {
             <?php wp_nonce_field('notulenmu_tingkat_nonce', 'notulenmu_tingkat_nonce'); ?>
         </form>
     </div>
+</div>
     <?php
 }
 ?>

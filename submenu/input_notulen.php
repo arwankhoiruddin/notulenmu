@@ -41,10 +41,6 @@ function notulenmu_input_form_page() {
     $logged_user = get_current_user_id();
 
     echo '<h1>' . ($is_edit_mode ? 'Edit Notulen' : 'Input Notulen') . '</h1>';
-    
-    echo '<div class="mb-4">
-        <a href="' . esc_url(admin_url('admin.php?page=notulenmu-list')) . '" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>
-    </div>';
 
     $selected_peserta = [];
     if ($is_edit_mode && $notulen_data && !empty($notulen_data['peserta_rapat'])) {
@@ -58,6 +54,9 @@ function notulenmu_input_form_page() {
     }
     ?>
 <div class="notulenmu-container">
+    <div class="mb-4">
+        <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-list')); ?>" class="inline-block bg-gray-300 hover:bg-gray-500 text-gray-800 font-semibold py-2 px-4 rounded">Kembali</a>
+    </div>
     <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg" id="notulenmu-form">
         <?php if ($is_edit_mode) : ?>
             <input type="hidden" name="edit_id" value="<?php echo esc_attr($notulen_id); ?>">
