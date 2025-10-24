@@ -74,7 +74,7 @@ function kegiatanmu_list_page()
     $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 
     $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
-    $query = "SELECT * FROM $table_name WHERE id_tingkat IN ($placeholders)";
+    $query = "SELECT * FROM $table_name WHERE id_tingkat IN ($placeholders) order by tanggal_kegiatan DESC";
     $params = $id_tingkat_list;
 
     if (!empty($search)) {

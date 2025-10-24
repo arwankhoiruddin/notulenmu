@@ -140,7 +140,7 @@ function notulenmu_list_page()
     // Build query based on whether user is arwan or not
     if ($is_arwan) {
         // User arwan can see all notulen, with optional filtering
-        $query = "SELECT * FROM $table_name WHERE 1=1";
+        $query = "SELECT * FROM $table_name WHERE 1=1 order by tanggal_rapat DESC";
         $params = array();
         
         // Apply filters based on selected tingkat and organization
@@ -166,7 +166,7 @@ function notulenmu_list_page()
     } else {
         // Other users see only notulen from their organizational hierarchy
         $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
-        $query = "SELECT * FROM $table_name WHERE id_tingkat IN ($placeholders)";
+        $query = "SELECT * FROM $table_name WHERE id_tingkat IN ($placeholders) order by tanggal_rapat DESC";
         $params = $id_tingkat_list;
     }
 
