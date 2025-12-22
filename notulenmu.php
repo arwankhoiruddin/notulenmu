@@ -55,7 +55,9 @@ function notulenmu_menu()
     $is_prm = false;
 
     $user = wp_get_current_user();
-    if (strpos($user->user_login, 'arwan') === 0) {
+    if (strpos($user->user_login, 'arwan') === 0 || 
+        strpos($user->user_login, 'pp.') === 0 || 
+        $user->user_login === 'lpcrpm.ppm') {
         $is_pp = true;
     } else if (strpos($user->user_login, 'pwm.') === 0) {
         $is_pwm = true;

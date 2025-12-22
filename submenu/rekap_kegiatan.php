@@ -1,8 +1,10 @@
 <?php
 function notulenmu_rekap_kegiatan_page() {
-    // Check if user is PP (arwan)
+    // Check if user is PP (arwan, pp.*, or lpcrpm.ppm)
     $current_user = wp_get_current_user();
-    $is_pp = (strpos($current_user->user_login, 'arwan') === 0);
+    $is_pp = (strpos($current_user->user_login, 'arwan') === 0 || 
+              strpos($current_user->user_login, 'pp.') === 0 || 
+              $current_user->user_login === 'lpcrpm.ppm');
     
     if (!$is_pp) {
         echo '<div class="notice notice-error"><p>Hanya user PP yang dapat mengakses halaman ini.</p></div>';
