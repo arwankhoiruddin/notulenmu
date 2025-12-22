@@ -24,6 +24,7 @@ include plugin_dir_path(__FILE__) . 'submenu/notulenmu-view.php';
 include plugin_dir_path(__FILE__) . 'includes/styles.php';
 include plugin_dir_path(__FILE__) . 'submenu/rekap_topik.php';
 include plugin_dir_path(__FILE__) . 'submenu/rekap_nasional.php';
+include plugin_dir_path(__FILE__) . 'submenu/rekap_kegiatan.php';
 include plugin_dir_path(__FILE__) . 'submenu/pengurus_list.php';
 
 
@@ -86,6 +87,12 @@ function notulenmu_menu()
         add_submenu_page('notulenmu', 'Rekap Wilayah Kerja', 'Rekap Wilayah Kerja', 'manage_options', 'rekap-topik', 'rekap_topik_page');
         add_submenu_page('notulenmu', 'Rekap Isu', 'Rekap Isu', 'manage_options', 'rekap-isu', 'rekap_isu_page');
         add_submenu_page('notulenmu', 'Rekap Nasional', 'Rekap Nasional', 'manage_options', 'rekap-nasional', 'notulenmu_rekap_nasional_page');
+        
+        // Add Rekap Kegiatan menu only for PP users
+        if ($is_pp) {
+            add_submenu_page('notulenmu', 'Rekap Kegiatan', 'Rekap Kegiatan', 'read', 'rekap-kegiatan', 'notulenmu_rekap_kegiatan_page');
+        }
+        
         add_submenu_page('notulenmu', 'View Kegiatan', '', 'read', 'kegiatanmu-view', 'kegiatanmu_view_page');
     }
 }
