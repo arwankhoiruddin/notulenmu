@@ -22,7 +22,7 @@ function notulenmu_rekap_kegiatan_page() {
     
     // Get filter parameters
     $selected_tingkat = isset($_GET['tingkat']) ? sanitize_text_field($_GET['tingkat']) : '';
-    $selected_id_tingkat = isset($_GET['id_tingkat']) ? intval($_GET['id_tingkat']) : 0;
+    $selected_id_tingkat = isset($_GET['id_tingkat']) ? sanitize_text_field($_GET['id_tingkat']) : '';
     
     // Get organizational data from Sicara tables
     $pcm_table = $wpdb->prefix . 'sicara_pcm';
@@ -40,87 +40,133 @@ function notulenmu_rekap_kegiatan_page() {
     $total_kegiatan = 0;
     $wordcloud_data = array();
     
-    if ($selected_tingkat && $selected_id_tingkat > 0) {
+    if ($selected_tingkat && !empty($selected_id_tingkat)) {
         $table_kegiatan = $wpdb->prefix . 'salammu_kegiatanmu';
         
         if ($selected_tingkat === 'cabang') {
-            // Get all PRM under selected PCM
-            $prm_under_pcm = $wpdb->get_results($wpdb->prepare(
-                "SELECT id_prm, ranting FROM $prm_table WHERE id_pcm = %d ORDER BY ranting ASC",
-                $selected_id_tingkat
-            ));
-            
-            // Get kegiatan count for selected PCM
-            $pcm_count = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM $table_kegiatan WHERE tingkat = 'cabang' AND id_tingkat = %d",
-                $selected_id_tingkat
-            ));
-            
-            if ($pcm_count > 0) {
-                $pcm_name = $wpdb->get_var($wpdb->prepare(
-                    "SELECT cabang FROM $pcm_table WHERE id_pcm = %d",
+            // Check if "Semua Cabang" is selected
+            if ($selected_id_tingkat === 'semua') {
+                // Get all PCM and their kegiatan counts
+                foreach ($pcm_list as $pcm) {
+                    $count = $wpdb->get_var($wpdb->prepare(
+                        "SELECT COUNT(*) FROM $table_kegiatan WHERE tingkat = 'cabang' AND id_tingkat = %d",
+                        $pcm->id_pcm
+                    ));
+                    if ($count > 0) {
+                        $chart_labels[] = 'PCM ' . $pcm->cabang;
+                        $chart_data[] = intval($count);
+                        $total_kegiatan += intval($count);
+                    }
+                }
+                
+                // Get all kegiatan names for wordcloud
+                $kegiatan_names = $wpdb->get_col("SELECT nama_kegiatan FROM $table_kegiatan WHERE tingkat = 'cabang'");
+                
+            } else {
+                // Specific PCM selected
+                $selected_id_tingkat = intval($selected_id_tingkat);
+                
+                // Get all PRM under selected PCM
+                $prm_under_pcm = $wpdb->get_results($wpdb->prepare(
+                    "SELECT id_prm, ranting FROM $prm_table WHERE id_pcm = %d ORDER BY ranting ASC",
                     $selected_id_tingkat
                 ));
-                $chart_labels[] = 'PCM ' . $pcm_name;
-                $chart_data[] = intval($pcm_count);
-                $total_kegiatan += intval($pcm_count);
-            }
-            
-            // Get kegiatan count for each PRM under the PCM
-            foreach ($prm_under_pcm as $prm) {
-                $count = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM $table_kegiatan WHERE tingkat = 'ranting' AND id_tingkat = %d",
-                    $prm->id_prm
+                
+                // Get kegiatan count for selected PCM
+                $pcm_count = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM $table_kegiatan WHERE tingkat = 'cabang' AND id_tingkat = %d",
+                    $selected_id_tingkat
                 ));
-                if ($count > 0) {
-                    $chart_labels[] = 'PRM ' . $prm->ranting;
-                    $chart_data[] = intval($count);
-                    $total_kegiatan += intval($count);
+                
+                if ($pcm_count > 0) {
+                    $pcm_name = $wpdb->get_var($wpdb->prepare(
+                        "SELECT cabang FROM $pcm_table WHERE id_pcm = %d",
+                        $selected_id_tingkat
+                    ));
+                    $chart_labels[] = 'PCM ' . $pcm_name;
+                    $chart_data[] = intval($pcm_count);
+                    $total_kegiatan += intval($pcm_count);
+                }
+                
+                // Get kegiatan count for each PRM under the PCM
+                foreach ($prm_under_pcm as $prm) {
+                    $count = $wpdb->get_var($wpdb->prepare(
+                        "SELECT COUNT(*) FROM $table_kegiatan WHERE tingkat = 'ranting' AND id_tingkat = %d",
+                        $prm->id_prm
+                    ));
+                    if ($count > 0) {
+                        $chart_labels[] = 'PRM ' . $prm->ranting;
+                        $chart_data[] = intval($count);
+                        $total_kegiatan += intval($count);
+                    }
+                }
+                
+                // Get kegiatan names for wordcloud (PCM + all PRM under it)
+                $prm_ids = array_map(function($prm) { return $prm->id_prm; }, $prm_under_pcm);
+                
+                // Build query for wordcloud
+                if (!empty($prm_ids)) {
+                    $prm_placeholders = implode(',', array_fill(0, count($prm_ids), '%d'));
+                    $kegiatan_names = $wpdb->get_col($wpdb->prepare(
+                        "SELECT nama_kegiatan FROM $table_kegiatan 
+                        WHERE (tingkat = 'cabang' AND id_tingkat = %d) 
+                        OR (tingkat = 'ranting' AND id_tingkat IN ($prm_placeholders))",
+                        array_merge(array($selected_id_tingkat), $prm_ids)
+                    ));
+                } else {
+                    $kegiatan_names = $wpdb->get_col($wpdb->prepare(
+                        "SELECT nama_kegiatan FROM $table_kegiatan 
+                        WHERE tingkat = 'cabang' AND id_tingkat = %d",
+                        $selected_id_tingkat
+                    ));
                 }
             }
             
-            // Get kegiatan names for wordcloud (PCM + all PRM under it)
-            $prm_ids = array_map(function($prm) { return $prm->id_prm; }, $prm_under_pcm);
-            
-            // Build query for wordcloud
-            if (!empty($prm_ids)) {
-                $prm_placeholders = implode(',', array_fill(0, count($prm_ids), '%d'));
-                $kegiatan_names = $wpdb->get_col($wpdb->prepare(
-                    "SELECT nama_kegiatan FROM $table_kegiatan 
-                    WHERE (tingkat = 'cabang' AND id_tingkat = %d) 
-                    OR (tingkat = 'ranting' AND id_tingkat IN ($prm_placeholders))",
-                    array_merge(array($selected_id_tingkat), $prm_ids)
-                ));
-            } else {
-                $kegiatan_names = $wpdb->get_col($wpdb->prepare(
-                    "SELECT nama_kegiatan FROM $table_kegiatan 
-                    WHERE tingkat = 'cabang' AND id_tingkat = %d",
-                    $selected_id_tingkat
-                ));
-            }
-            
         } elseif ($selected_tingkat === 'ranting') {
-            // Get kegiatan count for selected PRM
-            $prm_count = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM $table_kegiatan WHERE tingkat = 'ranting' AND id_tingkat = %d",
-                $selected_id_tingkat
-            ));
-            
-            if ($prm_count > 0) {
-                $prm_name = $wpdb->get_var($wpdb->prepare(
-                    "SELECT ranting FROM $prm_table WHERE id_prm = %d",
+            // Check if "Semua Ranting" is selected
+            if ($selected_id_tingkat === 'semua') {
+                // Get all PRM and their kegiatan counts
+                foreach ($prm_list as $prm) {
+                    $count = $wpdb->get_var($wpdb->prepare(
+                        "SELECT COUNT(*) FROM $table_kegiatan WHERE tingkat = 'ranting' AND id_tingkat = %d",
+                        $prm->id_prm
+                    ));
+                    if ($count > 0) {
+                        $chart_labels[] = 'PRM ' . $prm->ranting;
+                        $chart_data[] = intval($count);
+                        $total_kegiatan += intval($count);
+                    }
+                }
+                
+                // Get all kegiatan names for wordcloud
+                $kegiatan_names = $wpdb->get_col("SELECT nama_kegiatan FROM $table_kegiatan WHERE tingkat = 'ranting'");
+                
+            } else {
+                // Specific PRM selected
+                $selected_id_tingkat = intval($selected_id_tingkat);
+                
+                // Get kegiatan count for selected PRM
+                $prm_count = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM $table_kegiatan WHERE tingkat = 'ranting' AND id_tingkat = %d",
                     $selected_id_tingkat
                 ));
-                $chart_labels[] = 'PRM ' . $prm_name;
-                $chart_data[] = intval($prm_count);
-                $total_kegiatan = intval($prm_count);
+                
+                if ($prm_count > 0) {
+                    $prm_name = $wpdb->get_var($wpdb->prepare(
+                        "SELECT ranting FROM $prm_table WHERE id_prm = %d",
+                        $selected_id_tingkat
+                    ));
+                    $chart_labels[] = 'PRM ' . $prm_name;
+                    $chart_data[] = intval($prm_count);
+                    $total_kegiatan = intval($prm_count);
+                }
+                
+                // Get kegiatan names for wordcloud
+                $kegiatan_names = $wpdb->get_col($wpdb->prepare(
+                    "SELECT nama_kegiatan FROM $table_kegiatan WHERE tingkat = 'ranting' AND id_tingkat = %d",
+                    $selected_id_tingkat
+                ));
             }
-            
-            // Get kegiatan names for wordcloud
-            $kegiatan_names = $wpdb->get_col($wpdb->prepare(
-                "SELECT nama_kegiatan FROM $table_kegiatan WHERE tingkat = 'ranting' AND id_tingkat = %d",
-                $selected_id_tingkat
-            ));
         }
         
         // Process kegiatan names for wordcloud
@@ -154,40 +200,43 @@ function notulenmu_rekap_kegiatan_page() {
         
         <!-- Filter Form -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-            <form method="get" action="" class="space-y-4">
+            <form method="get" action="">
                 <input type="hidden" name="page" value="rekap-kegiatan">
                 <?php wp_nonce_field('rekap_kegiatan_filter', '_wpnonce', false); ?>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Tingkat Selection -->
-                    <div>
-                        <label for="tingkat" class="block text-sm font-medium text-gray-700 mb-2">Pilih Tingkat:</label>
-                        <select name="tingkat" id="tingkat" class="w-full p-2 border border-gray-300 rounded-md" onchange="updateIdTingkatOptions()">
-                            <option value="">-- Pilih Tingkat --</option>
-                            <option value="cabang" <?php echo $selected_tingkat === 'cabang' ? 'selected' : ''; ?>>Cabang (PCM)</option>
-                            <option value="ranting" <?php echo $selected_tingkat === 'ranting' ? 'selected' : ''; ?>>Ranting (PRM)</option>
-                        </select>
-                    </div>
-                    
-                    <!-- ID Tingkat Selection -->
-                    <div>
-                        <label for="id_tingkat" class="block text-sm font-medium text-gray-700 mb-2">Pilih Cabang/Ranting:</label>
-                        <select name="id_tingkat" id="id_tingkat" class="w-full p-2 border border-gray-300 rounded-md">
-                            <option value="">-- Pilih Cabang/Ranting --</option>
-                            <!-- Options will be populated by JavaScript -->
-                        </select>
-                    </div>
-                </div>
-                
-                <div>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">
-                        Tampilkan
-                    </button>
-                </div>
+                <table class="w-full border-collapse">
+                    <tr>
+                        <td class="py-2 px-4 font-medium text-gray-700" style="width: 200px;">Pilih Tingkat:</td>
+                        <td class="py-2 px-4">
+                            <select name="tingkat" id="tingkat" class="w-full p-2 border border-gray-300 rounded-md" onchange="updateIdTingkatOptions()">
+                                <option value="">-- Pilih Tingkat --</option>
+                                <option value="cabang" <?php echo $selected_tingkat === 'cabang' ? 'selected' : ''; ?>>Cabang (PCM)</option>
+                                <option value="ranting" <?php echo $selected_tingkat === 'ranting' ? 'selected' : ''; ?>>Ranting (PRM)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 font-medium text-gray-700">Pilih Cabang/Ranting:</td>
+                        <td class="py-2 px-4">
+                            <select name="id_tingkat" id="id_tingkat" class="w-full p-2 border border-gray-300 rounded-md">
+                                <option value="">-- Pilih Cabang/Ranting --</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4"></td>
+                        <td class="py-2 px-4">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded">
+                                Tampilkan
+                            </button>
+                        </td>
+                    </tr>
+                </table>
             </form>
         </div>
         
-        <?php if ($selected_tingkat && $selected_id_tingkat > 0) { ?>
+        <?php if ($selected_tingkat && !empty($selected_id_tingkat)) { ?>
             <!-- Total Kegiatan -->
             <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-2">Total Kegiatan</h2>
@@ -221,7 +270,7 @@ function notulenmu_rekap_kegiatan_page() {
         var pcmData = <?php echo json_encode($pcm_list); ?>;
         var prmData = <?php echo json_encode($prm_list); ?>;
         var selectedTingkat = '<?php echo esc_js($selected_tingkat); ?>';
-        var selectedIdTingkat = <?php echo intval($selected_id_tingkat); ?>;
+        var selectedIdTingkat = '<?php echo esc_js($selected_id_tingkat); ?>';
         
         function updateIdTingkatOptions() {
             var tingkat = document.getElementById('tingkat').value;
@@ -231,6 +280,13 @@ function notulenmu_rekap_kegiatan_page() {
             idTingkatSelect.innerHTML = '<option value="">-- Pilih Cabang/Ranting --</option>';
             
             if (tingkat === 'cabang') {
+                // Add "Semua Cabang" option
+                var semuaOption = document.createElement('option');
+                semuaOption.value = 'semua';
+                semuaOption.textContent = 'Semua Cabang';
+                idTingkatSelect.appendChild(semuaOption);
+                
+                // Add individual PCM options
                 pcmData.forEach(function(pcm) {
                     var option = document.createElement('option');
                     option.value = pcm.id_pcm;
@@ -238,6 +294,13 @@ function notulenmu_rekap_kegiatan_page() {
                     idTingkatSelect.appendChild(option);
                 });
             } else if (tingkat === 'ranting') {
+                // Add "Semua Ranting" option
+                var semuaOption = document.createElement('option');
+                semuaOption.value = 'semua';
+                semuaOption.textContent = 'Semua Ranting';
+                idTingkatSelect.appendChild(semuaOption);
+                
+                // Add individual PRM options
                 prmData.forEach(function(prm) {
                     var option = document.createElement('option');
                     option.value = prm.id_prm;
@@ -252,7 +315,7 @@ function notulenmu_rekap_kegiatan_page() {
             updateIdTingkatOptions();
             
             // Restore selected value if exists
-            if (selectedIdTingkat > 0) {
+            if (selectedIdTingkat) {
                 document.getElementById('id_tingkat').value = selectedIdTingkat;
             }
         });
