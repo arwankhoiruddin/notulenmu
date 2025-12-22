@@ -27,10 +27,10 @@ function notulenmu_rekap_kegiatan_page() {
     $prm_table = $wpdb->prefix . 'sicara_prm';
     
     // Get all PCM (cabang)
-    $pcm_list = $wpdb->get_results($wpdb->prepare("SELECT id_pcm, cabang FROM $pcm_table ORDER BY cabang ASC"));
+    $pcm_list = $wpdb->get_results("SELECT id_pcm, cabang FROM $pcm_table ORDER BY cabang ASC");
     
     // Get all PRM (ranting)
-    $prm_list = $wpdb->get_results($wpdb->prepare("SELECT id_prm, ranting FROM $prm_table ORDER BY ranting ASC"));
+    $prm_list = $wpdb->get_results("SELECT id_prm, ranting FROM $prm_table ORDER BY ranting ASC");
     
     // Prepare data for charts if filter is applied
     $chart_data = array();
