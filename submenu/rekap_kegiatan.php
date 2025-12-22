@@ -11,6 +11,13 @@ function notulenmu_rekap_kegiatan_page() {
     
     global $wpdb;
     
+    // Verify nonce if form was submitted
+    if (isset($_GET['tingkat']) || isset($_GET['id_tingkat'])) {
+        if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'rekap_kegiatan_filter')) {
+            wp_die('Security check failed');
+        }
+    }
+    
     // Get filter parameters
     $selected_tingkat = isset($_GET['tingkat']) ? sanitize_text_field($_GET['tingkat']) : '';
     $selected_id_tingkat = isset($_GET['id_tingkat']) ? intval($_GET['id_tingkat']) : 0;
@@ -20,10 +27,10 @@ function notulenmu_rekap_kegiatan_page() {
     $prm_table = $wpdb->prefix . 'sicara_prm';
     
     // Get all PCM (cabang)
-    $pcm_list = $wpdb->get_results("SELECT id_pcm, cabang FROM $pcm_table ORDER BY cabang ASC");
+    $pcm_list = $wpdb->get_results($wpdb->prepare("SELECT id_pcm, cabang FROM $pcm_table ORDER BY cabang ASC"));
     
     // Get all PRM (ranting)
-    $prm_list = $wpdb->get_results("SELECT id_prm, ranting FROM $prm_table ORDER BY ranting ASC");
+    $prm_list = $wpdb->get_results($wpdb->prepare("SELECT id_prm, ranting FROM $prm_table ORDER BY ranting ASC"));
     
     // Prepare data for charts if filter is applied
     $chart_data = array();
@@ -147,6 +154,7 @@ function notulenmu_rekap_kegiatan_page() {
         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
             <form method="get" action="" class="space-y-4">
                 <input type="hidden" name="page" value="rekap-kegiatan">
+                <?php wp_nonce_field('rekap_kegiatan_filter', '_wpnonce', false); ?>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Tingkat Selection -->
