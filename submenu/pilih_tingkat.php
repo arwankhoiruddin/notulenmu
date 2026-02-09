@@ -61,12 +61,85 @@ function notulenmu_pilih_tingkat_page() {
                     <?php endif; ?>
                 </select>
             </div>
+            
+            <!-- Dynamic selection for specific organizational unit -->
+            <div id="specific-tingkat-container" class="flex flex-col space-y-2 mb-4" style="display: none;">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                        <path d="M12 7l0 5" />
+                        <path d="M10 12l4 0" />
+                    </svg>
+                    <label class="block font-semibold text-[15px]" id="specific-tingkat-label">Pilih Unit</label>
+                </div>
+                <select name="id_tingkat" id="id_tingkat" class="w-full p-2 border rounded-md" style="min-width: 100%;">
+                    <option value="">-- Pilih Unit --</option>
+                </select>
+            </div>
+            
             <div class="flex justify-end mt-4">
                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">Lanjut</button>
             </div>
             <?php wp_nonce_field('notulenmu_tingkat_nonce', 'notulenmu_tingkat_nonce'); ?>
         </form>
     </div>
+    
+    <script>
+    jQuery(document).ready(function($) {
+        var is_pdm = <?php echo $is_pdm ? 'true' : 'false'; ?>;
+        var user_id = <?php echo $logged_user; ?>;
+        
+        $('#tingkat').on('change', function() {
+            var tingkat = $(this).val();
+            var needsSelection = false;
+            
+            // Determine if we need to show the specific unit selector
+            if (is_pdm && (tingkat === 'cabang' || tingkat === 'ranting')) {
+                needsSelection = true;
+            }
+            
+            if (needsSelection) {
+                // Update label
+                var label = tingkat === 'cabang' ? 'Pilih Cabang' : 'Pilih Ranting';
+                $('#specific-tingkat-label').text(label);
+                
+                // Load options via AJAX
+                $('#id_tingkat').html('<option value="">Loading...</option>');
+                $('#specific-tingkat-container').show();
+                $('#id_tingkat').prop('required', true);
+                
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'get_lower_level_options',
+                        tingkat: tingkat,
+                        user_id: user_id,
+                        nonce: '<?php echo wp_create_nonce('get_lower_level_options'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            var options = '<option value="">-- Pilih Unit --</option>';
+                            $.each(response.data, function(id, name) {
+                                options += '<option value="' + id + '">' + name + '</option>';
+                            });
+                            $('#id_tingkat').html(options);
+                        } else {
+                            $('#id_tingkat').html('<option value="">Tidak ada data</option>');
+                        }
+                    },
+                    error: function() {
+                        $('#id_tingkat').html('<option value="">Error loading data</option>');
+                    }
+                });
+            } else {
+                $('#specific-tingkat-container').hide();
+                $('#id_tingkat').prop('required', false);
+            }
+        });
+    });
+    </script>
 </div>
     <?php
 }

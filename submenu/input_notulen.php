@@ -38,6 +38,7 @@ function notulenmu_input_form_page() {
     }
 
     $tingkat = isset($_POST['tingkat']) ? sanitize_text_field($_POST['tingkat']) : ($notulen_data ? $notulen_data['tingkat'] : '');
+    $id_tingkat_override = isset($_POST['id_tingkat']) ? intval($_POST['id_tingkat']) : 0;
     $logged_user = get_current_user_id();
 
     echo '<h1>' . ($is_edit_mode ? 'Edit Notulen' : 'Input Notulen') . '</h1>';
@@ -65,6 +66,9 @@ function notulenmu_input_form_page() {
         <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
         <input type="hidden" name="action" value="handle_notulen_form">
         <input type="hidden" name="tingkat" value="<?php echo esc_attr($tingkat); ?>">
+        <?php if ($id_tingkat_override > 0): ?>
+            <input type="hidden" name="id_tingkat_override" value="<?php echo esc_attr($id_tingkat_override); ?>">
+        <?php endif; ?>
         <?php wp_nonce_field('notulenmu_add_nonce', 'notulenmu_nonce'); ?>
 
         <!-- Main Form -->
@@ -88,12 +92,22 @@ function notulenmu_input_form_page() {
                         "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
                         $user_id
                     ), ARRAY_A);
-                    $id_tingkat_list = $settings ? array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]) : [];
-                    if (!empty($id_tingkat_list)) {
+                    
+                    // Determine which id_tingkat to use for pengurus query
+                    $query_id_tingkat = [];
+                    if ($id_tingkat_override > 0) {
+                        // Use the specific selected id_tingkat
+                        $query_id_tingkat = [$id_tingkat_override];
+                    } else if ($settings) {
+                        // Use user's settings
+                        $query_id_tingkat = array_filter([$settings['pwm'], $settings['pdm'], $settings['pcm'], $settings['prm']]);
+                    }
+                    
+                    if (!empty($query_id_tingkat)) {
                         $pengurus_table = $wpdb->prefix . 'sicara_pengurus';
-                        $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%d'));
+                        $placeholders = implode(',', array_fill(0, count($query_id_tingkat), '%d'));
                         $query = "SELECT id, nama, tingkat, jabatan FROM $pengurus_table WHERE tingkat = %s AND id_tingkat IN ($placeholders)";
-                        $query = $wpdb->prepare($query, array_merge([$tingkat], $id_tingkat_list));
+                        $query = $wpdb->prepare($query, array_merge([$tingkat], $query_id_tingkat));
                         $pengurus = $wpdb->get_results($query);
                         if (!empty($pengurus)) {
                             echo '<table style="border-collapse: collapse; width: 100%;" border="1" cellpadding="5">';
