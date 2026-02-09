@@ -38,17 +38,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_name']) && $_POS
     }
 
     $setting_table_name = $wpdb->prefix . 'sicara_settings';
-
-    if ($tingkat == 'wilayah') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'daerah') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'cabang') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
-    } else if ($tingkat == 'ranting') {
-        $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
+    
+    // Check if id_tingkat is explicitly provided (for PDM creating at lower levels)
+    if (isset($_POST['id_tingkat_value']) && !empty($_POST['id_tingkat_value'])) {
+        $tingkat_id = intval($_POST['id_tingkat_value']);
     } else {
-        return;
+        // Use user's own settings
+        if ($tingkat == 'wilayah') {
+            $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pwm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        } else if ($tingkat == 'daerah') {
+            $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pdm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        } else if ($tingkat == 'cabang') {
+            $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT pcm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        } else if ($tingkat == 'ranting') {
+            $tingkat_id = $wpdb->get_var($wpdb->prepare("SELECT prm FROM $setting_table_name WHERE user_id = %d", $user_id));
+        } else {
+            return;
+        }
     }
 
     if (empty($tingkat_id)) {
@@ -172,10 +178,11 @@ function tambah_kegiatan_page()
     }
 ?>
 <div class="notulenmu-container">
-    <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg">
+    <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="p-6 mr-4 bg-white shadow-md rounded-lg" id="kegiatan-form">
         <input type="hidden" name="form_name" value="kegiatanmu_add_form">
         <input type="hidden" name="user_id" value="<?php echo $logged_user; ?>">
         <input type="hidden" name="action" value="handle_kegiatan_form">
+        <input type="hidden" name="id_tingkat_value" id="id_tingkat_value" value="">
         <?php if ($editing && $kegiatan) { ?>
             <input type="hidden" name="edit_id" value="<?php echo esc_attr($kegiatan->id); ?>">
         <?php } ?>
@@ -194,6 +201,22 @@ function tambah_kegiatan_page()
                     <option value="daerah" <?php echo ($kegiatan && $kegiatan->tingkat == 'daerah' ? 'selected' : ''); ?>>Pimpinan Daerah</option>
                     <option value="cabang" <?php echo ($kegiatan && $kegiatan->tingkat == 'cabang' ? 'selected' : ''); ?>>Pimpinan Cabang</option>
                     <option value="ranting" <?php echo ($kegiatan && $kegiatan->tingkat == 'ranting' ? 'selected' : ''); ?>>Pimpinan Ranting</option>
+                </select>
+            </div>
+            
+            <!-- Dynamic selection for specific organizational unit -->
+            <div id="specific-tingkat-kegiatan-container" class="flex flex-col space-y-2" style="display: none;">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                        <path d="M12 7l0 5" />
+                        <path d="M10 12l4 0" />
+                    </svg>
+                    <label class="block font-semibold text-[15px]" id="specific-tingkat-kegiatan-label">Pilih Unit</label>
+                </div>
+                <select name="id_tingkat_select" id="id_tingkat_select" class="w-full p-2 border rounded-md" style="min-width: 100%;">
+                    <option value="">-- Pilih Unit --</option>
                 </select>
             </div>
 
@@ -301,6 +324,78 @@ function tambah_kegiatan_page()
 
             reader.readAsDataURL(file);
         }
+        
+        jQuery(document).ready(function($) {
+            var is_pdm = <?php echo $is_pdm ? 'true' : 'false'; ?>;
+            var user_id = <?php echo (int)$logged_user; ?>;
+            
+            $('#tingkat').on('change', function() {
+                var tingkat = $(this).val();
+                var needsSelection = false;
+                
+                // Determine if we need to show the specific unit selector
+                if (is_pdm && (tingkat === 'cabang' || tingkat === 'ranting')) {
+                    needsSelection = true;
+                }
+                
+                if (needsSelection) {
+                    // Update label
+                    var label = tingkat === 'cabang' ? 'Pilih Cabang' : 'Pilih Ranting';
+                    $('#specific-tingkat-kegiatan-label').text(label);
+                    
+                    // Load options via AJAX
+                    $('#id_tingkat_select').html('<option value="">Loading...</option>');
+                    $('#specific-tingkat-kegiatan-container').show();
+                    $('#id_tingkat_select').prop('required', true);
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'get_lower_level_options',
+                            tingkat: tingkat,
+                            user_id: user_id,
+                            nonce: '<?php echo wp_create_nonce('get_lower_level_options'); ?>'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                var options = '<option value="">-- Pilih Unit --</option>';
+                                $.each(response.data, function(id, name) {
+                                    options += '<option value="' + id + '">' + name + '</option>';
+                                });
+                                $('#id_tingkat_select').html(options);
+                            } else {
+                                $('#id_tingkat_select').html('<option value="">Tidak ada data</option>');
+                            }
+                        },
+                        error: function() {
+                            $('#id_tingkat_select').html('<option value="">Error loading data</option>');
+                        }
+                    });
+                } else {
+                    $('#specific-tingkat-kegiatan-container').hide();
+                    $('#id_tingkat_select').prop('required', false);
+                    $('#id_tingkat_value').val('');
+                }
+            });
+            
+            // Update hidden field when selection changes
+            $('#id_tingkat_select').on('change', function() {
+                $('#id_tingkat_value').val($(this).val());
+            });
+            
+            // Form validation
+            $('#kegiatan-form').on('submit', function(e) {
+                var tingkat = $('#tingkat').val();
+                var needsSelection = is_pdm && (tingkat === 'cabang' || tingkat === 'ranting');
+                
+                if (needsSelection && !$('#id_tingkat_value').val()) {
+                    e.preventDefault();
+                    alert('Harap pilih unit terlebih dahulu');
+                    return false;
+                }
+            });
+        });
     </script>
 <?php
 }

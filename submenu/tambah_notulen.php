@@ -76,17 +76,26 @@ function handle_notulen_form() {
 
     $table = $wpdb->prefix . 'salammu_notulenmu';
     // Ambil id_tingkat dari setting user sesuai tingkat yang dipilih
-    $setting_table = $wpdb->prefix . 'sicara_settings';
-    $settings = $wpdb->get_row($wpdb->prepare(
-        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
-        $user_id
-    ), ARRAY_A);
+    // ATAU gunakan id_tingkat yang dikirim dari form (untuk PDM memilih tingkat bawah)
     $id_tingkat = 0;
-    if ($settings) {
-        if ($tingkat === 'wilayah') $id_tingkat = intval($settings['pwm']);
-        elseif ($tingkat === 'daerah') $id_tingkat = intval($settings['pdm']);
-        elseif ($tingkat === 'cabang') $id_tingkat = intval($settings['pcm']);
-        elseif ($tingkat === 'ranting') $id_tingkat = intval($settings['prm']);
+    
+    if (isset($_POST['id_tingkat_override']) && !empty($_POST['id_tingkat_override'])) {
+        // Use the explicitly selected id_tingkat (for PDM creating at lower levels)
+        $id_tingkat = intval($_POST['id_tingkat_override']);
+    } else {
+        // Use the user's own id_tingkat based on their settings
+        $setting_table = $wpdb->prefix . 'sicara_settings';
+        $settings = $wpdb->get_row($wpdb->prepare(
+            "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+            $user_id
+        ), ARRAY_A);
+        
+        if ($settings) {
+            if ($tingkat === 'wilayah') $id_tingkat = intval($settings['pwm']);
+            elseif ($tingkat === 'daerah') $id_tingkat = intval($settings['pdm']);
+            elseif ($tingkat === 'cabang') $id_tingkat = intval($settings['pcm']);
+            elseif ($tingkat === 'ranting') $id_tingkat = intval($settings['prm']);
+        }
     }
     $data = [
         'user_id' => $user_id,
@@ -194,7 +203,81 @@ function get_pengurus_by_tingkat() {
 }
 
 
+function get_lower_level_options() {
+    check_ajax_referer('get_lower_level_options', 'nonce');
+    
+    global $wpdb;
+    $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+    $tingkat = isset($_POST['tingkat']) ? sanitize_text_field($_POST['tingkat']) : '';
+    
+    if (!$user_id || !$tingkat) {
+        wp_send_json_error('Invalid parameters');
+        return;
+    }
+    
+    // Get user settings
+    $setting_table = $wpdb->prefix . 'sicara_settings';
+    $settings = $wpdb->get_row($wpdb->prepare(
+        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+        $user_id
+    ), ARRAY_A);
+    
+    if (!$settings) {
+        wp_send_json_error('Settings not found');
+        return;
+    }
+    
+    $options = [];
+    
+    if ($tingkat === 'cabang') {
+        // Get all PCM under the user's PDM
+        $pdm_id = intval($settings['pdm']);
+        if ($pdm_id > 0) {
+            $pcm_table = $wpdb->prefix . 'sicara_pcm';
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT id_pcm, cabang FROM $pcm_table WHERE id_pdm = %d ORDER BY cabang",
+                $pdm_id
+            ));
+            
+            foreach ($results as $row) {
+                $options[$row->id_pcm] = $row->cabang;
+            }
+        }
+    } elseif ($tingkat === 'ranting') {
+        // Get all PRM under the user's PDM (through PCM)
+        $pdm_id = intval($settings['pdm']);
+        if ($pdm_id > 0) {
+            // First get all PCM under this PDM
+            $pcm_table = $wpdb->prefix . 'sicara_pcm';
+            $pcm_ids = $wpdb->get_col($wpdb->prepare(
+                "SELECT id_pcm FROM $pcm_table WHERE id_pdm = %d",
+                $pdm_id
+            ));
+            
+            if (!empty($pcm_ids)) {
+                // Then get all PRM under these PCMs
+                $prm_table = $wpdb->prefix . 'sicara_prm';
+                $placeholders = implode(',', array_fill(0, count($pcm_ids), '%d'));
+                $query = "SELECT id_prm, ranting FROM $prm_table WHERE id_pcm IN ($placeholders) ORDER BY ranting";
+                $results = $wpdb->get_results($wpdb->prepare($query, $pcm_ids));
+                
+                foreach ($results as $row) {
+                    $options[$row->id_prm] = $row->ranting;
+                }
+            }
+        }
+    }
+    
+    if (empty($options)) {
+        wp_send_json_error('No data available');
+    } else {
+        wp_send_json_success($options);
+    }
+}
+
 add_action('admin_post_handle_notulen_form', 'handle_notulen_form');
 add_action('admin_post_nopriv_handle_notulen_form', 'handle_notulen_form');
 add_action('wp_ajax_get_pengurus_by_tingkat', 'get_pengurus_by_tingkat');
 add_action('wp_ajax_nopriv_get_pengurus_by_tingkat', 'get_pengurus_by_tingkat');
+add_action('wp_ajax_get_lower_level_options', 'get_lower_level_options');
+add_action('wp_ajax_nopriv_get_lower_level_options', 'get_lower_level_options');
