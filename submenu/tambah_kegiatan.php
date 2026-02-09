@@ -153,10 +153,26 @@ function tambah_kegiatan_page()
 
     $editing = isset($_GET['edit']);
     $logged_user = get_current_user_id();
+    
+    // Determine user organization level
+    $is_pwm = false;
     $is_pdm = false;
+    $is_pcm = false;
+    $is_prm = false;
+    
     $user_info = get_userdata($logged_user);
-    if ($user_info && strpos($user_info->user_login, 'pdm.') === 0) {
-        $is_pdm = true;
+    if ($user_info) {
+        if (strpos($user_info->user_login, 'pwm.') === 0 || 
+            strpos($user_info->user_login, 'pp.') === 0 || 
+            strpos($user_info->user_login, 'arwan') === 0) {
+            $is_pwm = true;
+        } else if (strpos($user_info->user_login, 'pdm.') === 0) {
+            $is_pdm = true;
+        } else if (strpos($user_info->user_login, 'pcm.') === 0) {
+            $is_pcm = true;
+        } else if (strpos($user_info->user_login, 'prm.') === 0) {
+            $is_prm = true;
+        }
     }
 
     echo '<h1>' . ($editing ? 'Edit' : 'Tambah') . ' Kegiatan</h1>';
@@ -195,12 +211,21 @@ function tambah_kegiatan_page()
                 </div>
                 <select name="tingkat" id="tingkat" class="w-full p-2 border rounded-md" style="min-width: 100%;">
                     <option class="w-full">Pilih Tingkat</option>
-                    <?php if (!$is_pdm) { ?>
+                    <?php if ($is_pwm) { ?>
                         <option value="wilayah" <?php echo ($kegiatan && $kegiatan->tingkat == 'wilayah' ? 'selected' : ''); ?>>Pimpinan Wilayah</option>
+                        <option value="daerah" <?php echo ($kegiatan && $kegiatan->tingkat == 'daerah' ? 'selected' : ''); ?>>Pimpinan Daerah</option>
+                        <option value="cabang" <?php echo ($kegiatan && $kegiatan->tingkat == 'cabang' ? 'selected' : ''); ?>>Pimpinan Cabang</option>
+                        <option value="ranting" <?php echo ($kegiatan && $kegiatan->tingkat == 'ranting' ? 'selected' : ''); ?>>Pimpinan Ranting</option>
+                    <?php } else if ($is_pdm) { ?>
+                        <option value="daerah" <?php echo ($kegiatan && $kegiatan->tingkat == 'daerah' ? 'selected' : ''); ?>>Pimpinan Daerah</option>
+                        <option value="cabang" <?php echo ($kegiatan && $kegiatan->tingkat == 'cabang' ? 'selected' : ''); ?>>Pimpinan Cabang</option>
+                        <option value="ranting" <?php echo ($kegiatan && $kegiatan->tingkat == 'ranting' ? 'selected' : ''); ?>>Pimpinan Ranting</option>
+                    <?php } else if ($is_pcm) { ?>
+                        <option value="cabang" <?php echo ($kegiatan && $kegiatan->tingkat == 'cabang' ? 'selected' : ''); ?>>Pimpinan Cabang</option>
+                        <option value="ranting" <?php echo ($kegiatan && $kegiatan->tingkat == 'ranting' ? 'selected' : ''); ?>>Pimpinan Ranting</option>
+                    <?php } else if ($is_prm) { ?>
+                        <option value="ranting" <?php echo ($kegiatan && $kegiatan->tingkat == 'ranting' ? 'selected' : ''); ?>>Pimpinan Ranting</option>
                     <?php } ?>
-                    <option value="daerah" <?php echo ($kegiatan && $kegiatan->tingkat == 'daerah' ? 'selected' : ''); ?>>Pimpinan Daerah</option>
-                    <option value="cabang" <?php echo ($kegiatan && $kegiatan->tingkat == 'cabang' ? 'selected' : ''); ?>>Pimpinan Cabang</option>
-                    <option value="ranting" <?php echo ($kegiatan && $kegiatan->tingkat == 'ranting' ? 'selected' : ''); ?>>Pimpinan Ranting</option>
                 </select>
             </div>
             
@@ -326,7 +351,10 @@ function tambah_kegiatan_page()
         }
         
         jQuery(document).ready(function($) {
+            var is_pwm = <?php echo $is_pwm ? 'true' : 'false'; ?>;
             var is_pdm = <?php echo $is_pdm ? 'true' : 'false'; ?>;
+            var is_pcm = <?php echo $is_pcm ? 'true' : 'false'; ?>;
+            var is_prm = <?php echo $is_prm ? 'true' : 'false'; ?>;
             var user_id = <?php echo (int)$logged_user; ?>;
             
             $('#tingkat').on('change', function() {
@@ -334,7 +362,12 @@ function tambah_kegiatan_page()
                 var needsSelection = false;
                 
                 // Determine if we need to show the specific unit selector
+                // PDM users selecting cabang or ranting
                 if (is_pdm && (tingkat === 'cabang' || tingkat === 'ranting')) {
+                    needsSelection = true;
+                }
+                // PCM users selecting ranting
+                else if (is_pcm && tingkat === 'ranting') {
                     needsSelection = true;
                 }
                 
@@ -387,7 +420,13 @@ function tambah_kegiatan_page()
             // Form validation
             $('#kegiatan-form').on('submit', function(e) {
                 var tingkat = $('#tingkat').val();
-                var needsSelection = is_pdm && (tingkat === 'cabang' || tingkat === 'ranting');
+                var needsSelection = false;
+                
+                if (is_pdm && (tingkat === 'cabang' || tingkat === 'ranting')) {
+                    needsSelection = true;
+                } else if (is_pcm && tingkat === 'ranting') {
+                    needsSelection = true;
+                }
                 
                 if (needsSelection && !$('#id_tingkat_value').val()) {
                     e.preventDefault();
