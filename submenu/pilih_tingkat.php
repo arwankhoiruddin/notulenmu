@@ -88,7 +88,7 @@ function notulenmu_pilih_tingkat_page() {
     <script>
     jQuery(document).ready(function($) {
         var is_pdm = <?php echo $is_pdm ? 'true' : 'false'; ?>;
-        var user_id = <?php echo $logged_user; ?>;
+        var user_id = <?php echo (int)$logged_user; ?>;
         
         $('#tingkat').on('change', function() {
             var tingkat = $(this).val();

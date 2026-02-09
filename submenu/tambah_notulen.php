@@ -243,7 +243,7 @@ function get_lower_level_options() {
                 $options[$row->id_pcm] = $row->cabang;
             }
         }
-    } else if ($tingkat === 'ranting') {
+    } elseif ($tingkat === 'ranting') {
         // Get all PRM under the user's PDM (through PCM)
         $pdm_id = intval($settings['pdm']);
         if ($pdm_id > 0) {

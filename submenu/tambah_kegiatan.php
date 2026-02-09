@@ -327,7 +327,7 @@ function tambah_kegiatan_page()
         
         jQuery(document).ready(function($) {
             var is_pdm = <?php echo $is_pdm ? 'true' : 'false'; ?>;
-            var user_id = <?php echo $logged_user; ?>;
+            var user_id = <?php echo (int)$logged_user; ?>;
             
             $('#tingkat').on('change', function() {
                 var tingkat = $(this).val();
@@ -391,7 +391,7 @@ function tambah_kegiatan_page()
                 
                 if (needsSelection && !$('#id_tingkat_value').val()) {
                     e.preventDefault();
-                    alert('Silakan pilih unit terlebih dahulu');
+                    alert('Harap pilih unit terlebih dahulu');
                     return false;
                 }
             });
