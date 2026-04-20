@@ -7,13 +7,37 @@ if (isset($_GET['delete_kegiatan']) && !empty($_GET['delete_kegiatan'])) {
     global $wpdb;
     $user_id = get_current_user_id();
     $delete_id = intval($_GET['delete_kegiatan']);
-    if (wp_verify_nonce($_GET['_wpnonce'], 'delete_kegiatan_' . $delete_id)) {
+    if (wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'delete_kegiatan_' . $delete_id)) {
         $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
         $deleted = $wpdb->delete($table_name, array('id' => $delete_id, 'user_id' => $user_id));
         if ($deleted) {
             set_transient('kegiatanmu_admin_notice', 'Kegiatan berhasil dihapus.', 5);
         } else {
             set_transient('kegiatanmu_admin_notice', 'Gagal menghapus kegiatan.', 5);
+        }
+        if (!function_exists('wp_redirect')) {
+            require_once(ABSPATH . WPINC . '/pluggable.php');
+        }
+        wp_redirect(admin_url('admin.php?page=kegiatanmu-list'));
+        exit;
+    }
+}
+
+// Handle delete jadwal ied action before any output
+if (isset($_GET['delete_jadwal_ied']) && !empty($_GET['delete_jadwal_ied'])) {
+    if (!function_exists('wp_verify_nonce')) {
+        require_once(ABSPATH . WPINC . '/pluggable.php');
+    }
+    global $wpdb;
+    $user_id = get_current_user_id();
+    $delete_id = intval($_GET['delete_jadwal_ied']);
+    if (wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'delete_jadwal_ied_' . $delete_id)) {
+        $table_name = $wpdb->prefix . 'salammu_jadwal_shalat_ied';
+        $deleted = $wpdb->delete($table_name, array('id' => $delete_id, 'user_id' => $user_id));
+        if ($deleted) {
+            set_transient('kegiatanmu_admin_notice', 'Jadwal Shalat Ied berhasil dihapus.', 5);
+        } else {
+            set_transient('kegiatanmu_admin_notice', 'Gagal menghapus jadwal shalat ied.', 5);
         }
         if (!function_exists('wp_redirect')) {
             require_once(ABSPATH . WPINC . '/pluggable.php');
@@ -36,6 +60,7 @@ function kegiatanmu_list_page()
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
+    $table_jadwal_ied = $wpdb->prefix . 'salammu_jadwal_shalat_ied';
 
     // Determine user organizational level and PP status
     $current_user = wp_get_current_user();
@@ -76,6 +101,18 @@ function kegiatanmu_list_page()
         } else {
             $sql = $query;
         }
+
+        // Jadwal ied for PP
+        $query_ied = "SELECT * FROM $table_jadwal_ied WHERE 1=1 ORDER BY tanggal_pelaksanaan DESC";
+        $params_ied = array();
+        if (!empty($search)) {
+            $query_ied .= " AND (tingkat LIKE %s OR tempat_penyelenggaraan LIKE %s OR nama_imam LIKE %s)";
+            $search_term = '%' . $wpdb->esc_like($search) . '%';
+            $params_ied[] = $search_term;
+            $params_ied[] = $search_term;
+            $params_ied[] = $search_term;
+        }
+        $sql_ied = !empty($params_ied) ? $wpdb->prepare($query_ied, $params_ied) : $query_ied;
     } else {
         // Ambil id tingkat dari settings user
         $setting_table = $wpdb->prefix . 'sicara_settings';
@@ -110,9 +147,22 @@ function kegiatanmu_list_page()
         }
 
         $sql = $wpdb->prepare($query, $params);
+
+        // Jadwal ied for non-PP
+        $query_ied = "SELECT * FROM $table_jadwal_ied WHERE id_tingkat IN ($placeholders) ORDER BY tanggal_pelaksanaan DESC";
+        $params_ied = $id_tingkat_list;
+        if (!empty($search)) {
+            $query_ied .= " AND (tingkat LIKE %s OR tempat_penyelenggaraan LIKE %s OR nama_imam LIKE %s)";
+            $search_term = '%' . $wpdb->esc_like($search) . '%';
+            $params_ied[] = $search_term;
+            $params_ied[] = $search_term;
+            $params_ied[] = $search_term;
+        }
+        $sql_ied = $wpdb->prepare($query_ied, $params_ied);
     }
 
     $rows = $wpdb->get_results($sql);
+    $rows_ied = $wpdb->get_results($sql_ied);
 
     // Group kegiatan by organizational level (tingkat), then by entity (tingkat + id_tingkat)
     $grouped_kegiatan = array();
@@ -143,9 +193,36 @@ function kegiatanmu_list_page()
         return $order_a - $order_b;
     });
 
+    // Group jadwal ied by tingkat
+    $grouped_jadwal_ied = array();
+    foreach ($rows_ied as $row) {
+        $tingkat = $row->tingkat;
+        $entity_key = $row->tingkat . '_' . $row->id_tingkat;
+
+        if (!isset($grouped_jadwal_ied[$tingkat])) {
+            $grouped_jadwal_ied[$tingkat] = array();
+        }
+
+        if (!isset($grouped_jadwal_ied[$tingkat][$entity_key])) {
+            $grouped_jadwal_ied[$tingkat][$entity_key] = array(
+                'tingkat' => $row->tingkat,
+                'id_tingkat' => $row->id_tingkat,
+                'entity_name' => notulenmu_get_entity_name($row->tingkat, $row->id_tingkat),
+                'jadwal' => array()
+            );
+        }
+        $grouped_jadwal_ied[$tingkat][$entity_key]['jadwal'][] = $row;
+    }
+
+    uksort($grouped_jadwal_ied, function($a, $b) use ($tingkat_order) {
+        $order_a = isset($tingkat_order[$a]) ? $tingkat_order[$a] : 999;
+        $order_b = isset($tingkat_order[$b]) ? $tingkat_order[$b] : 999;
+        return $order_a - $order_b;
+    });
+
     // Notifikasi
     if ($message = get_transient('kegiatanmu_admin_notice')) {
-        echo "<div class='notice notice-success is-dismissible'><p>$message</p></div>";
+        echo "<div class='notice notice-success is-dismissible'><p>" . esc_html($message) . "</p></div>";
         delete_transient('kegiatanmu_admin_notice');
     }
 ?>
@@ -154,8 +231,9 @@ function kegiatanmu_list_page()
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-semibold  text-gray-700">List Kegiatan</h1>
         </div>
-        <div class="mb-4">
+        <div class="mb-4 flex gap-2">
             <a href="<?php echo esc_url(admin_url('admin.php?page=kegiatanmu-add')); ?>" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded" style="color:#fff !important;">+ Tambah Kegiatan</a>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=jadwal-ied-add')); ?>" class="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded" style="color:#fff !important;">+ Tambah Jadwal Ied</a>
         </div>
         <div class="mb-4 flex flex-col md:flex-row md:items-center gap-2">
             <form method="get" class="flex items-center gap-2 w-full md:w-auto" action="">
@@ -217,14 +295,14 @@ function kegiatanmu_list_page()
                                 <tr class="hover:bg-gray-100">
                                     <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tingkat); ?></td>
                                     <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->nama_kegiatan); ?></td>
-                                    <td class="py-2 px-4 border border-gray-300"><?php echo date('Y-m-d', strtotime($row->tanggal_kegiatan)); ?></td>
+                                    <td class="py-2 px-4 border border-gray-300"><?php echo esc_html(date('Y-m-d', strtotime($row->tanggal_kegiatan))); ?></td>
                                     <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tempat_kegiatan); ?></td>
                                     <td class="py-2 px-4 border border-gray-300 text-center">
-                                        <a href="<?php echo admin_url('admin.php?page=kegiatanmu-view&id=' . $row->id); ?>" class="text-blue-500 hover:text-blue-700">View Details</a>
+                                        <a href="<?php echo esc_url(admin_url('admin.php?page=kegiatanmu-view&id=' . $row->id)); ?>" class="text-blue-500 hover:text-blue-700">View Details</a>
                                     </td>
                                     <td class="py-2 px-4 border border-gray-300 text-center">
-                                        <a href="<?php echo admin_url('admin.php?page=kegiatanmu-add&edit=true&id=' . $row->id); ?>" class="text-green-500 hover:text-green-700 mr-2">Edit</a>
-                                        <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=kegiatanmu-list&delete_kegiatan=' . $row->id), 'delete_kegiatan_' . $row->id); ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus kegiatan ini?');">Delete</a>
+                                        <a href="<?php echo esc_url(admin_url('admin.php?page=kegiatanmu-add&edit=true&id=' . $row->id)); ?>" class="text-green-500 hover:text-green-700 mr-2">Edit</a>
+                                        <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=kegiatanmu-list&delete_kegiatan=' . $row->id), 'delete_kegiatan_' . $row->id)); ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus kegiatan ini?');">Delete</a>
                                     </td>
                                 </tr>
                             <?php } ?>
@@ -233,6 +311,61 @@ function kegiatanmu_list_page()
                 <?php } ?>
             <?php } ?>
         <?php } ?>
+
+        <!-- Jadwal Shalat Ied Section -->
+        <div class="mt-10">
+            <h2 class="text-2xl font-bold text-gray-900 border-b-4 border-green-500 pb-3 mb-4">Jadwal Shalat Ied</h2>
+            <?php if (empty($grouped_jadwal_ied)) { ?>
+                <p class="text-gray-600 text-center py-4">Tidak ada data jadwal shalat ied yang ditemukan.</p>
+            <?php } else { ?>
+                <?php
+                $tingkat_labels = array(
+                    'wilayah' => 'PWM (Pimpinan Wilayah Muhammadiyah)',
+                    'daerah' => 'PDM (Pimpinan Daerah Muhammadiyah)',
+                    'cabang' => 'PCM (Pimpinan Cabang Muhammadiyah)',
+                    'ranting' => 'PRM (Pimpinan Ranting Muhammadiyah)'
+                );
+                foreach ($grouped_jadwal_ied as $tingkat => $entities) { ?>
+                    <div class="mt-8 mb-4">
+                        <h2 class="text-2xl font-bold text-gray-900 border-b-4 border-green-400 pb-3">
+                            <?php echo esc_html(isset($tingkat_labels[$tingkat]) ? $tingkat_labels[$tingkat] : ucfirst($tingkat)); ?>
+                        </h2>
+                    </div>
+                    <?php foreach ($entities as $entity_key => $entity_data) { ?>
+                        <div class="mt-6 mb-3">
+                            <h3 class="text-xl font-semibold text-gray-800 border-b-2 border-gray-300 pb-2">
+                                <?php echo esc_html($entity_data['entity_name']); ?>
+                            </h3>
+                        </div>
+                        <table class="min-w-full border border-gray-300 mb-6">
+                            <thead class="bg-green-50 text-gray-700">
+                                <tr>
+                                    <th class="py-2 px-4 border border-gray-300">Tingkat</th>
+                                    <th class="py-2 px-4 border border-gray-300">Tempat Penyelenggaraan</th>
+                                    <th class="py-2 px-4 border border-gray-300">Tanggal Pelaksanaan</th>
+                                    <th class="py-2 px-4 border border-gray-300">Nama Imam / Penceramah</th>
+                                    <th class="py-2 px-4 border border-gray-300">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <?php foreach ($entity_data['jadwal'] as $row) { ?>
+                                    <tr class="hover:bg-gray-100">
+                                        <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tingkat); ?></td>
+                                        <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->tempat_penyelenggaraan); ?></td>
+                                        <td class="py-2 px-4 border border-gray-300"><?php echo esc_html(date('Y-m-d', strtotime($row->tanggal_pelaksanaan))); ?></td>
+                                        <td class="py-2 px-4 border border-gray-300"><?php echo esc_html($row->nama_imam); ?></td>
+                                        <td class="py-2 px-4 border border-gray-300 text-center">
+                                            <a href="<?php echo esc_url(admin_url('admin.php?page=jadwal-ied-add&edit=true&id=' . $row->id)); ?>" class="text-green-500 hover:text-green-700 mr-2">Edit</a>
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=kegiatanmu-list&delete_jadwal_ied=' . $row->id), 'delete_jadwal_ied_' . $row->id)); ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Yakin ingin menghapus jadwal shalat ied ini?');">Delete</a>
+                                        </td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    <?php } ?>
+                <?php } ?>
+            <?php } ?>
+        </div>
         </div>
     </div>
 </div>
