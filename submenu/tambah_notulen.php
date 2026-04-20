@@ -244,9 +244,24 @@ function get_lower_level_options() {
             }
         }
     } elseif ($tingkat === 'ranting') {
-        // Get all PRM under the user's PDM (through PCM)
+        // Get PRM based on user level
+        $pcm_id = intval($settings['pcm']);
         $pdm_id = intval($settings['pdm']);
-        if ($pdm_id > 0) {
+        $prm_table = $wpdb->prefix . 'sicara_prm';
+        
+        // If user has a PCM ID, they are a PCM user - show only PRMs under their PCM
+        if ($pcm_id > 0) {
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT id_prm, ranting FROM $prm_table WHERE id_pcm = %d ORDER BY ranting",
+                $pcm_id
+            ));
+            
+            foreach ($results as $row) {
+                $options[$row->id_prm] = $row->ranting;
+            }
+        } 
+        // Otherwise, if they have a PDM ID, they are a PDM user - show all PRMs in the district
+        elseif ($pdm_id > 0) {
             // First get all PCM under this PDM
             $pcm_table = $wpdb->prefix . 'sicara_pcm';
             $pcm_ids = $wpdb->get_col($wpdb->prepare(
@@ -256,7 +271,6 @@ function get_lower_level_options() {
             
             if (!empty($pcm_ids)) {
                 // Then get all PRM under these PCMs
-                $prm_table = $wpdb->prefix . 'sicara_prm';
                 $placeholders = implode(',', array_fill(0, count($pcm_ids), '%d'));
                 $query = "SELECT id_prm, ranting FROM $prm_table WHERE id_pcm IN ($placeholders) ORDER BY ranting";
                 $results = $wpdb->get_results($wpdb->prepare($query, $pcm_ids));
