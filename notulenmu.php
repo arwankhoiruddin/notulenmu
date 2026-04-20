@@ -18,6 +18,7 @@ include plugin_dir_path(__FILE__) . 'submenu/tambah_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/setting_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/about_notulen.php';
 include plugin_dir_path(__FILE__) . 'submenu/tambah_kegiatan.php';
+include plugin_dir_path(__FILE__) . 'submenu/tambah_jadwal_ied.php';
 include plugin_dir_path(__FILE__) . 'submenu/list_kegiatan.php';
 include plugin_dir_path(__FILE__) . 'submenu/kegiatanmu-view.php';
 include plugin_dir_path(__FILE__) . 'submenu/notulenmu-view.php';
@@ -84,6 +85,7 @@ function notulenmu_menu()
         add_submenu_page('__hidden', 'Input Notulen', 'Input Notulen', 'read', 'notulenmu-add-step2', 'notulenmu_input_form_page');
         add_submenu_page('notulenmu', 'Notulen', 'Notulen', 'read', 'notulenmu-list', 'notulenmu_list_page');
         add_submenu_page('__hidden', 'Tambah Kegiatan', 'Tambah Kegiatan', 'read', 'kegiatanmu-add', 'tambah_kegiatan_page');
+        add_submenu_page('__hidden', 'Tambah Jadwal Ied', 'Tambah Jadwal Ied', 'read', 'jadwal-ied-add', 'tambah_jadwal_ied_page');
         add_submenu_page('notulenmu', 'Kegiatan', 'Kegiatan', 'read', 'kegiatanmu-list', 'kegiatanmu_list_page');
         add_submenu_page('notulenmu', 'View Notulen', '', 'read', 'notulenmu-view', 'notulenmu_view_page');
         add_submenu_page('notulenmu', 'Rekap Wilayah Kerja', 'Rekap Wilayah Kerja', 'manage_options', 'rekap-topik', 'rekap_topik_page');
@@ -372,6 +374,26 @@ function notulenmu_install()
         dbDelta($sql);
     }
 
+    $jadwal_ied_table_name = $wpdb->prefix . 'salammu_jadwal_shalat_ied';
+
+    if ($wpdb->get_var("SHOW TABLES LIKE '$jadwal_ied_table_name'") != $jadwal_ied_table_name) {
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $jadwal_ied_table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            user_id int NOT NULL,
+            id_tingkat int NOT NULL,
+            tingkat text NOT NULL,
+            tempat_penyelenggaraan text NOT NULL,
+            tanggal_pelaksanaan date DEFAULT '0000-00-00' NOT NULL,
+            nama_imam text NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
+
     // Helper function to add or modify columns if type is different
     function add_missing_columns($table, $expected_columns) {
         global $wpdb;
@@ -449,6 +471,14 @@ function notulenmu_install()
         'nama_lengkap_gelar' => 'VARCHAR(40) NOT NULL',
         'jabatan' => 'VARCHAR(30) NOT NULL',
         'no_hp' => 'VARCHAR(20) NOT NULL',
+    ));
+    add_missing_columns($jadwal_ied_table_name, array(
+        'user_id' => 'int NOT NULL',
+        'id_tingkat' => 'int NOT NULL',
+        'tingkat' => 'text NOT NULL',
+        'tempat_penyelenggaraan' => 'text NOT NULL',
+        'tanggal_pelaksanaan' => "date DEFAULT '0000-00-00' NOT NULL",
+        'nama_imam' => 'text NOT NULL',
     ));
 }
 
