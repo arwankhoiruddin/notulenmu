@@ -33,11 +33,13 @@ function notulenmu_list_page()
     // Determine user organizational level
     $current_user = wp_get_current_user();
     $user_level = '';
-    $is_arwan = false;
+    $is_pp = false;
     
-    // Check if user is arwan (PP - Pimpinan Pusat)
-    if (strpos($current_user->user_login, 'arwan') === 0) {
-        $is_arwan = true;
+    // Check if user is PP (Pimpinan Pusat)
+    if (strpos($current_user->user_login, 'arwan') === 0 ||
+        strpos($current_user->user_login, 'pp.') === 0 ||
+        $current_user->user_login === 'lpcrpm.ppm') {
+        $is_pp = true;
     } else if (strpos($current_user->user_login, 'pwm.') === 0) {
         $user_level = 'pwm';
     } else if (strpos($current_user->user_login, 'pdm.') === 0) {
@@ -51,10 +53,9 @@ function notulenmu_list_page()
     // Initialize id_tingkat_list
     $id_tingkat_list = array();
     
-    // For user arwan, allow access to all notulen (no filtering)
-    if (!$is_arwan) {
+    // For PP users, allow access to all notulen (no filtering)
+    if (!$is_pp) {
         // For other users, get settings and filter by organizational hierarchy
-        // $setting_table = $wpdb->prefix . 'salammu_notulenmu_setting';
         $setting_table = $wpdb->prefix . 'sicara_settings';
         $settings = $wpdb->get_row($wpdb->prepare(
             "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
@@ -77,20 +78,20 @@ function notulenmu_list_page()
 
     $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
     
-    // For user arwan, get filter parameters
+    // For PP users, get filter parameters
     $filter_tingkat = isset($_GET['filter_tingkat']) ? sanitize_text_field($_GET['filter_tingkat']) : '';
     $filter_pwm = isset($_GET['filter_pwm']) ? intval($_GET['filter_pwm']) : 0;
     $filter_pdm = isset($_GET['filter_pdm']) ? intval($_GET['filter_pdm']) : 0;
     $filter_pcm = isset($_GET['filter_pcm']) ? intval($_GET['filter_pcm']) : 0;
     $filter_prm = isset($_GET['filter_prm']) ? intval($_GET['filter_prm']) : 0;
     
-    // Get organizational data from Sicara tables for arwan user filters
+    // Get organizational data from Sicara tables for PP user filters
     $pwm_list = array();
     $pdm_list = array();
     $pcm_list = array();
     $prm_list = array();
     
-    if ($is_arwan) {
+    if ($is_pp) {
         // Get all PWM
         $pwm_table = $wpdb->prefix . 'sicara_pwm';
         $pwm_list = $wpdb->get_results("SELECT id_pwm, wilayah FROM $pwm_table ORDER BY wilayah");
@@ -137,9 +138,9 @@ function notulenmu_list_page()
     
     $table_name = $wpdb->prefix . 'salammu_notulenmu';
 
-    // Build query based on whether user is arwan or not
-    if ($is_arwan) {
-        // User arwan can see all notulen, with optional filtering
+    // Build query based on whether user is PP or not
+    if ($is_pp) {
+        // PP users can see all notulen, with optional filtering
         $query = "SELECT * FROM $table_name WHERE 1=1 order by tanggal_rapat DESC";
         $params = array();
         
@@ -225,8 +226,8 @@ function notulenmu_list_page()
                 <a href="<?php echo esc_url(admin_url('admin.php?page=notulenmu-add')); ?>" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded" style="color:#fff !important;">+ Tambah Notulen</a>
             </div>
             
-            <?php if ($is_arwan) { ?>
-                <!-- Filter dropdowns for user arwan -->
+            <?php if ($is_pp) { ?>
+                <!-- Filter dropdowns for PP users -->
                 <form method="get" id="filter-form" class="flex flex-col gap-3" action="">
                     <input type="hidden" name="page" value="notulenmu-list">
                     
@@ -356,7 +357,7 @@ function notulenmu_list_page()
                 }
                 </script>
             <?php } else { ?>
-                <!-- Search box for non-arwan users -->
+                <!-- Search box for non-PP users -->
                 <div class="flex flex-col md:flex-row md:items-center gap-2">
                     <form method="get" class="flex items-center gap-2" action="">
                         <input type="hidden" name="page" value="notulenmu-list">

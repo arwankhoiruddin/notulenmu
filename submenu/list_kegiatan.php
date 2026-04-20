@@ -37,23 +37,16 @@ function kegiatanmu_list_page()
     global $wpdb;
     $table_name = $wpdb->prefix . 'salammu_kegiatanmu';
 
-    // Ambil id tingkat dari settings user
-    $setting_table = $wpdb->prefix . 'sicara_settings';
-    $settings = $wpdb->get_row($wpdb->prepare(
-        "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
-        $user_id
-    ), ARRAY_A);
-
-    if (!$settings) {
-        echo "<p>Data tidak ditemukan.</p>";
-        return;
-    }
-    
-    // Determine user organizational level
+    // Determine user organizational level and PP status
     $current_user = wp_get_current_user();
     $user_level = '';
-    
-    if (strpos($current_user->user_login, 'pwm.') === 0) {
+    $is_pp = false;
+
+    if (strpos($current_user->user_login, 'arwan') === 0 ||
+        strpos($current_user->user_login, 'pp.') === 0 ||
+        $current_user->user_login === 'lpcrpm.ppm') {
+        $is_pp = true;
+    } else if (strpos($current_user->user_login, 'pwm.') === 0) {
         $user_level = 'pwm';
     } else if (strpos($current_user->user_login, 'pdm.') === 0) {
         $user_level = 'pdm';
@@ -62,30 +55,63 @@ function kegiatanmu_list_page()
     } else if (strpos($current_user->user_login, 'prm.') === 0) {
         $user_level = 'prm';
     }
-    
-    // Get all accessible id_tingkat based on organizational hierarchy
-    $id_tingkat_list = notulenmu_get_accessible_id_tingkat($settings, $user_level);
-
-    if (empty($id_tingkat_list)) {
-        echo "<p>You do not have sufficient permissions to access this page.</p>";
-        return;
-    }
 
     $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 
-    $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
-    $query = "SELECT * FROM $table_name WHERE id_tingkat IN ($placeholders) order by tanggal_kegiatan DESC";
-    $params = $id_tingkat_list;
+    if ($is_pp) {
+        // PP users can see all kegiatan across Indonesia
+        $query = "SELECT * FROM $table_name WHERE 1=1 ORDER BY tanggal_kegiatan DESC";
+        $params = array();
 
-    if (!empty($search)) {
-        $query .= " AND (tingkat LIKE %s OR nama_kegiatan LIKE %s OR tempat_kegiatan LIKE %s)";
-        $search_term = '%' . $wpdb->esc_like($search) . '%';
-        $params[] = $search_term;
-        $params[] = $search_term;
-        $params[] = $search_term;
+        if (!empty($search)) {
+            $query .= " AND (tingkat LIKE %s OR nama_kegiatan LIKE %s OR tempat_kegiatan LIKE %s)";
+            $search_term = '%' . $wpdb->esc_like($search) . '%';
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $params[] = $search_term;
+        }
+
+        if (!empty($params)) {
+            $sql = $wpdb->prepare($query, $params);
+        } else {
+            $sql = $query;
+        }
+    } else {
+        // Ambil id tingkat dari settings user
+        $setting_table = $wpdb->prefix . 'sicara_settings';
+        $settings = $wpdb->get_row($wpdb->prepare(
+            "SELECT pwm, pdm, pcm, prm FROM $setting_table WHERE user_id = %d",
+            $user_id
+        ), ARRAY_A);
+
+        if (!$settings) {
+            echo "<p>Data tidak ditemukan.</p>";
+            return;
+        }
+
+        // Get all accessible id_tingkat based on organizational hierarchy
+        $id_tingkat_list = notulenmu_get_accessible_id_tingkat($settings, $user_level);
+
+        if (empty($id_tingkat_list)) {
+            echo "<p>You do not have sufficient permissions to access this page.</p>";
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($id_tingkat_list), '%s'));
+        $query = "SELECT * FROM $table_name WHERE id_tingkat IN ($placeholders) ORDER BY tanggal_kegiatan DESC";
+        $params = $id_tingkat_list;
+
+        if (!empty($search)) {
+            $query .= " AND (tingkat LIKE %s OR nama_kegiatan LIKE %s OR tempat_kegiatan LIKE %s)";
+            $search_term = '%' . $wpdb->esc_like($search) . '%';
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $params[] = $search_term;
+        }
+
+        $sql = $wpdb->prepare($query, $params);
     }
 
-    $sql = $wpdb->prepare($query, $params);
     $rows = $wpdb->get_results($sql);
 
     // Group kegiatan by organizational level (tingkat), then by entity (tingkat + id_tingkat)
