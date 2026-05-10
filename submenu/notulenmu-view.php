@@ -145,7 +145,22 @@ function notulenmu_view_page() {
             margin: 10,
             filename: fileName,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                scrollY: 0,
+                onclone: function(clonedDoc) {
+                    var svgs = clonedDoc.querySelectorAll('#notulenmu-share-content svg');
+                    svgs.forEach(function(svg) {
+                        var parent = svg.parentElement;
+                        if (parent && parent.children.length === 1) {
+                            parent.style.display = 'none';
+                        } else {
+                            svg.style.display = 'none';
+                        }
+                    });
+                }
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['css', 'legacy'] }
         };
