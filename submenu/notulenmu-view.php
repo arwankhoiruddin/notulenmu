@@ -88,6 +88,7 @@ function notulenmu_view_page() {
     $sifat_rapat = $notulen->sifat_rapat ? json_decode($notulen->sifat_rapat, true) : [];
     $tempat_rapat = $notulen->tempat_rapat ? $notulen->tempat_rapat : '';
     $peserta_rapat = $notulen->peserta_rapat ? json_decode($notulen->peserta_rapat, true) : [];
+    $pdf_filename = 'notulen-' . $notulen->id . '-' . sanitize_title(!empty($notulen->topik_rapat) ? $notulen->topik_rapat : 'rapat') . '.pdf';
 ?>
 <div class="notulenmu-container">
     <!-- Header Section with Brand Colors -->
@@ -104,174 +105,176 @@ function notulenmu_view_page() {
 
     <!-- Main Content -->
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <!-- Meeting Overview Section -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-200">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="bg-[#2d3476] p-2 rounded-lg">
-                    <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800"><?php echo esc_html($notulen->topik_rapat); ?></h2>
-                    <p class="text-gray-600"><?php echo esc_html($notulen->tingkat); ?></p>
+        <div id="notulenmu-share-content">
+            <!-- Meeting Overview Section -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-[#2d3476] p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800"><?php echo esc_html($notulen->topik_rapat); ?></h2>
+                        <p class="text-gray-600"><?php echo esc_html($notulen->tingkat); ?></p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Meeting Details Grid -->
-        <div class="p-6">
-            <div class="grid md:grid-cols-2 gap-6 mb-8">
-                <!-- Date and Time Info -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Waktu & Tempat</h3>
-                    
-                    <div class="flex items-start gap-3">
-                        <div class="bg-blue-100 p-2 rounded-lg">
-                            <svg class="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-800">Tanggal Rapat</p>
-                            <p class="text-gray-600"><?php echo date('d F Y', strtotime($notulen->tanggal_rapat)); ?></p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3">
-                        <div class="bg-green-100 p-2 rounded-lg">
-                            <svg class="w-4 h-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-800">Waktu</p>
-                            <p class="text-gray-600"><?php echo esc_html($notulen->jam_mulai); ?> - <?php echo esc_html($notulen->jam_selesai); ?></p>
-                        </div>
-                    </div>
-
-                    <?php if (!empty($tempat_rapat)) { ?>
-                    <div class="flex items-start gap-3">
-                        <div class="bg-purple-100 p-2 rounded-lg">
-                            <svg class="w-4 h-4 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-800">Tempat Rapat</p>
-                            <p class="text-gray-600"><?php echo esc_html($tempat_rapat); ?></p>
-                        </div>
-                    </div>
-                    <?php } ?>
-                </div>
-
-                <!-- Meeting Type and Participants -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Informasi Rapat</h3>
-                    
-                    <?php if (!empty($sifat_rapat)) { ?>
-                    <div class="flex items-start gap-3">
-                        <div class="bg-orange-100 p-2 rounded-lg">
-                            <svg class="w-4 h-4 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-800">Sifat Rapat</p>
-                            <div class="flex flex-wrap gap-1 mt-1">
-                                <?php foreach ($sifat_rapat as $sifat) { ?>
-                                    <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full"><?php echo esc_html($sifat); ?></span>
-                                <?php } ?>
+            <!-- Meeting Details Grid -->
+            <div class="p-6">
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <!-- Date and Time Info -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Waktu & Tempat</h3>
+                        
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-100 p-2 rounded-lg">
+                                <svg class="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Tanggal Rapat</p>
+                                <p class="text-gray-600"><?php echo date('d F Y', strtotime($notulen->tanggal_rapat)); ?></p>
                             </div>
                         </div>
-                    </div>
-                    <?php } ?>
 
-                    <?php if (!empty($peserta_rapat)) { ?>
-                    <div class="flex items-start gap-3">
-                        <div class="bg-indigo-100 p-2 rounded-lg">
-                            <svg class="w-4 h-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                            </svg>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-green-100 p-2 rounded-lg">
+                                <svg class="w-4 h-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Waktu</p>
+                                <p class="text-gray-600"><?php echo esc_html($notulen->jam_mulai); ?> - <?php echo esc_html($notulen->jam_selesai); ?></p>
+                            </div>
                         </div>
-                        <div class="w-full">
-                            <p class="font-medium text-gray-800 mb-2">Peserta Rapat</p>
-                            <div class="bg-indigo-50 rounded-lg p-3">
-                                <div class="flex flex-wrap gap-2">
-                                    <?php foreach ($peserta_rapat as $peserta) { ?>
-                                        <span class="bg-white text-indigo-700 text-sm px-3 py-1 rounded-md border border-indigo-200"><?php echo esc_html($peserta); ?></span>
+
+                        <?php if (!empty($tempat_rapat)) { ?>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-purple-100 p-2 rounded-lg">
+                                <svg class="w-4 h-4 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Tempat Rapat</p>
+                                <p class="text-gray-600"><?php echo esc_html($tempat_rapat); ?></p>
+                            </div>
+                        </div>
+                        <?php } ?>
+                    </div>
+
+                    <!-- Meeting Type and Participants -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">Informasi Rapat</h3>
+                        
+                        <?php if (!empty($sifat_rapat)) { ?>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-orange-100 p-2 rounded-lg">
+                                <svg class="w-4 h-4 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Sifat Rapat</p>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    <?php foreach ($sifat_rapat as $sifat) { ?>
+                                        <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full"><?php echo esc_html($sifat); ?></span>
                                     <?php } ?>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <?php } ?>
-                </div>
-            </div>
+                        <?php } ?>
 
-            <!-- Meeting Summary -->
-            <div class="mb-8">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="bg-gray-100 p-2 rounded-lg">
-                        <svg class="w-5 h-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-800">Rangkuman Rapat</h3>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <div class="prose prose-sm max-w-none text-gray-700">
-                        <?php echo wp_kses_post($notulen->notulen_rapat); ?>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Attachments Section -->
-            <?php if (!empty($image_path) || !empty($lampiran_path)) { ?>
-            <div class="border-t border-gray-200 pt-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Lampiran</h3>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <?php if (!empty($image_path)) { ?>
-                    <div>
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="bg-pink-100 p-2 rounded-lg">
-                                <svg class="w-4 h-4 text-pink-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <?php if (!empty($peserta_rapat)) { ?>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-indigo-100 p-2 rounded-lg">
+                                <svg class="w-4 h-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                                 </svg>
                             </div>
-                            <p class="font-medium text-gray-800">Foto Kegiatan</p>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-3">
-                            <img src="<?php echo esc_url($image_path); ?>" class="w-full max-w-sm rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200" alt="Foto Kegiatan">
-                        </div>
-                    </div>
-                    <?php } ?>
-
-                    <?php if (!empty($lampiran_path)) { ?>
-                    <div>
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="bg-red-100 p-2 rounded-lg">
-                                <svg class="w-4 h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
+                            <div class="w-full">
+                                <p class="font-medium text-gray-800 mb-2">Peserta Rapat</p>
+                                <div class="bg-indigo-50 rounded-lg p-3">
+                                    <div class="flex flex-wrap gap-2">
+                                        <?php foreach ($peserta_rapat as $peserta) { ?>
+                                            <span class="bg-white text-indigo-700 text-sm px-3 py-1 rounded-md border border-indigo-200"><?php echo esc_html($peserta); ?></span>
+                                        <?php } ?>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="font-medium text-gray-800">Dokumen Lampiran</p>
                         </div>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <a href="<?php echo esc_url($lampiran_path); ?>" target="_blank" 
-                               class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Download Lampiran PDF
-                            </a>
+                        <?php } ?>
+                    </div>
+                </div>
+
+                <!-- Meeting Summary -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-gray-100 p-2 rounded-lg">
+                            <svg class="w-5 h-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800">Rangkuman Rapat</h3>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div class="prose prose-sm max-w-none text-gray-700">
+                            <?php echo wp_kses_post($notulen->notulen_rapat); ?>
                         </div>
                     </div>
-                    <?php } ?>
                 </div>
+
+                <!-- Attachments Section -->
+                <?php if (!empty($image_path) || !empty($lampiran_path)) { ?>
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Lampiran</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <?php if (!empty($image_path)) { ?>
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="bg-pink-100 p-2 rounded-lg">
+                                    <svg class="w-4 h-4 text-pink-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-gray-800">Foto Kegiatan</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <img src="<?php echo esc_url($image_path); ?>" class="w-full max-w-sm rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200" alt="Foto Kegiatan">
+                            </div>
+                        </div>
+                        <?php } ?>
+
+                        <?php if (!empty($lampiran_path)) { ?>
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="bg-red-100 p-2 rounded-lg">
+                                    <svg class="w-4 h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-gray-800">Dokumen Lampiran</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <a href="<?php echo esc_url($lampiran_path); ?>" target="_blank" 
+                                   class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Download Lampiran PDF
+                                </a>
+                            </div>
+                        </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
             </div>
-            <?php } ?>
         </div>
 
         <!-- Footer Actions -->
@@ -280,16 +283,142 @@ function notulenmu_view_page() {
                 <div class="text-sm text-gray-500">
                     ID Notulen: #<?php echo esc_html($notulen->id); ?>
                 </div>
-                <a href="<?php echo admin_url('admin.php?page=notulenmu-list'); ?>" 
-                   class="inline-flex items-center gap-2 bg-[#2d3476] hover:bg-[#1e2355] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Kembali ke Daftar
-                </a>
+                <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; align-items:center;">
+                    <span id="notulenmu-share-status" class="text-sm text-gray-500" aria-live="polite"></span>
+                    <button type="button" id="notulenmu-download-pdf"
+                            class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Ekspor PDF
+                    </button>
+                    <button type="button" id="notulenmu-share-pdf"
+                            class="inline-flex items-center gap-2 bg-[#2d3476] hover:bg-[#1e2355] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.882 13.12 9 12.827 9 12.5s-.118-.62-.316-.842m0 1.684a1.4 1.4 0 01-1.368.158l-3.845-1.922a1.5 1.5 0 010-2.684l3.845-1.922A1.5 1.5 0 019.5 8.5c0 .327-.118.62-.316.842m0 3.316l6.132 3.066A1.5 1.5 0 0017.5 14.5c0-.327-.118-.62-.316-.842m0 0a1.4 1.4 0 00-1.368-.158L9.684 16.566m7.5-5.224c.198-.222.316-.515.316-.842a1.5 1.5 0 00-2.184-1.342L9.184 12.224m8 1.118L9.184 9.158" />
+                        </svg>
+                        Share Notulen
+                    </button>
+                    <a href="<?php echo admin_url('admin.php?page=notulenmu-list'); ?>" 
+                       class="inline-flex items-center gap-2 bg-[#2d3476] hover:bg-[#1e2355] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Kembali ke Daftar
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+        integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<script>
+(function () {
+    var content = document.getElementById('notulenmu-share-content');
+    var downloadButton = document.getElementById('notulenmu-download-pdf');
+    var shareButton = document.getElementById('notulenmu-share-pdf');
+    var status = document.getElementById('notulenmu-share-status');
+    var fileName = <?php echo wp_json_encode($pdf_filename); ?>;
+    var shareTitle = <?php echo wp_json_encode($notulen->topik_rapat); ?>;
+
+    if (!content || !downloadButton || !shareButton) {
+        return;
+    }
+
+    function setStatus(message) {
+        if (status) {
+            status.textContent = message;
+        }
+    }
+
+    function setBusy(isBusy, message) {
+        downloadButton.disabled = isBusy;
+        shareButton.disabled = isBusy;
+        downloadButton.style.opacity = isBusy ? '0.7' : '1';
+        shareButton.style.opacity = isBusy ? '0.7' : '1';
+        downloadButton.style.cursor = isBusy ? 'wait' : 'pointer';
+        shareButton.style.cursor = isBusy ? 'wait' : 'pointer';
+        setStatus(message || '');
+    }
+
+    function downloadBlob(blob) {
+        var blobUrl = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function () {
+            URL.revokeObjectURL(blobUrl);
+        }, 1000);
+    }
+
+    async function generatePdfBlob() {
+        var options = {
+            margin: [10, 10, 10, 10],
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'] }
+        };
+        var worker = html2pdf().set(options).from(content);
+
+        if (typeof worker.outputPdf === 'function') {
+            return worker.outputPdf('blob');
+        }
+
+        await worker.toPdf();
+        return worker.get('pdf').then(function (pdf) {
+            return pdf.output('blob');
+        });
+    }
+
+    downloadButton.addEventListener('click', async function () {
+        try {
+            setBusy(true, 'Mengekspor notulen ke PDF...');
+            var blob = await generatePdfBlob();
+            downloadBlob(blob);
+            setBusy(false, 'PDF berhasil diekspor.');
+        } catch (error) {
+            console.error(error);
+            setBusy(false, 'Gagal mengekspor PDF.');
+        }
+    });
+
+    shareButton.addEventListener('click', async function () {
+        try {
+            setBusy(true, 'Menyiapkan PDF untuk dibagikan...');
+            var blob = await generatePdfBlob();
+            var pdfFile = new File([blob], fileName, { type: 'application/pdf' });
+
+            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                await navigator.share({
+                    title: shareTitle,
+                    text: 'Notulen rapat terlampir dalam format PDF.',
+                    files: [pdfFile]
+                });
+                setBusy(false, 'Notulen berhasil dibagikan.');
+                return;
+            }
+
+            downloadBlob(blob);
+            setBusy(false, 'Browser belum mendukung share file. PDF diunduh sebagai gantinya.');
+        } catch (error) {
+            if (error && error.name === 'AbortError') {
+                setBusy(false, 'Proses share dibatalkan.');
+                return;
+            }
+
+            console.error(error);
+            setBusy(false, 'Gagal membagikan notulen.');
+        }
+    });
+})();
+</script>
 <?php
 }
