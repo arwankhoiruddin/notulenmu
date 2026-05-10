@@ -88,7 +88,116 @@ function notulenmu_view_page() {
     $sifat_rapat = $notulen->sifat_rapat ? json_decode($notulen->sifat_rapat, true) : [];
     $tempat_rapat = $notulen->tempat_rapat ? $notulen->tempat_rapat : '';
     $peserta_rapat = $notulen->peserta_rapat ? json_decode($notulen->peserta_rapat, true) : [];
-    $pdf_filename = 'notulen-' . $notulen->id . '-' . sanitize_title(!empty($notulen->topik_rapat) ? $notulen->topik_rapat : 'rapat') . '.pdf';
+    $pdf_id = absint($notulen->id);
+    $pdf_topic = sanitize_file_name(!empty($notulen->topik_rapat) ? $notulen->topik_rapat : 'rapat');
+    $pdf_filename = 'notulen-' . $pdf_id . '-' . $pdf_topic . '.pdf';
+    $share_title = !empty($notulen->topik_rapat) ? $notulen->topik_rapat : 'Notulen Rapat';
+    $file_name_js = wp_json_encode($pdf_filename);
+    $share_title_js = wp_json_encode($share_title);
+    $inline_script = <<<JS
+(function () {
+    var content = document.getElementById('notulenmu-share-content');
+    var downloadButton = document.getElementById('notulenmu-download-pdf');
+    var shareButton = document.getElementById('notulenmu-share-pdf');
+    var status = document.getElementById('notulenmu-share-status');
+    var fileName = $file_name_js;
+    var shareTitle = $share_title_js;
+
+    if (!content || !downloadButton || !shareButton) {
+        return;
+    }
+
+    function setStatus(message) {
+        if (status) {
+            status.textContent = message;
+        }
+    }
+
+    function setBusy(isBusy, message) {
+        downloadButton.disabled = isBusy;
+        shareButton.disabled = isBusy;
+        downloadButton.style.opacity = isBusy ? '0.7' : '1';
+        shareButton.style.opacity = isBusy ? '0.7' : '1';
+        downloadButton.style.cursor = isBusy ? 'wait' : 'pointer';
+        shareButton.style.cursor = isBusy ? 'wait' : 'pointer';
+        setStatus(message || '');
+    }
+
+    function downloadBlob(blob) {
+        var blobUrl = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function () {
+            URL.revokeObjectURL(blobUrl);
+        }, 1000);
+    }
+
+    async function generatePdfBlob() {
+        if (typeof html2pdf !== 'function') {
+            throw new Error('Library html2pdf belum dimuat.');
+        }
+
+        var options = {
+            margin: 10,
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'] }
+        };
+        return await html2pdf().set(options).from(content).outputPdf('blob');
+    }
+
+    downloadButton.addEventListener('click', async function () {
+        try {
+            setBusy(true, 'Mengekspor notulen ke PDF...');
+            var blob = await generatePdfBlob();
+            downloadBlob(blob);
+            setBusy(false, 'PDF berhasil diekspor.');
+        } catch (error) {
+            console.error(error);
+            setBusy(false, error && error.message ? error.message : 'Gagal mengekspor PDF.');
+        }
+    });
+
+    shareButton.addEventListener('click', async function () {
+        try {
+            setBusy(true, 'Menyiapkan PDF untuk dibagikan...');
+            var blob = await generatePdfBlob();
+            var pdfFile = new File([blob], fileName, { type: 'application/pdf' });
+
+            // File sharing via the Web Share API is only available in supported browsers.
+            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                await navigator.share({
+                    title: shareTitle,
+                    text: 'Notulen rapat terlampir dalam bentuk PDF.',
+                    files: [pdfFile]
+                });
+                setBusy(false, 'Notulen berhasil dibagikan.');
+                return;
+            }
+
+            downloadBlob(blob);
+            setBusy(false, 'Browser tidak mendukung fitur berbagi file. PDF diunduh sebagai gantinya.');
+        } catch (error) {
+            if (error && error.name === 'AbortError') {
+                setBusy(false, 'Proses share dibatalkan.');
+                return;
+            }
+
+            console.error(error);
+            setBusy(false, error && error.message ? error.message : 'Gagal membagikan notulen.');
+        }
+    });
+})();
+JS;
+    // Bundled html2pdf asset is stored in assets/js for offline WordPress admin usage.
+    wp_enqueue_script('notulenmu-html2pdf', plugin_dir_url(__FILE__) . '../assets/js/html2pdf.bundle.min.js', array(), '0.14.0', true);
+    wp_add_inline_script('notulenmu-html2pdf', $inline_script);
 ?>
 <div class="notulenmu-container">
     <!-- Header Section with Brand Colors -->
@@ -283,7 +392,7 @@ function notulenmu_view_page() {
                 <div class="text-sm text-gray-500">
                     ID Notulen: #<?php echo esc_html($notulen->id); ?>
                 </div>
-                <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; align-items:center;">
+                <div class="flex gap-3 flex-wrap justify-end items-center">
                     <span id="notulenmu-share-status" class="text-sm text-gray-500" aria-live="polite"></span>
                     <button type="button" id="notulenmu-download-pdf"
                             class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200">
@@ -311,114 +420,5 @@ function notulenmu_view_page() {
         </div>
     </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
-        integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-<script>
-(function () {
-    var content = document.getElementById('notulenmu-share-content');
-    var downloadButton = document.getElementById('notulenmu-download-pdf');
-    var shareButton = document.getElementById('notulenmu-share-pdf');
-    var status = document.getElementById('notulenmu-share-status');
-    var fileName = <?php echo wp_json_encode($pdf_filename); ?>;
-    var shareTitle = <?php echo wp_json_encode($notulen->topik_rapat); ?>;
-
-    if (!content || !downloadButton || !shareButton) {
-        return;
-    }
-
-    function setStatus(message) {
-        if (status) {
-            status.textContent = message;
-        }
-    }
-
-    function setBusy(isBusy, message) {
-        downloadButton.disabled = isBusy;
-        shareButton.disabled = isBusy;
-        downloadButton.style.opacity = isBusy ? '0.7' : '1';
-        shareButton.style.opacity = isBusy ? '0.7' : '1';
-        downloadButton.style.cursor = isBusy ? 'wait' : 'pointer';
-        shareButton.style.cursor = isBusy ? 'wait' : 'pointer';
-        setStatus(message || '');
-    }
-
-    function downloadBlob(blob) {
-        var blobUrl = URL.createObjectURL(blob);
-        var link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(function () {
-            URL.revokeObjectURL(blobUrl);
-        }, 1000);
-    }
-
-    async function generatePdfBlob() {
-        var options = {
-            margin: [10, 10, 10, 10],
-            filename: fileName,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'] }
-        };
-        var worker = html2pdf().set(options).from(content);
-
-        if (typeof worker.outputPdf === 'function') {
-            return worker.outputPdf('blob');
-        }
-
-        await worker.toPdf();
-        return worker.get('pdf').then(function (pdf) {
-            return pdf.output('blob');
-        });
-    }
-
-    downloadButton.addEventListener('click', async function () {
-        try {
-            setBusy(true, 'Mengekspor notulen ke PDF...');
-            var blob = await generatePdfBlob();
-            downloadBlob(blob);
-            setBusy(false, 'PDF berhasil diekspor.');
-        } catch (error) {
-            console.error(error);
-            setBusy(false, 'Gagal mengekspor PDF.');
-        }
-    });
-
-    shareButton.addEventListener('click', async function () {
-        try {
-            setBusy(true, 'Menyiapkan PDF untuk dibagikan...');
-            var blob = await generatePdfBlob();
-            var pdfFile = new File([blob], fileName, { type: 'application/pdf' });
-
-            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-                await navigator.share({
-                    title: shareTitle,
-                    text: 'Notulen rapat terlampir dalam format PDF.',
-                    files: [pdfFile]
-                });
-                setBusy(false, 'Notulen berhasil dibagikan.');
-                return;
-            }
-
-            downloadBlob(blob);
-            setBusy(false, 'Browser belum mendukung share file. PDF diunduh sebagai gantinya.');
-        } catch (error) {
-            if (error && error.name === 'AbortError') {
-                setBusy(false, 'Proses share dibatalkan.');
-                return;
-            }
-
-            console.error(error);
-            setBusy(false, 'Gagal membagikan notulen.');
-        }
-    });
-})();
-</script>
 <?php
 }
