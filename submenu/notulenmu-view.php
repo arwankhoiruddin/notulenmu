@@ -96,7 +96,7 @@ function notulenmu_view_page() {
     $share_title_js = wp_json_encode($share_title);
     $inline_script = <<<JS
 (function () {
-    var content = document.getElementById('notulenmu-share-content');
+    var content = document.getElementById('notulenmu-pdf-content');
     var downloadButton = document.getElementById('notulenmu-download-pdf');
     var shareButton = document.getElementById('notulenmu-share-pdf');
     var status = document.getElementById('notulenmu-share-status');
@@ -399,6 +399,38 @@ JS;
                 </div>
                 <?php } ?>
             </div>
+        </div>
+
+        <!-- Hidden PDF export content with h2 field labels -->
+        <div id="notulenmu-pdf-content" aria-hidden="true" style="position:absolute;left:-9999px;top:0;width:210mm;font-family:Arial,sans-serif;padding:20px;color:#000;background:#fff;">
+            <h1 style="font-size:22px;margin-bottom:16px;"><?php echo esc_html($notulen->topik_rapat); ?></h1>
+
+            <h2 style="font-size:16px;margin-top:16px;margin-bottom:4px;">Tingkat</h2>
+            <p style="margin:0 0 8px;"><?php echo esc_html($notulen->tingkat); ?></p>
+
+            <h2 style="font-size:16px;margin-top:16px;margin-bottom:4px;">Tanggal Rapat</h2>
+            <p style="margin:0 0 8px;"><?php echo esc_html(date('d F Y', strtotime($notulen->tanggal_rapat))); ?></p>
+
+            <h2 style="font-size:16px;margin-top:16px;margin-bottom:4px;">Waktu</h2>
+            <p style="margin:0 0 8px;"><?php echo esc_html($notulen->jam_mulai); ?> - <?php echo esc_html($notulen->jam_selesai); ?></p>
+
+            <?php if (!empty($tempat_rapat)) { ?>
+            <h2 style="font-size:16px;margin-top:16px;margin-bottom:4px;">Tempat</h2>
+            <p style="margin:0 0 8px;"><?php echo esc_html($tempat_rapat); ?></p>
+            <?php } ?>
+
+            <?php if (!empty($sifat_rapat)) { ?>
+            <h2 style="font-size:16px;margin-top:16px;margin-bottom:4px;">Sifat Rapat</h2>
+            <p style="margin:0 0 8px;"><?php echo esc_html(implode(', ', $sifat_rapat)); ?></p>
+            <?php } ?>
+
+            <?php if (!empty($peserta_rapat)) { ?>
+            <h2 style="font-size:16px;margin-top:16px;margin-bottom:4px;">Peserta Rapat</h2>
+            <p style="margin:0 0 8px;"><?php echo esc_html(implode(', ', $peserta_rapat)); ?></p>
+            <?php } ?>
+
+            <h2 style="font-size:16px;margin-top:16px;margin-bottom:4px;">Keputusan Rapat</h2>
+            <div style="margin:0 0 8px;"><?php echo wp_kses_post($notulen->notulen_rapat); ?></div>
         </div>
 
         <!-- Footer Actions -->
